@@ -228,8 +228,6 @@ export default function CommitteeQuizPage() {
 
   const progressPercent = ((questionNumber - 1) / 10) * 100;
 
-
-
   return (
     <div className="relative flex flex-col items-center min-h-screen bg-gradient-to-br from-[#2E4A20] to-purple-800 p-6">
       {result && (
