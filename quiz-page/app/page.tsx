@@ -1,49 +1,98 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+// Removed unused Image import
 
 // --- QUIZ DATA ---
 type Question = {
   text: string;
-  options: { text: string; value: string}[];
-  slider?: boolean;
+  options: { text: string; nextQuestion?: number; result?: string }[];
+  number: number;
+  slider? : boolean;
 };
 
 const questions: Question[] = [
   {
     text: "How many conferences have you attended?",
-    options: [],
+    options: [
+      { text: "Beginner", nextQuestion: 1 },
+      { text: "Intermediate", nextQuestion: 4 },
+      { text: "Advanced", nextQuestion: 7 }
+    ],
+    number: 1,
     slider: true
   },
   {
-    text: "What type of ROP is most appealing to you?",
+    text: "Are you more interested in standard ROP or specialized/creative ROP like Crisis or Cabinet?",
     options: [
-      { text: "Standard ROP", value: "a" },
-      { text: "Somewhat Specialized ROP", value: "b" },
-      { text: "Entirely Specialized ROP", value: "c" },
-      { text: "Crisis ROP", value: "d" },
+      { text: "Standard ROP", nextQuestion: 2 },
+      { text: "Specialized/Crisis ROP", nextQuestion: 3 }
     ],
+    number: 2
   },
   {
-    text: "What kind of topics are you interested in?",
+    text: "Do you want your topic to be oriented around global policy issues or regional / thematic topics?",
     options: [
-      { text: "Crime", value: "a" },
-      { text: "Economic Issues", value: "b" },
-      { text: "History", value: "c" },
-      { text: "Secret Societies & Espionage", value: "d" },
-      { text: "Environmental Issues", value: "e" },
-      { text: "Mythology", value: "f" },
+      { text: "Global policy", result: "United Nations Office on Drugs and Crime (UNODC)" },
+      { text: "Economics / development focus", result: "United Nations Economic Commission for Africa (UNECA)" }
     ],
+    number: 3
   },
   {
-    text: "Pick a scope:",
+    text: "Are you drawn to current real-world issues or history and region specific topics?",
     options: [
-      { text: "Country-wide", value: "a" },
-      { text: "Regional", value: "b" },
-      { text: "International", value: "c" },
-      // { text: "Climate Action", value: 4 },
+      { text: "Environmental / climate focus", result: "Environmental Crisis Committee (ECC)" },
+      { text: "History / regional interest", result: "Newfoundland Commission of Government (NCOG)" }
     ],
+    number: 4
+  },
+  {
+    text: "Do you prefer standard UN structures or more uniquely-structured committees?",
+    options: [
+      { text: "Standard UN", nextQuestion: 5 },
+      { text: "Unique ROP", nextQuestion: 6 }
+    ],
+    number: 6
+  },
+  {
+    text: "Are you more interested in law / maritime themes or social / cultural issues?",
+    options: [
+      { text: "Law / sea governance", result: "United Nations Convention on the Law of the Sea (UNCLOS)" },
+      { text: "Cultural / indigenous focus", result: "United Nations Permanent Forum on Indigenous Issues (UNPFII)" }
+    ],
+    number: 7
+  },
+  {
+    text: "Are you more drawn to economics/finance topics or fiction and espionage themes?",
+    options: [
+      { text: "Finance & markets focus", result: "Financial Crisis Committee (FCC)" },
+      { text: "Cryptography / fiction", result: "Cicada 3301 (C-3301)" }
+    ],
+    number: 8
+  },
+  {
+    text: "Do you want a committee with a strong historical basis or creative / crisis style?",
+    options: [
+      { text: "Historical", nextQuestion: 8 },
+      { text: "Creative / crisis", nextQuestion: 9 }
+    ],
+    number: 10
+  },
+  {
+    text: "Which historical angle appeals to you?",
+    options: [
+      { text: "Classical international interwar diplomacy", result: "League of Nations (LoN)" },
+      { text: "Structured government / leadership roles", result: "Historical Cabinet" },
+      { text: "Unknown before registration / extreme challenge", result: "AD-HOC [REDACTED]" }
+    ],
+    number: 11
+  },
+  {
+    text: "Are you interested in mythology and broad cultural research or trade and historical connections?",
+    options: [
+      { text: "Mythic / cross-culture crisis", result: "League of Immortals (LOI)" },
+      { text: "Trade history / cross-period narrative", result: "The Silk Road (TSR)" }
+    ],
+    number: 12
   },
 ];
 
@@ -60,6 +109,7 @@ const committeeMatches: Record<number, string> = {
   10: "Environmental Crisis Committee (ECC)",
   11: "Financial Crisis Committee (FCC)",
   12: "League of Immortals (LOI)",
+  13: "Historical Cabinet",
 };
 
 const committeeDescriptions: Record<string, string> = {
@@ -75,6 +125,7 @@ const committeeDescriptions: Record<string, string> = {
   "Environmental Crisis Committee (ECC)" : "10Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "Financial Crisis Committee (FCC)" : "11Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "League of Immortals (LOI)" : "12Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+  "Historical Cabinet": "13Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
 };
 
 
@@ -82,13 +133,14 @@ export default function CommitteeQuizPage() {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [result, setResult] = useState<string | null>(null);
+  const [started, setStarted] = useState(false);
+  const [questionNumber, setQuestionNumber] = useState(1);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sliderDisplay = useRef<HTMLParagraphElement>(null);
   const sliderInput = useRef<HTMLInputElement>(null);
 
-  // 🎉 Confetti (Canvas) logic
-  useEffect(() => {
+    useEffect(() => {
     if (!result) return;
 
     const canvas = canvasRef.current;
@@ -165,32 +217,21 @@ export default function CommitteeQuizPage() {
     };
   }, [result]);
 
-  const handleSelect = (value: string | number) => {
-    const updated = [...answers];
-    if(typeof value === "number") {
-      if(value <=2) value = "2";
-      else if(value <=5) value = "5";
-      else if(value <= 7) value = "7";
-      else value = "8";
+  const handleSelect = (option: { text: string; nextQuestion?: number; result?: string }) => {
+    if (option.result) {
+      setResult(option.result);
+    } else if (option.nextQuestion !== undefined) {
+      setCurrent(option.nextQuestion);
+      setQuestionNumber(questions[option.nextQuestion].number);
     }
-    updated[current] = value.toString();
-    setAnswers(updated);
-
-    setTimeout(() => {
-      if (current < questions.length - 1) setCurrent(current + 1);
-      else {
-        const total = updated.reduce((a, b) => a + b, "");
-        console.log(total, committeeMatches[1]);
-        setResult(committeeMatches[1]);
-      }
-    }, 250);
   };
 
-  const progressPercent = ((current) / questions.length) * 100;
+  const progressPercent = ((questionNumber - 1) / 10) * 100;
+
+
 
   return (
     <div className="relative flex flex-col items-center min-h-screen bg-gradient-to-br from-[#2E4A20] to-purple-800 p-6">
-      {/* Canvas for confetti */}
       {result && (
         <canvas
           ref={canvasRef}
@@ -198,7 +239,6 @@ export default function CommitteeQuizPage() {
         />
       )}
 
-      {/* Animated background orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-72 h-72 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute top-40 right-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
@@ -211,13 +251,30 @@ export default function CommitteeQuizPage() {
       </h1>
       <p className="relative text-purple-200 text-center mb-8">Find your perfect committee match</p>
 
-      {!result ? (
+      {!started? (
+        <div className="result-card fade-in relative bg-white/10 backdrop-blur-md rounded-2xl p-12 shadow-2xl text-center border border-white/20 max-w-lg">
+          <div className="text-6xl mb-4 left-[42%]" id="LOGO"></div>
+          <h2 className="text-4xl font-bold text-white">KINGMUN 2026 Committees Quiz</h2>
+          <p className="text-xl font-smibold text-white my-8">
+            Find the perfect KINGMUN committee for you!
+          </p>
+          <div className="my-8 h-1 w-28 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mx-auto"></div>
+          <button
+            onClick={() => {
+              setStarted(true);
+            }}
+            className="btn-retry"
+          >
+            Start Quiz
+          </button>
+        </div>
+      ) : 
+      (!result ? (
         <div className="relative w-full max-w-5xl">
-          {/* Progress bar */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-semibold text-purple-200">
-                Question {current + 1} of {questions.length}
+                Question {questionNumber}
               </span>
               <span className="text-sm font-semibold text-purple-200">
                 {Math.round(progressPercent)}%
@@ -236,8 +293,8 @@ export default function CommitteeQuizPage() {
               {questions[current].text}
             </p>
 
-            <div className={`grid grid-cols-1 ${questions[current].slider? "" :"md:grid-cols-2"} gap-4`}>
-              {questions[current].slider? (
+            <div className={`grid grid-cols-1 ${questions[current] && questions[current].slider? "" : "md:grid-cols-2"} gap-4`}>
+              {questions[current] && questions[current].slider? (
                 <div className="flex flex-row items-center">
                     <div className="flex flex-col flex-grow mr-6">
                     <p 
@@ -255,53 +312,60 @@ export default function CommitteeQuizPage() {
                     />
                     </div>
                   <button
-                    onClick={() => {handleSelect(sliderInput.current ? parseInt(sliderInput.current.value) : 4); console.log(parseInt(sliderInput.current!.value))}}
+                    onClick={() => {
+                      const number = sliderInput.current ? parseInt(sliderInput.current.value) : 4;
+                      if (number <= 3) {
+                        var nextQ = 1;
+                      } else if (number <= 6) {
+                        var nextQ = 4;
+                      } else {
+                        var nextQ = 7;
+                      }
+                      handleSelect({ text: "", nextQuestion: nextQ });
+                      console.log(nextQ);
+                    }}
                     className="btn-retry group max-h-10 md:max-h-72 max-w-min flex flex-col items-center justify-center mt-auto"
                   >
                     Next
                   </button>
                 </div>
-              ):(questions[current].options.map((opt, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSelect(opt.value)}
-                  className="btn-option group min-h-40 md:min-h-72 flex flex-col items-center justify-center"
-                >
-                  {/* <Image
-                    src={`/quiz/options/option-${current + 1}-${idx + 1}.svg`}
-                    alt={opt.text}
-                    fill={true}
-                    className="max-md:hidden border mb-2 mx-auto group-hover:scale-110 transition-transform duration-300"
-                  /> */}
-                  <span className="relative z-10 text-lg">{opt.text}</span>
-                </button>
-              )))}
+              ) : (
+                questions[current].options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelect(opt)}
+                    className="btn-option group min-h-40 md:min-h-72 flex flex-col items-center justify-center"
+                  >
+                    <span className="relative z-10 text-lg">{opt.text}</span>
+                  </button>
+              )))
+              }
             </div>
           </div>
         </div>
-      ) : (
-        <div className="result-card fade-in relative bg-white/10 backdrop-blur-md rounded-2xl p-12 shadow-2xl text-center border border-white/20 max-w-lg">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-4xl font-bold text-white mb-2">You're Matched With:</h2>
-          <div className="my-8 h-1 w-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mx-auto"></div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent mb-8">
-            {result}
-          </p>
-          <p className="my-8">{committeeDescriptions[result]}</p>
-          <button
-            onClick={() => {
-              setCurrent(0);
-              setAnswers([]);
-              setResult(null);
-            }}
-            className="btn-retry"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
+        ) : (
+          <div className="result-card fade-in relative bg-white/10 backdrop-blur-md rounded-2xl p-12 shadow-2xl text-center border border-white/20 max-w-lg">
+            <div className="text-6xl mb-4">🎉</div>
+            <h2 className="text-4xl font-bold text-white mb-2">You're Matched With:</h2>
+            <div className="my-8 h-1 w-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mx-auto"></div>
+            <p className="text-3xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent mb-8">
+              {result}
+            </p>
+            <p className="my-8">{committeeDescriptions[result]}</p>
+            <button
+              onClick={() => {
+                setCurrent(0);
+                setAnswers([]);
+                setResult(null);
+                setQuestionNumber(1);
+              }}
+              className="btn-retry"
+            >
+              Try Again
+            </button>
+          </div>
+        ))}
 
-      {/* CSS styles */}
       <style jsx>{`
         #LOGO{
           top:-10%;
