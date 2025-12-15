@@ -226,7 +226,7 @@ export default function CommitteeQuizPage() {
     }
   };
 
-  const progressPercent = ((questionNumber - 1) / 10) * 100;
+  const progressPercent = ((questionNumber - 1) / 12) * 100;
 
   return (
     <div className="relative flex flex-col items-center min-h-screen bg-gradient-to-br from-[#2E4A20] to-purple-800 p-6">
@@ -320,7 +320,6 @@ export default function CommitteeQuizPage() {
                         var nextQ = 7;
                       }
                       handleSelect({ text: "", nextQuestion: nextQ });
-                      console.log(nextQ);
                     }}
                     className="btn-retry group max-h-10 md:max-h-72 max-w-min flex flex-col items-center justify-center mt-auto"
                   >
