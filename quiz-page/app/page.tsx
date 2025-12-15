@@ -82,7 +82,7 @@ const questions: Question[] = [
     options: [
       { text: "Classical international interwar diplomacy", result: "League of Nations (LoN)" },
       { text: "Structured government / leadership roles", result: "Historical Cabinet" },
-      { text: "Unknown before registration / extreme challenge", result: "AD-HOC [REDACTED]" }
+      { text: "[REDACTED]", result: "AD-HOC [REDACTED]" }
     ],
     number: 11
   },
@@ -116,12 +116,12 @@ const committeeDescriptions: Record<string, string> = {
   "United Nations Office on Drugs and Crime (UNODC)": "1Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "United Nations Convention on the Law of the Sea (UNCLOS)" : "2Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "League of Nations (LoN)" : "3Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "United Nations Economic Commission for Africa (UNECA)" : "4Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "United Nations Permanent Forum on Indigenous Issues (UNPFII)" : "5Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "The Silk Road (TSR)" : "6Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+  "United Nations Economic Commission for Africa (UNECA)" : "This ECOSOC committee focuses on economic development issues in Africa, addressing economic and regional issues. UNECA is perfect for beginner delegates interested in geopolitics and development.",
+  "United Nations Permanent Forum on Indigenous Issues (UNPFII)" : "This committee centers around indigenous issues globally, discussing cultural preservation and rights. UNPFII suits delegates passionate about indigenous advocacy and are open to a standard ROP with a few specialized motions.",
+  "The Silk Road (TSR)" : "Explore the trade routes from East to West that connected the ancient world in this historical committee. TSR is ideal for delegates who want to explore the rich history of trade and cultural exchange, and who are open to a specialized ROP.",
   "Newfoundland Commission of Government (NCOG)" : "7Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "Cicada 3301 (C-3301)" : "8Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "AD-HOC [REDACTED]" : "9Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+  "AD-HOC [REDACTED]" : "This committee's topic will be revealed on conference day and it best for advanced delegates. Prepare for an exciting and secretive experience!",
   "Environmental Crisis Committee (ECC)" : "10Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "Financial Crisis Committee (FCC)" : "11Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
   "League of Immortals (LOI)" : "12Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
@@ -243,7 +243,7 @@ export default function CommitteeQuizPage() {
         <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
 
-      <h1 className="relative text-5xl font-bold text-white text-center mb-2 drop-shadow-lg flex items-center justify-center">
+      <h1 className="relative text-5xl font-bold text-white text-center mb-2 drop-shadow-lg flex flex-wrap items-center justify-center">
         <div id="LOGO"></div>
         <p>KINGMUN Committee Quiz</p>
       </h1>
@@ -293,11 +293,11 @@ export default function CommitteeQuizPage() {
 
             <div className={`grid grid-cols-1 ${questions[current] && questions[current].slider? "" : "md:grid-cols-2"} gap-4`}>
               {questions[current] && questions[current].slider? (
-                <div className="flex flex-row items-center">
-                    <div className="flex flex-col flex-grow mr-6">
+                <div className="flex flex-row flex-wrap items-center max-md:flex-col my-10">
+                    <div className="flex flex-col flex-grow md:mr-6 max-md:w-full">
                     <p 
                       ref = {sliderDisplay}
-                      className="my-5 text-center text-xl font-bold text-white"
+                      className="mt-2 mb-8 text-center text-xl font-bold text-white"
                     >4 conferences</p>
                     <input
                       ref={sliderInput}
@@ -321,7 +321,7 @@ export default function CommitteeQuizPage() {
                       }
                       handleSelect({ text: "", nextQuestion: nextQ });
                     }}
-                    className="btn-retry group max-h-10 md:max-h-72 max-w-min flex flex-col items-center justify-center mt-auto"
+                    className="btn-retry group max-h-10 max-md:mt-10 md:max-h-72 w-full md:max-w-min flex flex-col items-center justify-center mt-auto"
                   >
                     Next
                   </button>
@@ -346,9 +346,9 @@ export default function CommitteeQuizPage() {
             <h2 className="text-4xl font-bold text-white mb-2">You're Matched With:</h2>
             <div className="my-8 h-1 w-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mx-auto"></div>
             <p className="text-3xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent mb-8">
-              {result}
+              <span className={result == "AD-HOC [REDACTED]"? "text-black bg-black" : ""}>{result}</span>
             </p>
-            <p className="my-8">{committeeDescriptions[result]}</p>
+            <p className="my-8"> <span className={result == "AD-HOC [REDACTED]"? "text-black bg-black" : ""}>{committeeDescriptions[result]}</span></p>
             <button
               onClick={() => {
                 setCurrent(0);
