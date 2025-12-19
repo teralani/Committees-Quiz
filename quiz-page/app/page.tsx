@@ -117,9 +117,9 @@ export default function Home() {
                             </div>
                             
                             <p className="text-sm text-primary mb-3">
-                                Disclaimer: This quiz is designed for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
+                                Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                             </p>
-                            <p className="text-sm text-primary">For questions, feedback, or further guidance, contact us at da@kingmun.org.</p>
+                            <p className="text-sm text-primary">For questions, feedback, or further guidance, contact us at <a className="text-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
                         </div>
                         <Magnet
                             padding={30}
@@ -132,7 +132,7 @@ export default function Home() {
             </div>
             <CommitteesSection display={false} />
             <footer className="absolute min-h-14 max-h-min flex justify-center align-center bottom-0 w-full bg-secondary">
-                <h2 className="text-white text-center my-auto">© 2025 King County Model United Nations. All Rights Reserved.</h2>
+                <h2 className="text-white text-center my-auto">© 2026 King County Model United Nations. All Rights Reserved.</h2>
             </footer>
             <style jsx>{`
                 * {
