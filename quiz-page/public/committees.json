@@ -1,0 +1,65 @@
+[
+    {
+        "name": "United Nations Office on Drugs and Crime (UNODC)",
+        "acronym": "UNODC",
+        "description": "1Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "United Nations Convention on the Law of the Sea (UNCLOS)",
+        "acronym": "UNCLOS",
+        "description": "2Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "League of Nations (LoN)", 
+        "acronym": "LoN",
+        "description": "3Lorem ipsum dolor Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "United Nations Economic Commission for Africa (UNECA)",
+        "acronym": "UNECA", 
+        "description": "This ECOSOC committee focuses on economic development issues in Africa, addressing economic and regional issues. UNECA is perfect for beginner delegates interested in geopolitics and development."},
+    {
+        "name": "United Nations Permanent Forum on Indigenous Issues (UNPFII)",
+        "acronym": "UNPFII", 
+        "description": "This committee centers around indigenous issues globally, discussing cultural preservation and rights. UNPFII suits delegates passionate about indigenous advocacy and are open to a standard ROP with a few specialized motions."},
+    {
+        "name": "The Silk Road (TSR)",
+        "acronym": "TSR", 
+        "description": "Explore the trade routes from East to West that connected the ancient world in this historical committee. TSR is ideal for delegates who want to explore the rich history of trade and cultural exchange, and who are open to a specialized ROP."},
+    {
+        "name": "Newfoundland Commission of Government (NCOG)",
+        "acronym": "NCOG", 
+        "description": "7Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "Cicada 3301 (C-3301)",
+        "acronym": "C-3301", 
+        "description": "8Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "AD-HOC",
+        "acronym": "AD-HOC", 
+        "description": "This committee's topic will be revealed on conference day and it best for advanced delegates. Prepare for an exciting and secretive experience!"
+    },
+        {
+        "name": "Historical Cabinet (H-CAB)", 
+        "acronym": "H-CAB",
+        "description": "13Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "Environmental Crisis Committee (ECC)",
+        "acronym": "ECC", 
+        "description": "10Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "Financial Crisis Committee (FCC)",
+        "acronym": "FCC", 
+        "description": "11Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    },
+    {
+        "name": "League of Immortals (LoI)",
+        "acronym": "LoI", 
+        "description": "12Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor."
+    }
+    
+]
