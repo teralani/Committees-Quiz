@@ -27,10 +27,12 @@
 
 body {
   /* background: var(--background); */
-  background: linear-gradient(rgba(42, 42, 42, 0.2), rgba(42, 42, 42, 0.4)), url(../public/background.jpeg) no-repeat center;
+  background: linear-gradient(rgba(44, 44, 101, 0.2), rgba(47, 47, 86, 0.2)), url(../public/background.jpeg) no-repeat center;
   background-size: cover;
   backdrop-filter: blur(6px);
   background-attachment: fixed;
+  overflow-x: clip;
+  overflow-y: scroll;
 
   color: var(--foreground);
   min-height: 100vh;

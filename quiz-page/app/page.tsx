@@ -1,21 +1,23 @@
 "use client";
-import Image from "next/image";
+// import Image from "next/image";
 import { Montserrat } from "next/font/google";
-import TiltedCard from "@/components/card";
 import CommitteesSection from "@/components/committeesSection";
 import Committees from "@/public/committees.json";
 import Link from "next/dist/client/link";
 import Card from "@/components/card";
 import Magnet from "@/components/magneticButton";
+import Pages from "@/public/pageText.json"
+import { div } from "motion/react-client";
 
 
 const montserrat = Montserrat({ subsets: ['latin'],  variable: '--font-montserrat' });
 const committees = Committees as Array<{ name: string; acronym: string; description: string }>;
+const content = Pages[0]
 
 export default function Home() {
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen relative">
             {/* <Image
                 alt="background image" 
                 sizes="100vw" 
@@ -30,12 +32,14 @@ export default function Home() {
                 <div className="hidden md:block" id="LOGO"></div> 
                 <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
             </nav>
-            <div className="w-full mx-auto mt-16 flex justify-center flex-col items-center">
+            <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect KINGMUN Committee</h1>
                 <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
-                <div className="flex justify-center md:flex-col items-center flex-col-reverse">
-                        <div className="flex flex-wrap w-full justify-center gap-2 my-5">
-                            <Card
+                <div className="flex justify-center pb-10 md:flex-col items-center flex-col">
+                        <div className="flex flex-wrap w-full justify-center gap-2 my-10">
+                            {[content.DA, content.SG, content.IS].map((team, idx) => {
+                                return (<Card
+                                key={idx}
                                 imageSrc={undefined}
                                 altText=""
                                 containerHeight={"400px"}
@@ -47,68 +51,22 @@ export default function Home() {
                                 displayCardContent={true}
                                 cardContent={
                                     <div className="w-full h-full p-6">
-                                        <div className="w-31 bg-blue border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6"></div>
-                                        <h3 className="text-2xl font-bold text-center">Delegate Affairs</h3>
-                                        <p className="mt-2 text-sm text-center">We know that choosing the right committee can be overwhelming, so we created this quiz to make it easier and even a little fun! We can't wait to see you thrive in committee at KINGMUN 2025 experience!</p>
+                                        <div className="w-31 bg-blue border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6 rounded-lg"></div>
+                                        <h3 className="text-2xl font-bold text-center">{team?.name}</h3>
+                                        <p className="mt-2 text-sm text-center">{team?.text}</p>
                                     </div>
                                 }
                                 displayOverlayContent={true}
                                 overlayContent={
                                     <div className="w-full h-full flex justify-center align-center">
-                                        <img className="bg-blue w-27 border h-27 mt-8" src="/DA.png" alt="DA" />
+                                        <img className="bg-blue w-27 border h-27 mt-8 rounded-md" src={team?.img} alt="Internal Secretariat" />
                                     </div>
                                 }
-                            />
-                            <Card
-                                imageSrc={undefined}
-                                altText=""
-                                containerHeight={"400px"}
-                                containerWidth={"400px"}
-                                cardHeight={"352px"}
-                                cardWidth={"300px"}
-                                scaleOnHover={1.03}
-                                rotateAmplitude={14}
-                                displayCardContent={true}
-                                cardContent={
-                                    <div className="w-full h-full p-6">
-                                        <div className="w-31 bg-blue border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6"></div>
-                                        <h3 className="text-2xl font-bold text-center">Secretary-General</h3>
-                                        <p className="mt-2 text-sm text-center">Whether you're here to challenge yourself or explore something new, I hope this helps you find where you'll shine at KINGMUN 2025.</p>
-                                    </div>
-                                }
-                                displayOverlayContent={true}
-                                overlayContent={
-                                    <div className="w-full h-full flex justify-center align-center">
-                                        <img className="bg-blue w-27 border h-27 mt-8" src="/SG.png" alt="Secretary-General" />
-                                    </div>
-                                }
-                            />
-                            <Card
-                                imageSrc={undefined}
-                                altText=""
-                                containerHeight={"400px"}
-                                containerWidth={"400px"}
-                                cardHeight={"352px"}
-                                cardWidth={"300px"}
-                                scaleOnHover={1.03}
-                                rotateAmplitude={14}
-                                displayCardContent={true}
-                                cardContent={
-                                    <div className="w-full h-full p-6">
-                                        <div className="w-31 bg-blue border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6"></div>
-                                        <h3 className="text-2xl font-bold text-center">Internal Secretariat</h3>
-                                        <p className="mt-2 text-sm text-center">Our team put a lot of thought into designing committees that are engaging, creative, and, most importantly, perfect for you. This tool is our way of guiding you through our various committees!</p>
-                                    </div>
-                                }
-                                displayOverlayContent={true}
-                                overlayContent={
-                                    <div className="w-full h-full flex justify-center align-center">
-                                        <img className="bg-blue w-27 border h-27 mt-8" src="/IS.png" alt="Internal Secretariat" />
-                                    </div>
-                                }
-                            />
+                            />)
+                            }
+                            )}
                         </div>
-                        <div id="disclaimer" className="flex-col mx-5 md:mx-15 max-w-175 my-20 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
+                        <div id="disclaimer" className="flex-col mx-20 md:mx-15 max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
                             <div className="flex">
                                 <svg className="h-6 w-6 text-[#2E4A20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"></path>
@@ -123,16 +81,17 @@ export default function Home() {
                         </div>
                         <Magnet
                             padding={30}
+                            wrapperClassName="mt-20 mb-10"
                         >
                             <Link href="/quiz">
-                                <button className="bg-primary/80 backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary mb-16">Take the Quiz Now!</button>
+                                <button className="bg-primary/80 backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary">Take the Quiz Now!</button>
                             </Link>
                         </Magnet>
                 </div>
             </div>
             <CommitteesSection display={false} />
-            <footer className="absolute min-h-14 max-h-min flex justify-center align-center bottom-0 w-full bg-secondary">
-                <h2 className="text-white text-center my-auto">© 2026 King County Model United Nations. All Rights Reserved.</h2>
+            <footer className=" min-h-14 max-h-min flex justify-center align-center w-full bg-secondary">
+                <h2 className="text-white text-center my-auto">© {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.</h2>
             </footer>
             <style jsx>{`
                 * {
@@ -151,7 +110,7 @@ export default function Home() {
                 }
                 #disclaimer {
                     max-width: 700px;
-                    border-left-width: 8px;
+                    border-left-width: 12px;
                     border-image: linear-gradient(to bottom, #2E4A20, #5b2950) 1;
                 }
                 

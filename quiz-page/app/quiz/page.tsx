@@ -1,148 +1,106 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-// Removed unused Image import
+import { Montserrat } from "next/font/google";
+import committees from "@/public/committees.json";
+import Magnet from "@/components/magneticButton";
+import Link from "next/link";
 
 // --- QUIZ DATA ---
 type Question = {
   text: string;
-  options: { text: string; nextQuestion?: number; result?: string }[];
-  number: number;
-  slider? : boolean;
+  options: { text: string; tags: Array<string>; range?: number }[];
+  slider?: boolean;
+  max?: number;
 };
+
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 const questions: Question[] = [
   {
     text: "How many conferences have you attended?",
     options: [
-      { text: "Beginner", nextQuestion: 1 },
-      { text: "Intermediate", nextQuestion: 4 },
-      { text: "Advanced", nextQuestion: 7 }
+      { text: "Introductory", range: 2, tags: ["UNODC", "UNECA", "UNCLOS"] },
+      { text: "Intermediate", range: 4, tags: ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
+      { text: "Intermediate+", range: 6, tags: ["LoN", "C-3301", "FCC", "TSR"] },
+      { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
     ],
-    number: 1,
-    slider: true
+    slider: true,
+    max: 8,
   },
   {
-    text: "Are you more interested in standard ROP or specialized/creative ROP like Crisis or Cabinet?",
+    text: "How many specialized or crisis committees have you attended?",
     options: [
-      { text: "Standard ROP", nextQuestion: 2 },
-      { text: "Specialized/Crisis ROP", nextQuestion: 3 }
+      { text: "Introductory", range: 0, tags: ["ECC", "NCOG"] },
+      { text: "Intermediate", range: 2, tags: ["C-3301", "FCC"] },
+      { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
     ],
-    number: 2
+    slider: true,
+    max: 5,
   },
   {
-    text: "Do you want your topic to be oriented around global policy issues or regional / thematic topics?",
+    text: "What’s your favorite subject in school?",
     options: [
-      { text: "Global policy", result: "United Nations Office on Drugs and Crime (UNODC)" },
-      { text: "Economics / development focus", result: "United Nations Economic Commission for Africa (UNECA)" }
+      { text: "History", tags: ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
+      { text: "Economics", tags: ["UNECA", "FCC", "NCOG", "UNODC"] },
+      { text: "Math/Science", tags: ["ECC", "C-3301", "UNCLOS"] },
     ],
-    number: 3
   },
   {
-    text: "Are you drawn to current real-world issues or history and region specific topics?",
+    text: "What type of debate style excites you the most?",
     options: [
-      { text: "Environmental / climate focus", result: "Environmental Crisis Committee (ECC)" },
-      { text: "History / regional interest", result: "Newfoundland Commission of Government (NCOG)" }
+      { text: "Formal, structured, clear rules", tags: ["UNODC", "UNECA"] },
+      { text: "Formal with a few twists", tags: ["UNCLOS", "UNPFII", "LoN"] },
+      { text: "Fast paced, crisis-driven", tags: ["ECC", "FCC", "LoI"] },
+      {
+        text: "Cabinet-style",
+        tags: ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"],
+      },
     ],
-    number: 4
   },
   {
-    text: "Do you prefer standard UN structures or more uniquely-structured committees?",
+    text: "If you could time-travel, where would you go?",
     options: [
-      { text: "Standard UN", nextQuestion: 5 },
-      { text: "Unique ROP", nextQuestion: 6 }
+      { text: "Stay in the present day", tags: ["UNODC", "UNECA", "UNPFII", "FCC"] },
+      { text: "20th century", tags: ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
+      { text: "The Ancient World", tags: ["LoI", "TSR"] },
+      { text: "The Future", tags: ["ECC", "UNCLOS"] },
     ],
-    number: 6
-  },
-  {
-    text: "Are you more interested in law / maritime themes or social / cultural issues?",
-    options: [
-      { text: "Law / sea governance", result: "United Nations Convention on the Law of the Sea (UNCLOS)" },
-      { text: "Cultural / indigenous focus", result: "United Nations Permanent Forum on Indigenous Issues (UNPFII)" }
-    ],
-    number: 7
-  },
-  {
-    text: "Are you more drawn to economics/finance topics or fiction and espionage themes?",
-    options: [
-      { text: "Finance & markets focus", result: "Financial Crisis Committee (FCC)" },
-      { text: "Cryptography / fiction", result: "Cicada 3301 (C-3301)" }
-    ],
-    number: 8
-  },
-  {
-    text: "Do you want a committee with a strong historical basis or creative / crisis style?",
-    options: [
-      { text: "Historical", nextQuestion: 8 },
-      { text: "Creative / crisis", nextQuestion: 9 }
-    ],
-    number: 10
-  },
-  {
-    text: "Which historical angle appeals to you?",
-    options: [
-      { text: "Classical international interwar diplomacy", result: "League of Nations (LoN)" },
-      { text: "Structured government / leadership roles", result: "Historical Cabinet" },
-      { text: "[REDACTED]", result: "AD-HOC [REDACTED]" }
-    ],
-    number: 11
-  },
-  {
-    text: "Are you interested in mythology and broad cultural research or trade and historical connections?",
-    options: [
-      { text: "Mythic / cross-culture crisis", result: "League of Immortals (LOI)" },
-      { text: "Trade history / cross-period narrative", result: "The Silk Road (TSR)" }
-    ],
-    number: 12
   },
 ];
 
-const committeeMatches: Record<number, string> = {
-  1: "United Nations Office on Drugs and Crime (UNODC)",
-  2: "United Nations Convention on the Law of the Sea (UNCLOS)",
-  3: "League of Nations (LoN)",
-  4: "United Nations Economic Commission for Africa (UNECA)",
-  5: "United Nations Permanent Forum on Indigenous Issues (UNPFII)",
-  6: "The Silk Road (TSR)",
-  7: "Newfoundland Commission of Government (NCOG)",
-  8: "Cicada 3301 (C-3301)",
-  9: "AD-HOC [REDACTED]",
-  10: "Environmental Crisis Committee (ECC)",
-  11: "Financial Crisis Committee (FCC)",
-  12: "League of Immortals (LOI)",
-  13: "Historical Cabinet",
-};
-
-const committeeDescriptions: Record<string, string> = {
-  "United Nations Office on Drugs and Crime (UNODC)": "1Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "United Nations Convention on the Law of the Sea (UNCLOS)" : "2Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "League of Nations (LoN)" : "3Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "United Nations Economic Commission for Africa (UNECA)" : "This ECOSOC committee focuses on economic development issues in Africa, addressing economic and regional issues. UNECA is perfect for beginner delegates interested in geopolitics and development.",
-  "United Nations Permanent Forum on Indigenous Issues (UNPFII)" : "This committee centers around indigenous issues globally, discussing cultural preservation and rights. UNPFII suits delegates passionate about indigenous advocacy and are open to a standard ROP with a few specialized motions.",
-  "The Silk Road (TSR)" : "Explore the trade routes from East to West that connected the ancient world in this historical committee. TSR is ideal for delegates who want to explore the rich history of trade and cultural exchange, and who are open to a specialized ROP.",
-  "Newfoundland Commission of Government (NCOG)" : "7Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "Cicada 3301 (C-3301)" : "8Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "AD-HOC [REDACTED]" : "This committee's topic will be revealed on conference day and it best for advanced delegates. Prepare for an exciting and secretive experience!",
-  "Environmental Crisis Committee (ECC)" : "10Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "Financial Crisis Committee (FCC)" : "11Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "League of Immortals (LOI)" : "12Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-  "Historical Cabinet": "13Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
-};
-
+const indexing = [
+  "UNODC",
+  "UNCLOS",
+  "LoN",
+  "UNECA",
+  "UNPFII",
+  "TSR",
+  "NCOG",
+  "C-3301",
+  "AD-HOC",
+  "H-CAB",
+  "ECC",
+  "FCC",
+  "LoI",
+];
 
 export default function CommitteeQuizPage() {
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
-  const [result, setResult] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
-  const [questionNumber, setQuestionNumber] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>(
+    Array(questions.length).fill(null)
+  );
+  const [sliderValues, setSliderValues] = useState<Array<number>>(
+    Array(questions.length).fill(0)
+  );
+  const [results, setResults] = useState<
+    { idx: number; name: string; percentage: number }[] | null
+  >(null);
+  const [questionNumber, setQuestionNumber] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sliderDisplay = useRef<HTMLParagraphElement>(null);
-  const sliderInput = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-    if (!result) return;
-
+  // confetti effect when results appear
+  useEffect(() => {
+    if (!results) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -178,13 +136,12 @@ export default function CommitteeQuizPage() {
         vy: random(2, 5),
         color: colors[Math.floor(Math.random() * colors.length)],
         size: random(3, 6),
-        opacity: Math.random(),
-        emoji: isEmoji ? (Math.random() < 0.5 ? "👑" : "🎉") : undefined, // Randomly choose between crown and another emoji
+        opacity: 1-Math.random()*0.05,
+        emoji: isEmoji ? (Math.random() < 0.5 ? "👑" : "🎉") : undefined,
       });
     }
 
     let animationFrameId: number;
-
     function draw() {
       if (!canvas || !ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -197,11 +154,9 @@ export default function CommitteeQuizPage() {
           ctx.fillStyle = p.color;
           ctx.fillRect(p.x, p.y, p.size, p.size * 2);
         }
-
         p.x += p.vx;
         p.y += p.vy;
-        p.opacity -= 0.005;
-
+        p.opacity -= 0.0005;
         if (p.y > canvas.height || p.opacity <= 0) {
           p.x = random(0, canvas.width);
           p.y = random(-canvas.height, -20);
@@ -210,179 +165,297 @@ export default function CommitteeQuizPage() {
       });
       animationFrameId = requestAnimationFrame(draw);
     }
-    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {draw()}
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) draw();
 
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [result]);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [results]);
 
-  const handleSelect = (option: { text: string; nextQuestion?: number; result?: string }) => {
-    if (option.result) {
-      setResult(option.result);
-    } else if (option.nextQuestion !== undefined) {
-      setCurrent(option.nextQuestion);
-      setQuestionNumber(questions[option.nextQuestion].number);
+  // — HANDLERS —
+  const handleOptionSelect = (qIdx: number, optIdx: number) => {
+    const newSelections = [...selectedOptions];
+    newSelections[qIdx] = optIdx;
+    setSelectedOptions(newSelections);
+  };
+
+  const handleSliderChange = (qIdx: number, value: number) => {
+    const newSliderVals = [...sliderValues];
+    newSliderVals[qIdx] = value;
+    setSliderValues(newSliderVals);
+
+    const newSelections = [...selectedOptions];
+    newSelections[qIdx] = value;
+    setSelectedOptions(newSelections);
+  };
+
+  const goToNextQuestion = () => {
+    if (questionNumber + 1 < questions.length) {
+      setQuestionNumber(questionNumber + 1);
+    } else {
+      calculateResults();
     }
   };
 
-  const progressPercent = ((questionNumber - 1) / 12) * 100;
+  const goToPreviousQuestion = () => {
+    if (questionNumber > 0) setQuestionNumber(questionNumber - 1);
+  };
+
+  const calculateResults = () => {
+    const tally = Array(indexing.length).fill(0);
+    // max possible = number of questions (each can give +1 per committee)
+    const maxPossible = questions.length;
+
+    selectedOptions.forEach((sel, idx) => {
+      const question = questions[idx];
+      if (question.slider && sel !== null) {
+        question.options.forEach((opt) => {
+          if (opt.range !== undefined && (sel as number) <= opt.range) {
+            opt.tags.forEach((tag) => {
+              const tid = indexing.indexOf(tag);
+              if (tid !== -1) tally[tid]++;
+            });
+          }
+        });
+      } else if (sel !== null) {
+        question.options[sel].tags.forEach((tag) => {
+          const tid = indexing.indexOf(tag);
+          if (tid !== -1) tally[tid]++;
+        });
+      }
+    });
+
+    // sort committees descending by score
+    const sorted = [...tally]
+      .map((score, idx) => ({ idx, score }))
+      .sort((a, b) => b.score - a.score);
+
+    const topThree = sorted.slice(0, 3).map(({ idx, score }) => ({
+      idx,
+      name: committees[idx].name,
+      percentage: Math.round((score / maxPossible) * 100),
+    }));
+
+    setResults(topThree);
+    localStorage.setItem("quizResults", JSON.stringify(topThree))
+    window.location.href= "./results";
+  };
+
+  const progressPercent = (questionNumber / questions.length) * 100;
+
 
   return (
-    <div className="relative flex flex-col items-center min-h-screen bg-linear-to-br from-[#2E4A20] to-purple-800 p-6">
-      {result && (
-        <canvas
-          ref={canvasRef}
-          className="pointer-events-none fixed inset-0"
-        />
-      )}
+    <div className="relative flex flex-col items-center min-h-screen">
+      {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+      <nav className="h-16 flex justify-center align-center w-full bg-primary" >
+          <div className="hidden md:block" id="LOGO"></div> 
+          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+      </nav>
 
-      <h1 className="relative text-5xl font-bold text-white text-center mb-2 drop-shadow-lg flex flex-wrap items-center justify-center">
-        <div id="LOGO"></div>
-        <p>KINGMUN Committee Quiz</p>
-      </h1>
-      <p className="relative text-purple-200 text-center mb-8">Find your perfect committee match</p>
-
-      {!started? (
-        <div className="result-card fade-in relative bg-white/10 backdrop-blur-md rounded-2xl p-12 shadow-2xl text-center border border-white/20 max-w-lg">
-          <div className="text-6xl mb-4 left-[42%]" id="LOGO"></div>
-          <h2 className="text-4xl font-bold text-white">KINGMUN 2026 Committees Quiz</h2>
-          <p className="text-xl font-smibold text-white my-8">
-            Find the perfect KINGMUN committee for you!
-          </p>
-          <div className="my-8 h-1 w-28 bg-linear-to-r from-blue-400 to-purple-500 rounded-full mx-auto"></div>
-          <button
-            onClick={() => {
-              setStarted(true);
-            }}
-            className="btn-retry"
-          >
-            Start Quiz
-          </button>
-        </div>
-      ) : 
-      (!result ? (
-        <div className="relative w-full max-w-5xl">
+      {!results ? (
+        <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-purple-200">
-                Question {questionNumber}
-              </span>
-              <span className="text-sm font-semibold text-purple-200">
-                {Math.round(progressPercent)}%
-              </span>
+              <span className="text-sm font-semibold text-white">Question {questionNumber + 1}</span>
+              <span className="text-sm font-semibold text-white">{Math.round(progressPercent)}%</span>
             </div>
             <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full transition-all duration-500"
+                className="h-full bg-linear-to-r from-primary to-secondary rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               ></div>
             </div>
           </div>
 
-          <div className="card fade-in bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-            <p className="text-2xl font-bold text-white mb-6">
-              {questions[current].text}
+          <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+            <p className="text-xl md:text-2xl font-bold text-primary mb-6">
+              {questions[questionNumber].text}
             </p>
 
-            <div className={`grid grid-cols-1 ${questions[current] && questions[current].slider? "" : "md:grid-cols-2"} gap-4`}>
-              {questions[current] && questions[current].slider? (
-                <div className="flex flex-row flex-wrap items-center max-md:flex-col my-10">
-                    <div className="flex flex-col flex-grow md:mr-6 max-md:w-full">
-                    <p 
-                      ref = {sliderDisplay}
-                      className="mt-2 mb-8 text-center text-xl font-bold text-white"
-                    >4 conferences</p>
-                    <input
-                      ref={sliderInput}
-                      type="range"
-                      min="0"
-                      max="8"
-                      step="1"
-                      className="w-full accent-purple-500 mr-5 mb-5 slider-gradient"
-                      onChange={(e) => sliderDisplay.current && (sliderDisplay.current.textContent = (e.target.value == e.target.max)? "8+ conferences": e.target.value + ` conference${e.target.value == "1"? "": "s"}`)}
-                    />
-                    </div>
+            {/* --- Slider Question Block --- */}
+            {questions[questionNumber].slider ? (
+              <div className="flex flex-col items-center mt-10 gap-10 h-full">
+                <p className="md:mt-8 mb-8 text-lg font-bold text-secondary">
+                  {sliderValues[questionNumber] < questions[questionNumber].max!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
+                </p>
+                <input
+                  type="range"
+                  min={0}
+                  max={questions[questionNumber].max!.toString()}
+                  value={sliderValues[questionNumber]}
+                  onChange={(e) =>
+                    handleSliderChange(questionNumber, parseInt(e.target.value))
+                  }
+                  className="w-full accent-secondary slider-gradient md:mb-8"
+                />
+
+                <div className="relative md:mt-8 mb-2 flex justify-between w-full px-10">
                   <button
-                    onClick={() => {
-                      const number = sliderInput.current ? parseInt(sliderInput.current.value) : 4;
-                      if (number <= 3) {
-                        var nextQ = 1;
-                      } else if (number <= 6) {
-                        var nextQ = 4;
-                      } else {
-                        var nextQ = 7;
-                      }
-                      handleSelect({ text: "", nextQuestion: nextQ });
-                    }}
-                    className="btn-retry group max-h-10 max-md:mt-10 md:max-h-72 w-full md:max-w-min flex flex-col items-center justify-center mt-auto"
+                    onClick={goToPreviousQuestion}
+                    disabled={questionNumber <= 0}
+                    className="btn-retry text-gray-500 shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center"
                   >
-                    Next
+                    <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                      <g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                      <g id="SVGRepo_iconCarrier"><title>ionicons-v5-a</title>
+                        <polyline style={{fill: "none", stroke: "#6a7282", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "48px"}} points="328 112 184 256 328 400" ></polyline>
+                      </g>
+                    </svg>
+                  </button>
+                  <button
+                    onClick={goToNextQuestion}
+                    disabled={selectedOptions[questionNumber] === null}
+                    className={`btn-retry ${questionNumber == questions.length - 1? "bg-primary text-white" : "text-gray-500"}  shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
+                  >
+                    {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform="rotate(180)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><title>ionicons-v5-a</title><polyline points="328 112 184 256 328 400" style={{fill: "none", stroke: "#6a7282", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "48px"}}></polyline></g></svg>}
                   </button>
                 </div>
-              ) : (
-                questions[current].options.map((opt, idx) => (
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-4">
+                  {questions[questionNumber].options.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleOptionSelect(questionNumber, idx)}
+                      className={`max-md:text-sm btn-option p-3 md:p-5 ${
+                        selectedOptions[questionNumber] === idx ? "selected" : ""
+                      }`}
+                    >
+                      {opt.text}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative mt-8 mb-2 flex justify-between w-full px-10">
                   <button
-                    key={idx}
-                    onClick={() => handleSelect(opt)}
-                    className="btn-option group min-h-40 md:min-h-72 flex flex-col items-center justify-center"
+                    onClick={goToPreviousQuestion}
+                    disabled={questionNumber <= 0}
+                    className="max-md:text-sm btn-retry text-gray-500 shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center"
                   >
-                    <span className="relative z-10 text-lg">{opt.text}</span>
+                    <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                      <g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                      <g id="SVGRepo_iconCarrier"><title>ionicons-v5-a</title>
+                        <polyline style={{fill: "none", stroke: "#6a7282", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "48px"}} points="328 112 184 256 328 400" ></polyline>
+                      </g>
+                    </svg>
                   </button>
-              )))
-              }
-            </div>
+                  <button
+                    onClick={goToNextQuestion}
+                    disabled={selectedOptions[questionNumber] === null}
+                    className={`max-md:text-sm btn-retry ${questionNumber == questions.length - 1 && selectedOptions[questionNumber] !== null? "bg-primary text-white" : "text-gray-500"} shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
+                  >
+                    {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform="rotate(180)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><title>ionicons-v5-a</title><polyline points="328 112 184 256 328 400" style={{fill: "none", stroke: "#6a7282", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "48px"}}></polyline></g></svg>}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        ) : (
-          <div className="result-card fade-in relative bg-white/10 backdrop-blur-md rounded-2xl p-12 shadow-2xl text-center border border-white/20 max-w-lg">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-4xl font-bold text-white mb-2">You're Matched With:</h2>
-            <div className="my-8 h-1 w-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mx-auto"></div>
-            <p className="text-3xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent mb-8">
-              <span className={result == "AD-HOC [REDACTED]"? "text-black bg-black" : ""}>{result}</span>
-            </p>
-            <p className="my-8"> <span className={result == "AD-HOC [REDACTED]"? "text-black bg-black" : ""}>{committeeDescriptions[result]}</span></p>
+      ) : (
+        <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-4xl font-bold text-white mb-6">Top Committee Matches</h2>
+
+          {results.map((r, i) => (
+            <div key={i} className="mb-4 w-full bg-white px-10 pb-10 py-5 rounded-2xl">
+              <div className="flex justify-between pb-2 align-middle w-full">
+                <div
+                  className="relative h-5 bg-linear-to-r from-primary to-secondary rounded-full transition-all duration-500"
+                  style={{ width: `${r.percentage}%` }}
+                ><p className={`text-sm right-4 text-white font-bold absolute`}>{r.percentage}% match</p></div>
+                
+            </div>
+            <div className="flex gap-10 max-md:flex-col">
+              <img
+                className="bg-blue-50 m-3 mb-0 aspect-square min-w-40 md:min-w-70 max-md:mx-auto"
+                // src={`https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/0e1764c52a619ffa2c1a5839cfc459053b3e4c935da8744a659f918849f5aa99/${committees[r.idx].acronym.replaceAll("-", "")}%20committee%20photo.jpeg`}
+
+                alt={committees[r.idx].acronym}
+              />
+
+              <div>
+                <p className="text-left text-2xl font-bold text-primary my-2">
+                  {r.name}
+                </p>
+                <p className="text-start text-gray-600">{committees[r.idx].description}</p>
+                <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committees[r.idx].difficulty == "Advanced"? 'text-red-600 bg-red-100' : committees[r.idx].difficulty == "Intermediate"? "text-yellow-600 bg-yellow-100" : "text-green-600 bg-green-100"}`}>{committees[r.idx].difficulty} </p>
+                <p className="text-start font-bold mt-5">Topics: </p>
+                <div className="my-2 flex max-w-min gap-3">
+                  {committees[r.idx].topics.map((topic) => {
+                    return (
+                    <p className="rounded-full py-1 px-3 bg-gray-200">
+                      {topic}
+                    </p>)
+                  })}
+    
+                </div>
+                <Link target={"_blank"} href={`https://kingmun.org/committees/${committees[r.idx].acronym}`}>
+                  <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-primary hover:bg-secondary">
+                    <p className="text-white font-bold text-sm">Learn More</p>
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            </div>
+          ))}
+
+
+          <Magnet
+            padding={30}
+            wrapperClassName="p-10"
+          >
             <button
               onClick={() => {
-                setCurrent(0);
-                setAnswers([]);
-                setResult(null);
-                setQuestionNumber(1);
+                setSelectedOptions(Array(questions.length).fill(null));
+                setSliderValues(Array(questions.length).fill(0));
+                setResults(null);
+                setQuestionNumber(0);
               }}
-              className="btn-retry"
+              className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
             >
               Try Again
             </button>
-          </div>
-        ))}
+          </Magnet>
+        </div>
+      )}
+
+        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-secondary">
+          <h2 className="text-white text-center my-auto">
+            © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
+          </h2>
+        </footer>
 
       <style jsx>{`
-        #LOGO{
-          top:-10%;
-          position: relative;
-          margin-right: 18px;
-          width: 60px;
-          height: 60px;
-          background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center;
-          background-size: contain;
+        * {
+          font-family: ${montserrat.style.fontFamily};
+          box-sizing: border-box;
         }
+        h1 {
+            font-weight: 700;
+        }
+        #LOGO{
+            position: relative;
+            width: 45px;
+            height: auto;
+            background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center;
+            background-size: contain;
+        }
+        #disclaimer {
+            max-width: 700px;
+            border-left-width: 12px;
+            border-image: linear-gradient(to bottom, #2E4A20, #5b2950) 1;
+        }
+          
         .btn-option {
           width: 100%;
-          padding: 16px;
+          flex: 1;
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-          border: 2px solid rgba(255, 255, 255, 0.3);
+          border: 2px solid rgba(100, 100, 100, 0.3);
           border-radius: 12px;
-          font-weight: 600;
-          color: white;
+          // font-weight: 600;
+          color: black;
           transition: all 0.3s ease;
-          backdrop-filter: blur(10px);
           position: relative;
           overflow: hidden;
         }
@@ -401,24 +474,30 @@ export default function CommitteeQuizPage() {
         }
         .btn-option:hover {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: rgba(255, 255, 255, 0.5);
+          border-color: var(--color-primary);
+          border-thickness: 5px;
           transform: translateY(-2px);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
-        .btn-retry {
+        .btn-option.selected {
+          border-color: var(--color-primary);
+          border-thickness: 5px;
+          background: #f3fcf2;
+        }
+        .btn-retry:enabled {
           padding: 14px 32px;
-          background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
-          color: white;
           border-radius: 10px;
           font-weight: bold;
           border: none;
           cursor: pointer;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
         }
-        .btn-retry:hover {
+        .btn-retry:disabled {
+          opacity: 0;
+        }
+        .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-primary) 50%, transparent);
         }
         .fade-in {
           animation: fadeIn 0.6s ease-out forwards;
@@ -432,26 +511,6 @@ export default function CommitteeQuizPage() {
             opacity: 1;
             transform: translateY(0);
           }
-        }
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(50px, -80px) scale(1.1);
-          }
-          66% {
-            transform: translate(-30px, 30px) scale(0.9);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
         }
       `}</style>
     </div>

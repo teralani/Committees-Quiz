@@ -1,0 +1,24 @@
+[
+    {
+        "name": "Home",
+        "DA": {
+            "name": "Delegate Affairs",
+            "img": "da.png",
+            "text": "We know that choosing the right committee can be overwhelming, so we created this quiz to make it easier and even a little fun! We can't wait to see you thrive in committee at KINGMUN 2025 experience!"
+        },
+        "SG": {
+            "name": "Secretary-General",
+            "img": "sg.png",
+            "text": "Whether you're here to challenge yourself or explore something new, I hope this helps you find where you'll shine at KINGMUN 2025."
+        },
+        "IS": {
+            "name": "Internal Secretariat",
+            "img": "is.png",
+            "text": "Our team put a lot of thought into designing committees that are engaging, creative, and, most importantly, perfect for you. This tool is our way of guiding you through our various committees!"
+        }
+    },
+    {
+        "name": "Quiz",
+        "content": "This is the Quiz page."
+    }
+]
