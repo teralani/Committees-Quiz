@@ -57,7 +57,7 @@ export default function CommitteeQuizPage() {
         vy: random(2, 5),
         color: colors[Math.floor(Math.random() * colors.length)],
         size: random(3, 6),
-        opacity: 1-Math.random()*0.05,
+        opacity: Math.random(),
         emoji: isEmoji ? (Math.random() < 0.5 ? "👑" : "🎉") : undefined,
       });
     }
@@ -75,8 +75,8 @@ export default function CommitteeQuizPage() {
           ctx.fillStyle = p.color;
           ctx.fillRect(p.x, p.y, p.size, p.size * 2);
         }
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += 1.2*p.vx;
+        p.y += 1.2*p.vy;
         p.opacity -= 0.0005;
         if (p.y > canvas.height || p.opacity <= 0) {
           p.x = random(0, canvas.width);
