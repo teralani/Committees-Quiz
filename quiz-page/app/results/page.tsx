@@ -4,98 +4,141 @@ import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
 import Magnet from "@/components/magneticButton";
 import Link from "next/link";
-import { canvas } from "motion/react-client";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 
 export default function CommitteeQuizPage() {
-  const [results, setResults] = useState<
-    { idx: number; name: string; percentage: number }[] | null
-  >(null);
+    const [results, setResults] = useState<{ idx: number; name: string; percentage: number }[] | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("quizResults");
-    if(stored) {
-        setResults(JSON.parse(stored))
-    }
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    type Particle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      color: string;
-      size: number;
-      opacity: number;
-      emoji?: string;
-    };
-
-    const colors = ["#F59E0B", "#EF4444", "#10B981", "#3B82F6", "#A855F7"];
-    const particles: Particle[] = [];
-
-    function random(min: number, max: number) {
-      return Math.random() * (max - min) + min;
-    }
-
-    for (let i = 0; i < 200; i++) {
-      const isEmoji = Math.random() < 0.3;
-      particles.push({
-        x: random(0, canvas.width),
-        y: random(-canvas.height, 0),
-        vx: random(-1.5, 1.5),
-        vy: random(2, 5),
-        color: colors[Math.floor(Math.random() * colors.length)],
-        size: random(3, 6),
-        opacity: Math.random(),
-        emoji: isEmoji ? (Math.random() < 0.5 ? "👑" : "🎉") : undefined,
-      });
-    }
-
-    let animationFrameId: number;
-    function draw() {
-      if (!canvas || !ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
-        ctx.globalAlpha = p.opacity;
-        if (p.emoji) {
-          ctx.font = `${p.size * 5}px Arial`;
-          ctx.fillText(p.emoji, p.x, p.y);
-        } else {
-          ctx.fillStyle = p.color;
-          ctx.fillRect(p.x, p.y, p.size, p.size * 2);
+    useEffect(() => {
+        const stored = localStorage.getItem("quizResults")
+        if (stored) {
+            setResults(JSON.parse(stored))
         }
-        p.x += 1.2*p.vx;
-        p.y += 1.2*p.vy;
-        p.opacity -= 0.0005;
-        if (p.y > canvas.height || p.opacity <= 0) {
-          p.x = random(0, canvas.width);
-          p.y = random(-canvas.height, -20);
-          p.opacity = 1;
-        }
-      });
-      animationFrameId = requestAnimationFrame(draw);
-    }
-    
-    draw();
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
+        const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // Set canvas dimensions
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = document.documentElement.scrollHeight;
+            const mp = isMobile? 80 : 200; // max particle count
+        })
+
+        canvas.width = window.innerWidth;
+        canvas.height = document.documentElement.scrollHeight;
+
+        type Particle = {
+            x: number;
+            y: number;
+            r: number;
+            d: number;
+            color: string;
+            tilt: number;
+            tiltAngleIncrement: number;
+            tiltAngle: number;
+            emoji?: string;
+        };
+
+        const colors = [
+            "DodgerBlue", "OliveDrab", "Gold", "pink", "SlateBlue",
+            "lightblue", "Violet", "PaleGreen", "SteelBlue",
+            "SandyBrown", "Chocolate", "Crimson"
+        ];
+
+        const particles: Particle[] = [];
+        const mp = isMobile? 80 : 200; // max particle count
+
+        function random(min: number, max: number) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Initialize particles
+        for (let i = 0; i < mp; i++) {
+            particles.push({
+            x: random(0, canvas.width),
+            y: random(-canvas.height, 0),
+            r: random(10, 30),
+            d: random(10, mp),
+            color: colors[i % colors.length],
+            tilt: random(-10, 10),
+            tiltAngleIncrement: random(0.05, 0.12),
+            tiltAngle: 0,
+            emoji: Math.random() < 0.25
+                ? (Math.random() < 0.5 ? "🎉" : "👑")
+                : undefined,
+            });
+        }
+
+        let angle = 0;
+        let animationFrameId: number;
+
+        function draw() {
+            if(!ctx || !canvas) {return}
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((p, idx) => {
+            // update tilt angle
+            p.tiltAngle += p.tiltAngleIncrement;
+
+            // update tilt (bending/rotation)
+            p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
+
+            // Draw either emoji or line confetti
+            if (p.emoji) {
+                // draw an emoji centered at particle
+                ctx.font = `${p.r * 0.7}px serif`;
+                ctx.fillText(p.emoji, p.x + p.tilt, p.y);
+            } else {
+                ctx.beginPath();
+                ctx.lineWidth = p.r / 2;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + (p.r / 4), p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + (p.r / 4));
+                ctx.stroke();
+            }
+
+            // update physics
+            p.y += (Math.cos(angle + p.d) + 2 + p.r / 2) / 3;
+            p.x += Math.sin(angle);
+
+            // reposition when off-screen
+            if (p.x > canvas.width + 20 || p.x < -20 || p.y > canvas.height) {
+                if (idx % 5 > 0 || idx % 2 === 0) {
+                p.x = Math.random() * canvas.width;
+                p.y = -10;
+                } else {
+                if (Math.sin(angle) > 0) {
+                    p.x = -20;
+                    p.y = Math.random() * canvas.height;
+                } else {
+                    p.x = canvas.width + 20;
+                    p.y = Math.random() * canvas.height;
+                }
+                }
+            }
+            });
+
+            angle += 0.01; // global drift
+
+            animationFrameId = requestAnimationFrame(draw);
+        }
+
+        draw();
+
+        return () => cancelAnimationFrame(animationFrameId);
+    }, []);
 
   
     const clearResults = () => {
-    localStorage.removeItem("quizResults");
-    window.location.href = "/";
+        localStorage.removeItem("quizResults");
+        window.location.href = "/";
     };
 
   return (
@@ -137,9 +180,9 @@ export default function CommitteeQuizPage() {
                 <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committees[r.idx].difficulty == "Advanced"? 'text-red-600 bg-red-100' : committees[r.idx].difficulty == "Intermediate"? "text-yellow-600 bg-yellow-100" : "text-green-600 bg-green-100"}`}>{committees[r.idx].difficulty} </p>
                 <p className="text-start font-bold mt-5">Topics: </p>
                 <div className="my-2 flex max-w-min gap-3">
-                  {committees[r.idx].topics.map((topic) => {
+                  {committees[r.idx].topics.map((topic, idx) => {
                     return (
-                    <p className="rounded-full py-1 px-3 bg-gray-200">
+                    <p key={idx} className="rounded-full py-1 px-3 bg-gray-200">
                       {topic}
                     </p>)
                   })}
@@ -161,7 +204,7 @@ export default function CommitteeQuizPage() {
             padding={30}
             wrapperClassName="p-10"
           >
-            <Link href={"./quiz"}>
+            <Link href={"/quiz"}>
                 <button
                     onClick={clearResults}
                     className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
@@ -197,44 +240,6 @@ export default function CommitteeQuizPage() {
             max-width: 700px;
             border-left-width: 12px;
             border-image: linear-gradient(to bottom, #2E4A20, #5b2950) 1;
-        }
-          
-        .btn-option {
-          width: 100%;
-          flex: 1;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-          border: 2px solid rgba(100, 100, 100, 0.3);
-          border-radius: 12px;
-          // font-weight: 600;
-          color: black;
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-        .btn-option::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transition: left 0.5s;
-        }
-        .btn-option:hover::before {
-          left: 100%;
-        }
-        .btn-option:hover {
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: var(--color-primary);
-          border-thickness: 5px;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-        .btn-option.selected {
-          border-color: var(--color-primary);
-          border-thickness: 5px;
-          background: #f3fcf2;
         }
         .btn-retry:enabled {
           padding: 14px 32px;
