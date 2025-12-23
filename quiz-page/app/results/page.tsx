@@ -18,7 +18,7 @@ export default function CommitteeQuizPage() {
             setResults(JSON.parse(stored))
         }
 
-        const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches
+        var isMobile = window.matchMedia("only screen and (max-width: 760px)").matches
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
@@ -27,12 +27,11 @@ export default function CommitteeQuizPage() {
         // Set canvas dimensions
         window.addEventListener("resize", () => {
             canvas.width = window.innerWidth;
-            canvas.height = document.documentElement.scrollHeight;
-            const mp = isMobile? 80 : 200; // max particle count
+            canvas.height = window.innerHeight;
         })
 
         canvas.width = window.innerWidth;
-        canvas.height = document.documentElement.scrollHeight;
+        canvas.height = window.innerHeight;
 
         type Particle = {
             x: number;
@@ -143,12 +142,12 @@ export default function CommitteeQuizPage() {
 
   return (
     <div className="relative flex flex-col items-center min-h-screen">
-      {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
+        {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
 
-      <nav className="h-16 flex justify-center align-center w-full bg-primary" >
-          <div className="hidden md:block" id="LOGO"></div> 
-          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
-      </nav>
+        <nav className="h-20 md:h-16 flex justify-center align-center w-full bg-primary" >
+            <div className="hidden md:block" id="LOGO"></div> 
+            <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+        </nav>
 
 
         <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">
@@ -188,7 +187,7 @@ export default function CommitteeQuizPage() {
                   })}
     
                 </div>
-                <Link href={`https://kingmun.org/committees/${committees[r.idx].acronym}`} target="_blank">
+                <Link href={`https://kingmun.org/committees/${committees[r.idx].acronym.replace("-", "").toLowerCase()}`} target="_blank">
                   <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-primary hover:bg-secondary">
                     <p className="text-white font-bold text-sm">Learn More</p>
                   </button>
@@ -198,8 +197,6 @@ export default function CommitteeQuizPage() {
 
             </div>
           ))}
-
-
           <Magnet
             padding={30}
             wrapperClassName="p-10"
@@ -213,9 +210,23 @@ export default function CommitteeQuizPage() {
                 </button>
             </Link>
           </Magnet>
+            <div id="disclaimer" className="flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
+                <div className="flex">
+                    <svg className="h-6 w-6 text-[#2E4A20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"></path>
+                </svg>
+                <h1 className="text-primary font-bold text-xl mb-2">Disclaimer & Contact</h1>
+                </div>
+                
+                <p className="text-sm text-primary mb-3">
+                    Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
+                </p>
+                <p className="text-sm text-primary">For questions, feedback, or further guidance, contact us at <a className="text-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
+            </div>
         </div>
 
-        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-secondary">
+
+        <footer className="absolute bottom-0 min-h-16 md:min-h-14 flex justify-center w-full bg-secondary">
           <h2 className="text-white text-center my-auto">
             © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
           </h2>
