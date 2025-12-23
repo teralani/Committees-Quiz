@@ -98,27 +98,6 @@ export default function CommitteeQuizPage() {
     window.location.href = "/";
     };
 
-
-    if (!results) {
-    return (
-        <div className="text-center p-8">
-        <h2 className="text-xl">No results found.</h2>
-                  <Magnet
-            padding={30}
-            wrapperClassName="p-10"
-          >
-            <Link href={"./quiz"}>
-                <button
-                    className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
-                    >
-                    Try Again
-                </button>
-            </Link>
-          </Magnet>
-        </div>
-    );
-    }
-
   return (
     <div className="relative flex flex-col items-center min-h-screen">
       {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
@@ -133,7 +112,7 @@ export default function CommitteeQuizPage() {
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-4xl font-bold text-white mb-6">Top Committee Matches</h2>
 
-          {results.map((r, i) => (
+          {results && results.map((r, i) => (
             <div key={i} className="mb-4 w-full bg-white px-10 pb-10 py-5 rounded-2xl">
               <div className="flex justify-between pb-2 align-middle w-full">
                 <div
@@ -150,7 +129,7 @@ export default function CommitteeQuizPage() {
                 alt={committees[r.idx].acronym}
               />
 
-              <div>
+              <div className="w-full">
                 <p className="text-left text-2xl font-bold text-primary my-2">
                   {r.name}
                 </p>
@@ -166,7 +145,7 @@ export default function CommitteeQuizPage() {
                   })}
     
                 </div>
-                <Link target={"_blank"} href={`https://kingmun.org/committees/${committees[r.idx].acronym}`} onClick={clearResults}>
+                <Link href={`https://kingmun.org/committees/${committees[r.idx].acronym}`} target="_blank">
                   <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-primary hover:bg-secondary">
                     <p className="text-white font-bold text-sm">Learn More</p>
                   </button>
@@ -184,6 +163,7 @@ export default function CommitteeQuizPage() {
           >
             <Link href={"./quiz"}>
                 <button
+                    onClick={clearResults}
                     className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
                     >
                     Try Again
