@@ -181,7 +181,7 @@ export default function CommitteeQuizPage() {
                   {r.name}
                 </p>
                 <p className="md:text-sm lg:text-md  text-start text-gray-600">{committees[r.idx].description}</p>
-                <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committees[r.idx].difficulty == "Advanced"? 'text-red-600 bg-red-100' : committees[r.idx].difficulty == "Intermediate"? "text-yellow-600 bg-yellow-100" : "text-green-600 bg-green-100"}`}>{committees[r.idx].difficulty} </p>
+                <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committees[r.idx].difficulty == "Advanced"? 'text-red-600 bg-red-100' : committees[r.idx].difficulty == "Intermediate"? "text-amber-600 bg-amber-100" : "text-green-700 bg-green-100"}`}>{committees[r.idx].difficulty} </p>
                 <p className="text-start font-bold mt-5">Topics: </p>
                 <div className="my-2 flex max-w-min gap-3">
                   {committees[r.idx].topics.map((topic, idx) => {
@@ -193,7 +193,7 @@ export default function CommitteeQuizPage() {
     
                 </div>
                 <Link href={`https://kingmun.org/committees/${committees[r.idx].acronym.replace("-", "").toLowerCase()}`} target="_blank">
-                  <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-primary hover:bg-secondary">
+                  <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-primary hover:bg-secondary hover:-translate-y-0.5 transition">
                     <p className="text-white font-bold text-sm">Learn more about {committees[r.idx].acronym}</p>
                   </button>
                 </Link>
@@ -206,7 +206,9 @@ export default function CommitteeQuizPage() {
             padding={30}
             wrapperClassName="p-10"
           >
-            <Link href={"/quiz"}>
+            <Link href={{
+                pathname: '/quiz'
+            }}>
                 <button
                     onClick={clearResults}
                     className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
