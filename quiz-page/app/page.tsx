@@ -50,8 +50,8 @@ export default function Home() {
                                 rotateAmplitude={14}
                                 displayCardContent={true}
                                 cardContent={
-                                    <div className="w-full h-full p-6">
-                                        <div className="w-31 bg-blue border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6 rounded-lg"></div>
+                                    <div className="hover-card w-full h-full p-6">
+                                        <div className="hover-border w-31 hover:bg-amber-400 border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6 rounded-lg"></div>
                                         <h3 className="text-2xl font-bold text-center">{team?.name}</h3>
                                         <p className="mt-2 text-sm text-center">{team?.text}</p>
                                     </div>
@@ -59,7 +59,9 @@ export default function Home() {
                                 displayOverlayContent={true}
                                 overlayContent={
                                     <div className="w-full h-full flex justify-center align-center">
-                                        <img className="bg-blue w-27 border h-27 mt-8 rounded-md" src={team?.img} alt="Internal Secretariat" />
+                                        <img className="card-img pointer-events-none w-27 border h-27 mt-8 rounded-md text-transparent" src={team?.img} alt={team?.name} 
+                                            aria-placeholder=""
+                                        />
                                     </div>
                                 }
                             />)
@@ -113,7 +115,10 @@ export default function Home() {
                     border-left-width: 12px;
                     border-image: linear-gradient(to bottom, #2E4A20, #5b2950) 1;
                 }
-                
+                .card-img {
+                    background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center, var(--color-primary);
+                    background-size: contain;
+                }
             `}</style>
         </div>
     )
