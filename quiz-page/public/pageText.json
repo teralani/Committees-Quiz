@@ -2,23 +2,76 @@
     {
         "name": "Home",
         "DA": {
-            "name": "Delegate Affairs",
-            "img": "da.png",
-            "text": "We know that choosing the right committee can be overwhelming, so we created this quiz to make it easier and even a little fun! We can't wait to see you thrive in committee at KINGMUN 2025 experience!"
+            "name": "Conference",
+            "img": "c.png",
+            "text": "[Insert Text]"
         },
         "SG": {
             "name": "Secretary-General",
             "img": "sg.png",
-            "text": "Whether you're here to challenge yourself or explore something new, I hope this helps you find where you'll shine at KINGMUN 2025."
+            "text": "[Insert Text]"
         },
         "IS": {
             "name": "Internal Secretariat",
             "img": "is.png",
-            "text": "Our team put a lot of thought into designing committees that are engaging, creative, and, most importantly, perfect for you. This tool is our way of guiding you through our various committees!"
+            "text": "[Insert Text]"
         }
     },
     {
         "name": "Quiz",
-        "content": "This is the Quiz page."
+        "content": "This is the Quiz page.",
+        "questions" : [
+            {
+                "text": "How many conferences have you attended?",
+                "options": [
+                { "text": "Introductory", "range": 2, "tags": ["UNODC", "UNECA", "UNCLOS"] },
+                { "text": "Intermediate", "range": 4, "tags": ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
+                { "text": "Intermediate+", "range": 6, "tags": ["LoN", "C-3301", "FCC", "TSR"] },
+                { "text": "Advanced", "tags": ["AD-HOC", "H-CAB", "LoI"] }
+                ],
+                "slider": true,
+                "max": 8
+            },
+            {
+                "text": "How many specialized or crisis committees have you attended?",
+                "options": [
+                { "text": "Introductory", "range": 0, "tags": ["ECC", "NCOG"] },
+                { "text": "Intermediate", "range": 2, "tags": ["C-3301", "FCC"] },
+                { "text": "Advanced", "tags": ["AD-HOC", "H-CAB", "LoI"] }
+                ],
+                "slider": true,
+                "max": 5
+            },
+            {
+                "text": "What’s your favorite subject in school?",
+                "options": [
+                    { "text": "History", "tags": ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
+                    { "text": "Economics", "tags": ["UNECA", "FCC", "NCOG", "UNODC"] },
+                    { "text": "Math/Science", "tags": ["ECC", "C-3301", "UNCLOS"] }
+                ]
+            },
+            {
+                "text": "What type of debate style excites you the most?",
+                "options": [
+                    { "text": "Formal, structured, clear rules", "tags": ["UNODC", "UNECA"] },
+                    { "text": "Formal with a few twists", "tags": ["UNCLOS", "UNPFII", "LoN"] },
+                    { "text": "Fast paced, crisis-driven", "tags": ["ECC", "FCC", "LoI"] },
+                    {
+                        "text": "Cabinet-style",
+                        "tags": ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"]
+                    }
+                ]
+            },
+            {
+                "text": "If you could time-travel, where would you go?",
+                "options": [
+                    { "text": "Stay in the present day", "tags": ["UNODC", "UNECA", "UNPFII", "FCC"] },
+                    { "text": "20th century", "tags": ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
+                    { "text": "The Ancient World", "tags": ["LoI", "TSR"] },
+                    { "text": "The Future", "tags": ["ECC", "UNCLOS"] }
+                ]
+            }
+        ]
+                
     }
 ]

@@ -4,6 +4,7 @@ import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
 import Magnet from "@/components/magneticButton";
 import Link from "next/link";
+import pageContent from "@/public/pageText.json"
 
 // --- QUIZ DATA ---
 type Question = {
@@ -15,58 +16,60 @@ type Question = {
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
-const questions: Question[] = [
-  {
-    text: "How many conferences have you attended?",
-    options: [
-      { text: "Introductory", range: 2, tags: ["UNODC", "UNECA", "UNCLOS"] },
-      { text: "Intermediate", range: 4, tags: ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
-      { text: "Intermediate+", range: 6, tags: ["LoN", "C-3301", "FCC", "TSR"] },
-      { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
-    ],
-    slider: true,
-    max: 8,
-  },
-  {
-    text: "How many specialized or crisis committees have you attended?",
-    options: [
-      { text: "Introductory", range: 0, tags: ["ECC", "NCOG"] },
-      { text: "Intermediate", range: 2, tags: ["C-3301", "FCC"] },
-      { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
-    ],
-    slider: true,
-    max: 5,
-  },
-  {
-    text: "What’s your favorite subject in school?",
-    options: [
-      { text: "History", tags: ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
-      { text: "Economics", tags: ["UNECA", "FCC", "NCOG", "UNODC"] },
-      { text: "Math/Science", tags: ["ECC", "C-3301", "UNCLOS"] },
-    ],
-  },
-  {
-    text: "What type of debate style excites you the most?",
-    options: [
-      { text: "Formal, structured, clear rules", tags: ["UNODC", "UNECA"] },
-      { text: "Formal with a few twists", tags: ["UNCLOS", "UNPFII", "LoN"] },
-      { text: "Fast paced, crisis-driven", tags: ["ECC", "FCC", "LoI"] },
-      {
-        text: "Cabinet-style",
-        tags: ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"],
-      },
-    ],
-  },
-  {
-    text: "If you could time-travel, where would you go?",
-    options: [
-      { text: "Stay in the present day", tags: ["UNODC", "UNECA", "UNPFII", "FCC"] },
-      { text: "20th century", tags: ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
-      { text: "The Ancient World", tags: ["LoI", "TSR"] },
-      { text: "The Future", tags: ["ECC", "UNCLOS"] },
-    ],
-  },
-];
+// const questions: Question[] = [
+//   {
+//     text: "How many conferences have you attended?",
+//     options: [
+//       { text: "Introductory", range: 2, tags: ["UNODC", "UNECA", "UNCLOS"] },
+//       { text: "Intermediate", range: 4, tags: ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
+//       { text: "Intermediate+", range: 6, tags: ["LoN", "C-3301", "FCC", "TSR"] },
+//       { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
+//     ],
+//     slider: true,
+//     max: 8,
+//   },
+//   {
+//     text: "How many specialized or crisis committees have you attended?",
+//     options: [
+//       { text: "Introductory", range: 0, tags: ["ECC", "NCOG"] },
+//       { text: "Intermediate", range: 2, tags: ["C-3301", "FCC"] },
+//       { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
+//     ],
+//     slider: true,
+//     max: 5,
+//   },
+//   {
+//     text: "What’s your favorite subject in school?",
+//     options: [
+//       { text: "History", tags: ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
+//       { text: "Economics", tags: ["UNECA", "FCC", "NCOG", "UNODC"] },
+//       { text: "Math/Science", tags: ["ECC", "C-3301", "UNCLOS"] },
+//     ],
+//   },
+//   {
+//     text: "What type of debate style excites you the most?",
+//     options: [
+//       { text: "Formal, structured, clear rules", tags: ["UNODC", "UNECA"] },
+//       { text: "Formal with a few twists", tags: ["UNCLOS", "UNPFII", "LoN"] },
+//       { text: "Fast paced, crisis-driven", tags: ["ECC", "FCC", "LoI"] },
+//       {
+//         text: "Cabinet-style",
+//         tags: ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"],
+//       },
+//     ],
+//   },
+//   {
+//     text: "If you could time-travel, where would you go?",
+//     options: [
+//       { text: "Stay in the present day", tags: ["UNODC", "UNECA", "UNPFII", "FCC"] },
+//       { text: "20th century", tags: ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
+//       { text: "The Ancient World", tags: ["LoI", "TSR"] },
+//       { text: "The Future", tags: ["ECC", "UNCLOS"] },
+//     ],
+//   },
+// ];
+
+const questions = pageContent[1].questions as Array<Question>
 
 const indexing = [
   "UNODC",
