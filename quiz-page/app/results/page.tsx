@@ -158,18 +158,18 @@ export default function CommitteeQuizPage() {
             <div key={i} className="mb-4 w-full bg-white md:pr-10 md:pl-5 max-md:px-10 pb-10 py-5 rounded-2xl">
               <div className="flex justify-between pb-2 align-middle w-full">
                 <div
-                  className="relative h-7 md:h-5 bg-linear-to-r from-primary to-secondary rounded-full transition-all duration-500"
+                  className="relative h-7 md:h-5 bg-linear-to-r from-primary to-secondary rounded-r-full md:rounded-full transition-all duration-500"
                   style={{ width: `${r.percentage}%` }}
                 ><p className={`text-sm right-4 text-white font-bold absolute max-md:mt-1`}>{r.percentage}% match</p></div>
                 
             </div>
             <div className="flex gap-8 lg:mt-3 md:gap-10 max-md:flex-col">
-                <div className="max-md:relative max-md:-top-10.5 max-md:h-0 md:min-h-max w-0 md:flex md:flex-col md:justify-around md:align-middle">
+                <div className="max-md:relative max-md:-top-10.5 max-md:-left-8 max-md:h-0 md:min-h-max w-0 md:flex md:flex-col md:justify-around md:align-middle">
                     <div className="text-center font-bold flex flex-col justify-around text-white rounded-full bg-primary text-2xl w-10 h-10">{i+1}</div>
                 </div>
               <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-60 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
                 <img
-                    className="object-fill h-full w-full"
+                    className="card-img object-fill h-full w-full"
                     // src={`https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/0e1764c52a619ffa2c1a5839cfc459053b3e4c935da8744a659f918849f5aa99/${committees[r.idx].acronym.replaceAll("-", "")}%20committee%20photo.jpeg`}
 
                     alt={committees[r.idx].acronym}
@@ -286,6 +286,11 @@ export default function CommitteeQuizPage() {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        .card-img {
+          background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center, var(--color-primary);
+          background-size: 10rem;
+          color: transparent;
         }
       `}</style>
     </div>

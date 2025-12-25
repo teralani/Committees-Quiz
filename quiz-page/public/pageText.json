@@ -23,6 +23,7 @@
         "questions" : [
             {
                 "text": "How many conferences have you attended?",
+                "weights": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
                 "options": [
                 { "text": "Introductory", "range": 2, "tags": ["UNODC", "UNECA", "UNCLOS"] },
                 { "text": "Intermediate", "range": 4, "tags": ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
@@ -34,8 +35,9 @@
             },
             {
                 "text": "How many specialized or crisis committees have you attended?",
+                "weights": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
                 "options": [
-                { "text": "Introductory", "range": 0, "tags": ["ECC", "NCOG"] },
+                { "text": "Introductory", "range": 0, "tags": ["ECC", "NCOG", "UNODC", "UNECA", "UNCLOS", "UNPFII", "UNCLOS"] },
                 { "text": "Intermediate", "range": 2, "tags": ["C-3301", "FCC"] },
                 { "text": "Advanced", "tags": ["AD-HOC", "H-CAB", "LoI"] }
                 ],
@@ -44,6 +46,7 @@
             },
             {
                 "text": "What’s your favorite subject in school?",
+                "weights": [1, 1, 3, 2, 1, 2, 1, 3, 2, 2, 2, 3, 1],
                 "options": [
                     { "text": "History", "tags": ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
                     { "text": "Economics", "tags": ["UNECA", "FCC", "NCOG", "UNODC"] },
@@ -52,13 +55,12 @@
             },
             {
                 "text": "What type of debate style excites you the most?",
+                "weights": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
                 "options": [
                     { "text": "Formal, structured, clear rules", "tags": ["UNODC", "UNECA"] },
                     { "text": "Formal with a few twists", "tags": ["UNCLOS", "UNPFII", "LoN"] },
                     { "text": "Fast paced, crisis-driven", "tags": ["ECC", "FCC", "LoI"] },
-                    {
-                        "text": "Cabinet-style",
-                        "tags": ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"]
+                    {"text": "Cabinet-style", "tags": ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"]
                     }
                 ]
             },
@@ -69,6 +71,40 @@
                     { "text": "20th century", "tags": ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
                     { "text": "The Ancient World", "tags": ["LoI", "TSR"] },
                     { "text": "The Future", "tags": ["ECC", "UNCLOS"] }
+                ]
+            },
+            {
+                "text": "Your perfect weekend looks like:",
+                "weights": [1, 1, 3, 1, 2, 1, 1, 3, 2, 3, 1, 1, 1],
+                "options": [
+                    { "text": "Relaxing with a light book or movie", "tags": ["UNODC", "UNECA", "NCOG", "ECC"] },
+                    { "text": "Exploring something intellectually challenging but fun", "tags": ["UNCLOS", "UNPFII", "FCC", "Cicada-3301"] },
+                    { "text": "Digging deep into history or mythology", "tags": ["LoN", "TSR", "H-CAB", "LoI"] },
+                    { "text": "Solving puzzles or cracking codes", "tags": ["Cicada-3301", "AD-HOC"] }
+                ]
+            },
+            {
+                "text": "Your ideal conference snack would be:",
+                "options": [
+                    { "text": "Classic chips & soda", "tags": ["UNODC", "UNECA"] },
+                    { "text": "Trail mix with a coffee", "tags": ["UNCLOS", "UNPFII", "LoI"] },
+                    { "text": "Tea and biscotti ", "tags": ["LoN", "TSR", "NCOG"] },
+                    { "text": "Energy drinks and protein bars", "tags": ["Cicada-3301", "AD-HOC", "H-CAB"] },
+                    { "text": "Electrolyte drinks", "tags": ["ECC", "FCC"] }
+                ]
+            },
+            {
+                "text": "If your ideal committee were a movie genre, it would be:",
+                "options": [
+                    { "text": "Political/expository Documentary", "tags": ["UNODC", "UNECA"] },
+                    { "text": "Epic historical drama", "tags": ["LoN", "TSR"] },
+                    { "text": "Detective fiction with codes and secrets", "tags": ["Cicada-3301"] },
+                    { "text": "Historical fiction with finance", "tags": ["FCC"] },
+                    { "text": "Mythological Fantasy", "tags": ["LoI"] },
+                    { "text": "Historical period piece", "tags": ["NCOG"] },
+                    { "text": "National Geographic documentary", "tags": ["ECC"] },
+                    { "text": "Classic pirate movie", "tags": ["UNCLOS"] },
+                    { "text": "Espionage mystery with plot twists", "tags": ["AD-HOC"] }
                 ]
             }
         ]

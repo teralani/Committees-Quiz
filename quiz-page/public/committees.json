@@ -2,7 +2,7 @@
     {
         "name": "United Nations Office on Drugs and Crime (UNODC)",
         "acronym": "UNODC",
-        "description": "1Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "This committee focuses on global challenges like drug trafficking, crime prevention, and corruption. Delegates debate practical legal and policy solutions to real-world security issues using standard ROP.",
         "difficulty": "Introductory",
         "topics": ["TBD", "TBD"]
 
@@ -10,14 +10,14 @@
     {
         "name": "United Nations Convention on the Law of the Sea (UNCLOS)",
         "acronym": "UNCLOS",
-        "description": "2Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "UNCLOS explores international maritime law, tackling topics like territorial waters, resource rights, and environmental protection.",
         "difficulty": "Intermediate",
         "topics": ["TBD", "TBD"]
     },
     {
         "name": "League of Nations (LoN)", 
         "acronym": "LoN",
-        "description": "3Lorem ipsum dolor Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "This historical committee recreates the world's first major international diplomatic body, debating early 20th century cirses. LoN is best suited for advanced delegates.",
         "difficulty": "Advanced",
         "topics": ["TBD", "TBD"]
     },
@@ -45,14 +45,14 @@
     {
         "name": "Newfoundland Commission of Government (NCOG)",
         "acronym": "NCOG", 
-        "description": "7Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "This introductory specialized committee is great for delegates hoping to explore less common ROP structures. NCOG uses a modified British Parliamentary ROP and is perfect for delegates interested in Canadian history and governance.",
         "difficulty": "Introductory",
         "topics": ["TBD", "TBD"]
     },
     {
         "name": "Cicada 3301 (C-3301)",
         "acronym": "C-3301", 
-        "description": "8Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "Hailing from the depths of the internet, this puzzling committee is where cryptography, espionage and coded problem-solving shape debate.",
         "difficulty": "Intermediate",
         "topics": ["TBD", "TBD"]
     },
@@ -66,28 +66,28 @@
         {
         "name": "Historical Cabinet (H-CAB)", 
         "acronym": "H-CAB",
-        "description": "13Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "This historical committee follows a cabinet ROP and is best suited for delegates with significant specialized or crisis committee experience.",
         "difficulty": "Advanced",
         "topics": ["TBD", "TBD"]
     },
     {
         "name": "Environmental Crisis Committee (ECC)",
         "acronym": "ECC", 
-        "description": "10Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "Travel to the future and explore this beginner-friendly crisis committee. ECC centers on environmental emergencies rooted in current events, challenging delegates to reflect on the present to better the future.",
         "difficulty": "Introductory",
         "topics": ["TBD", "TBD"]
     },
     {
         "name": "Financial Crisis Committee (FCC)",
         "acronym": "FCC", 
-        "description": "11Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "This intermediate committee challenges delegates to navigate significant and widespread financial turmoil in a fast-paced environment. ",
         "difficulty": "Intermediate",
         "topics": ["TBD", "TBD"]
     },
     {
         "name": "League of Immortals (LoI)",
         "acronym": "LoI", 
-        "description": "12Lorem ipsum dolor. Lorem ipsum  dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor.",
+        "description": "In this crisis committee blending mythology, cross-cultural research and emergency decision-making, delegates must integrate diverse cultural perspectives into an evolving crisis scenario.",
         "difficulty": "Advanced",
         "topics": ["TBD", "TBD"]
     }
