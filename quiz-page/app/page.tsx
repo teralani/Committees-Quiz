@@ -44,14 +44,14 @@ export default function Home() {
                                 altText=""
                                 containerHeight={"400px"}
                                 containerWidth={"400px"}
-                                cardHeight={"352px"}
+                                cardHeight={"375px"}
                                 cardWidth={"300px"}
                                 scaleOnHover={1.03}
                                 rotateAmplitude={14}
                                 displayCardContent={true}
                                 cardContent={
                                     <div className="hover-card w-full h-full p-6">
-                                        <div className="hover-border w-31 hover:bg-amber-400 border h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6 rounded-lg"></div>
+                                        <div className="hover-border w-31 hover:bg-amber-400 h-31 -mt-1 mx-auto shadow-lg shadow-primary/40 mb-6 rounded-lg"></div>
                                         <h3 className="text-2xl font-bold text-center">{team?.name}</h3>
                                         <p className="mt-2 text-sm text-center">{team?.text}</p>
                                     </div>
@@ -59,7 +59,7 @@ export default function Home() {
                                 displayOverlayContent={true}
                                 overlayContent={
                                     <div className="w-full h-full flex justify-center align-center">
-                                        <img className="card-img pointer-events-none w-27 border h-27 mt-8 rounded-md text-transparent" src={team?.img} alt={team?.name} 
+                                        <object className="card-img pointer-events-none w-27 h-27 mt-8 rounded-md text-transparent" data={team?.img} 
                                             aria-placeholder=""
                                         />
                                     </div>
