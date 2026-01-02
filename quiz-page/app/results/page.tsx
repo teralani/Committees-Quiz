@@ -11,6 +11,7 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 export default function CommitteeQuizPage() {
     const [results, setResults] = useState<{ idx: number; name: string; percentage: number }[] | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const showPercentage = true;
 
     useEffect(() => {
         const stored = localStorage.getItem("quizResults")
@@ -158,7 +159,7 @@ export default function CommitteeQuizPage() {
             <div key={i} className="mb-4 w-full bg-white md:pr-10 md:pl-5 max-md:px-10 pb-10 py-5 rounded-2xl">
               <div className="flex justify-between pb-2 align-middle w-full">
                 <div
-                  className="relative h-7 md:h-5 bg-linear-to-r from-primary to-secondary rounded-r-full md:rounded-full transition-all duration-500"
+                  className={`${showPercentage? "" : "hidden"} relative h-7 md:h-5 bg-linear-to-r from-primary to-secondary rounded-r-full md:rounded-full transition-all duration-500`}
                   style={{ width: `${r.percentage}%` }}
                 ><p className={`text-sm right-4 text-white font-bold absolute max-md:mt-1`}>{r.percentage}% match</p></div>
                 

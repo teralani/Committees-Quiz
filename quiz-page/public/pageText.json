@@ -23,11 +23,11 @@
         "questions" : [
             {
                 "text": "How many conferences have you attended?",
-                "options": [
-                { "text": "Introductory", "range": 2, "tags": ["UNODC", "UNECA", "UNCLOS"] },
-                { "text": "Intermediate", "range": 4, "tags": ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
-                { "text": "Intermediate+", "range": 6, "tags": ["LoN", "C-3301", "FCC", "TSR"] },
-                { "text": "Advanced", "tags": ["AD-HOC", "H-CAB", "LoI"] }
+                 "options": [
+                { "text": "Introductory", "weights": [1,0,1,1,0,0,0,0,0,0,0,0,0] },
+                { "text": "Intermediate", "weights": [0,1,0,0,2,0,2,2,0,0,0,0,0] },
+                { "text": "Intermediate+", "weights": [0,0,2,0,0,2,0,2,2,0,2,0,0] },
+                { "text": "Advanced", "weights": [0,0,0,0,0,0,0,0,3,3,0,0,3] }
                 ],
                 "slider": true,
                 "max": 8
@@ -35,9 +35,9 @@
             {
                 "text": "How many specialized or crisis committees have you attended?",
                 "options": [
-                { "text": "Introductory", "range": 0, "tags": ["ECC", "NCOG", "UNODC", "UNECA", "UNCLOS", "UNPFII", "UNCLOS"] },
-                { "text": "Intermediate", "range": 2, "tags": ["C-3301", "FCC"] },
-                { "text": "Advanced", "tags": ["AD-HOC", "H-CAB", "LoI"] }
+                { "text": "Introductory", "weights": [1,0,0,1,1,0,2,0,0,0,1,0,0] },
+                { "text": "Intermediate", "weights": [0,0,0,0,0,0,0,2,0,0,0,3,0] },
+                { "text": "Advanced", "weights": [0,0,0,0,0,0,0,0,3,3,0,0,3] }
                 ],
                 "slider": true,
                 "max": 5
@@ -45,61 +45,60 @@
             {
                 "text": "What’s your favorite subject in school?",
                 "options": [
-                    { "text": "History", "tags": ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
-                    { "text": "Economics", "tags": ["UNECA", "FCC", "NCOG", "UNODC"] },
-                    { "text": "Math/Science", "tags": ["ECC", "C-3301", "UNCLOS"] }
+                { "text": "History📖", "weights": [0,0,3,0,0,4,0,0,2,3,0,0,2] },
+                { "text": "Economics💵", "weights": [2,0,0,4,3,0,3,0,0,0,0,4,0] },
+                { "text": "Math/Science🔬", "weights": [0,3,0,0,0,0,0,3,0,0,4,0,0] }
                 ]
             },
             {
                 "text": "What type of debate style excites you the most?",
                 "options": [
-                    { "text": "Formal, structured, clear rules", "tags": ["UNODC", "UNECA"] },
-                    { "text": "Formal with a few twists", "tags": ["UNCLOS", "UNPFII", "LoN"] },
-                    { "text": "Fast paced, crisis-driven", "tags": ["ECC", "FCC", "LoI"] },
-                    {"text": "Cabinet-style", "tags": ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"]
-                    }
+                { "text": "Formal, structured, clear rules📋", "weights": [4,0,0,4,0,0,0,0,0,0,0,0,0] },
+                { "text": "Formal with a few twists🔥", "weights": [0,3,3,0,3,0,0,0,0,0,0,0,0] },
+                { "text": "Fast paced, crisis-driven⚡", "weights": [0,0,0,0,0,0,0,0,0,0,4,4,4] },
+                { "text": "Cabinet-style🤝", "weights": [0,0,3,0,0,3,3,0,3,3,0,0,0] }
                 ]
             },
             {
                 "text": "If you could time-travel, where would you go?",
                 "options": [
-                    { "text": "Stay in the present day", "tags": ["UNODC", "UNECA", "UNPFII", "FCC"] },
-                    { "text": "20th century", "tags": ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
-                    { "text": "The Ancient World", "tags": ["LoI", "TSR"] },
-                    { "text": "The Future", "tags": ["ECC", "UNCLOS"] }
+                { "text": "Stay in the present day📅", "weights": [3,0,0,3,3,0,0,0,0,0,0,2,0] },
+                { "text": "20th century🎞️", "weights": [0,0,3,0,0,3,3,0,3,3,0,0,0] },
+                { "text": "The Ancient World🏛️", "weights": [0,0,0,0,0,4,0,0,0,0,0,0,4] },
+                { "text": "The Future🔮", "weights": [0,3,0,0,0,0,0,0,0,0,3,0,0] }
                 ]
             },
             {
                 "text": "Your perfect weekend looks like:",
                 "options": [
-                    { "text": "Relaxing with a light book or movie", "tags": ["UNODC", "UNECA", "NCOG", "ECC"] },
-                    { "text": "Exploring something intellectually challenging but fun", "tags": ["UNCLOS", "UNPFII", "FCC", "Cicada-3301"] },
-                    { "text": "Digging deep into history or mythology", "tags": ["LoN", "TSR", "H-CAB", "LoI"] },
-                    { "text": "Solving puzzles or cracking codes", "tags": ["Cicada-3301", "AD-HOC"] }
+                { "text": "Relaxing with a light book🍿📖", "weights": [3,0,0,3,0,0,2,0,0,0,2,0,0] },
+                { "text": "Intellectually challenging🧠🔍", "weights": [0,3,0,0,3,0,0,3,2,0,0,3,0] },
+                { "text": "Digging deep into history🏺📚", "weights": [0,0,3,0,0,4,3,0,0,3,0,0,2] },
+                { "text": "Solving puzzles/codes🧩🔐", "weights": [0,0,0,0,0,0,0,3,3,3,0,0,0] }
                 ]
             },
             {
                 "text": "Your ideal conference snack would be:",
                 "options": [
-                    { "text": "Classic chips & soda", "tags": ["UNODC", "UNECA"] },
-                    { "text": "Trail mix with a coffee", "tags": ["UNCLOS", "UNPFII", "LoI"] },
-                    { "text": "Tea and biscotti ", "tags": ["LoN", "TSR", "NCOG"] },
-                    { "text": "Energy drinks and protein bars", "tags": ["Cicada-3301", "AD-HOC", "H-CAB"] },
-                    { "text": "Electrolyte drinks", "tags": ["ECC", "FCC"] }
+                { "text": "Classic chips & soda🥤", "weights": [3,0,0,3,0,0,0,0,0,0,0,0,0] },
+                { "text": "Trail mix + coffee☕", "weights": [0,3,0,0,3,0,0,0,0,0,0,0,3] },
+                { "text": "Tea and biscotti🍵", "weights": [0,0,3,0,0,0,3,0,0,0,0,0,0] },
+                { "text": "Energy drinks & bars⚡", "weights": [0,0,0,0,0,0,2,2,3,3,0,0,0] },
+                { "text": "Electrolyte drinks🧃", "weights": [0,0,0,0,0,0,0,0,0,0,3,3,0] }
                 ]
             },
             {
                 "text": "If your ideal committee were a movie genre, it would be:",
                 "options": [
-                    { "text": "Political/expository Documentary", "tags": ["UNODC", "UNECA"] },
-                    { "text": "Epic historical drama", "tags": ["LoN", "TSR"] },
-                    { "text": "Detective fiction with codes and secrets", "tags": ["Cicada-3301"] },
-                    { "text": "Historical fiction with finance", "tags": ["FCC"] },
-                    { "text": "Mythological Fantasy", "tags": ["LoI"] },
-                    { "text": "Historical period piece", "tags": ["NCOG"] },
-                    { "text": "National Geographic documentary", "tags": ["ECC"] },
-                    { "text": "Classic pirate movie", "tags": ["UNCLOS"] },
-                    { "text": "Espionage mystery with plot twists", "tags": ["AD-HOC"] }
+                { "text": "Political documentary🎬",          "weights": [4,0,0,4,0,0,0,0,0,0,0,0,0] },
+                { "text": "Epic historical drama🏰",         "weights": [0,0,4,0,0,4,0,0,0,0,0,0,0] },
+                { "text": "Detective/codes🔍",               "weights": [0,0,0,0,0,0,0,4,0,0,0,0,0] },
+                { "text": "Historical fiction + finance💼", "weights": [0,0,0,0,0,0,0,0,0,0,0,4,0] },
+                { "text": "Mythological fantasy🧙‍♂️",         "weights": [0,0,0,0,0,0,0,0,0,0,0,0,4] },
+                { "text": "Historical period piece📜",      "weights": [0,0,0,0,0,0,3,0,0,0,0,0,0] },
+                { "text": "National Geographic Documentary🌍",                   "weights": [0,0,0,0,0,0,0,0,0,0,4,0,0] },
+                { "text": "Classic pirate movie🏴‍☠️",         "weights": [0,4,0,0,0,0,0,0,0,0,0,0,0] },
+                { "text": "Espionage mystery🕵️‍♀️",            "weights": [0,0,0,0,0,0,0,0,4,0,0,0,0] }
                 ]
             }
         ]

@@ -9,7 +9,7 @@ import pageContent from "@/public/pageText.json"
 // --- QUIZ DATA ---
 type Question = {
   text: string;
-  options: { text: string; tags: Array<string>; range?: number }[];
+  options: { text: string; weights: Array<number>; range?: number }[];
   slider?: boolean;
   max?: number;
   weight?: [number];
@@ -203,68 +203,59 @@ export default function CommitteeQuizPage() {
     if (questionNumber > 0) setQuestionNumber(questionNumber - 1);
   };
 
-//   const maxPossible = [
-//   7,  // UNODC
-//   7,  // UNCLOS
-//   10, // LoN
-//   7,  // UNECA
-//   5,  // UNPFII
-//   9,  // TSR
-//   7,  // NCOG
-//   7,  // C-3301
-//   9,  // AD-HOC
-//   7,  // H-CAB
-//   8,  // ECC
-//   10, // FCC
-//   9   // LoI
-// ]
-
   const calculateResults = () => {
     const tally = Array(indexing.length).fill(0);
-    // max possible = number of questions (each can give +1 per committee)
-    const maxPossible = questions.length;
 
-    selectedOptions.forEach((sel, idx) => {
-      const question = questions[idx];
+    selectedOptions.forEach((sel, qIdx) => {
+      const question = questions[qIdx];
 
       if (question.slider && sel !== null) {
         question.options.forEach((opt) => {
           if (opt.range !== undefined && (sel as number) <= opt.range) {
-            opt.tags.forEach((tag) => {
-              const tid = indexing.indexOf(tag);
-              if (tid !== -1) {
-                tally[tid] += question.weight? question.weight[tid] : 1;
-              }
-            });
+            if (opt.weights) {
+              opt.weights.forEach((w, committeeIdx) => {
+                tally[committeeIdx] += w;
+              });
+            }
           }
         });
       } else if (sel !== null) {
-        question.options[sel].tags.forEach((tag) => {
-          const tid = indexing.indexOf(tag);
-            if (tid !== -1) {
-              tally[tid] += question.weight? question.weight[tid] : 1;
-            }
-        });
+        const chosen = question.options[sel];
+        if (chosen.weights) {
+          chosen.weights.forEach((w, committeeIdx) => {
+            tally[committeeIdx] += w;
+          });
+        }
       }
     });
 
-    // sort committees descending by score
-    const sorted = [...tally]
-      .map((score, idx) => ({ idx, score }))
-      .sort((a, b) => b.score - a.score);
+    const temperature = 2.5;
 
-    const topThree = sorted.slice(0, 3).map(({ idx, score }) => ({
+    const highestRaw = Math.max(...tally);
+
+    const scaledScores = tally.map((s) => Math.pow(s, 1 / temperature));
+
+    const percentages = scaledScores.map((val) =>
+      highestRaw > 0 ? Math.round((val / Math.pow(highestRaw, 1 / temperature)) * 100) : 0
+    );
+
+    const scored = tally.map((score, idx) => ({
       idx,
+      score,
       name: committees[idx].name,
-      percentage: Math.round(Math.min(score / (maxPossible - 5), 1) * 100),
+      percentage: percentages[idx],
     }));
 
-    setResults(topThree);
-    console.log(JSON.stringify(topThree))
-    localStorage.setItem("quizResults", JSON.stringify(topThree))
+    const sorted = [...scored].sort((a, b) => b.score - a.score);
+    const topThree = sorted.slice(0, 3);
 
-    window.location.href= "/results";
+    setResults(topThree);
+    localStorage.setItem("quizResults", JSON.stringify(topThree));
+    window.location.href = "/results";
   };
+
+
+
 
   const progressPercent = (questionNumber / questions.length) * 100;
 
