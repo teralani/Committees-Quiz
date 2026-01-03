@@ -105,8 +105,8 @@ export default function CommitteeQuizPage() {
             }
 
             // update physics
-            p.y += (Math.cos(angle + p.d) + 2 + p.r / 2) / 3;
-            p.x += Math.sin(angle);
+            p.y += 1.75* (Math.cos(angle + p.d) + 2 + p.r / 2) / 3;
+            p.x += 1.75* Math.sin(angle);
 
             // reposition when off-screen
             if (p.x > canvas.width + 20 || p.x < -20 || p.y > canvas.height) {
@@ -171,7 +171,7 @@ export default function CommitteeQuizPage() {
               <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-60 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
                 <img
                     className="card-img object-fill h-full w-full"
-                    // src={`https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/0e1764c52a619ffa2c1a5839cfc459053b3e4c935da8744a659f918849f5aa99/${committees[r.idx].acronym.replaceAll("-", "")}%20committee%20photo.jpeg`}
+                    src={`https://files.munnorthwest.org/image/kingmun/12867126dc81167bd82c00bf2571a19a863625f07b831494889df6c83cc0d97d/${committees[r.idx].acronym.replaceAll("-", "")}%20committee%20photo.jpeg`}
 
                     alt={committees[r.idx].acronym}
                 />

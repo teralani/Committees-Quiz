@@ -236,7 +236,7 @@ export default function CommitteeQuizPage() {
     const scaledScores = tally.map((s) => Math.pow(s, 1 / temperature));
 
     const percentages = scaledScores.map((val) =>
-      highestRaw > 0 ? Math.round((val / Math.pow(highestRaw, 1 / temperature)) * 100) : 0
+      highestRaw > 0 ? Math.round((val / Math.pow(highestRaw, 1 / temperature)) * 10000)/100 : 0
     );
 
     const scored = tally.map((score, idx) => ({
