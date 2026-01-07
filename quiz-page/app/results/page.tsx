@@ -127,7 +127,6 @@ export default function CommitteeQuizPage() {
             }
             });
 
-            if (particles.length <= 0) {console.log("done"); return}
 
             angle += 0.01; // global drift
 
