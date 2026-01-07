@@ -109,7 +109,7 @@ export default function CommitteeQuizPage() {
             p.x += 1.75* Math.sin(angle);
 
             // reposition when off-screen
-            if (p.x > canvas.width + 20 || p.x < -20 || p.y > canvas.height) {
+            if ( (p.x > canvas.width + 20 || p.x < -20 || p.y > canvas.height)) {
                 if (idx % 5 > 0 || idx % 2 === 0) {
                 p.x = Math.random() * canvas.width;
                 p.y = -10;
@@ -122,8 +122,12 @@ export default function CommitteeQuizPage() {
                     p.y = Math.random() * canvas.height;
                 }
                 }
+                particles.splice(idx, 1)
+                console.log(animationFrameId + " " +  particles.length)
             }
             });
+
+            if (particles.length <= 0) {console.log("done"); return}
 
             angle += 0.01; // global drift
 
@@ -150,10 +154,25 @@ export default function CommitteeQuizPage() {
             <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
         </nav>
 
-
         <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-4xl font-bold text-white mb-6">Top Committee Matches</h2>
+
+          <Magnet
+            padding={30}
+            wrapperClassName="p-10 my-10 "
+          >
+            <Link href={{
+                pathname: '/quiz'
+            }}>
+                <button
+                    onClick={clearResults}
+                    className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
+                    >
+                    Try Again
+                </button>
+            </Link>
+          </Magnet>
 
           {results && results.map((r, i) => (
             <div key={i} className="mb-4 w-full bg-white md:pr-10 md:pl-5 max-md:px-10 pb-10 py-5 rounded-2xl">
@@ -203,21 +222,7 @@ export default function CommitteeQuizPage() {
 
             </div>
           ))}
-          <Magnet
-            padding={30}
-            wrapperClassName="p-10"
-          >
-            <Link href={{
-                pathname: '/quiz'
-            }}>
-                <button
-                    onClick={clearResults}
-                    className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
-                    >
-                    Try Again
-                </button>
-            </Link>
-          </Magnet>
+
             <div id="disclaimer" className="flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
                 <div className="flex">
                     <svg className="h-6 w-6 text-[#2E4A20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
