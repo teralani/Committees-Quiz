@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Montserrat } from "next/font/google";
 import pageContentImport from "@/public/pageText.json";
+import MultiRangeSlider from "@/components/multiRangeBar";
+import committees from "@/public/committees.json"
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
@@ -30,21 +32,23 @@ type Option = {
 };
 type Question = {
   text: string;
-  options: Option[];
+  options: { text: string; weights: number[]; range?: number }[];
   slider?: boolean;
   max?: number;
 };
 
 const initialData = (pageContentImport as any)[1]?.questions as Question[] || [];
 
-const INDEXING = [
-  "UNODC","UNCLOS","LoN","UNECA","UNPFII","TSR","NCOG","C-3301","AD-HOC",
-  "H-CAB","ECC","FCC","LoI",
-];
+const INDEXING = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
+
+// const INDEXING = [
+//   "UNODC","UNCLOS","LoN","UNECA","UNPFII","TSR","NCOG","C-3301","AD-HOC",
+//   "H-CAB","ECC","FCC","LoI",
+// ];
 
 export default function DashboardPage() {
   const [questions, setQuestions] = useState<Question[]>(
-    () => JSON.parse(localStorage.getItem("editorQuestions") || "null") || initialData
+    () => initialData || JSON.parse(localStorage.getItem("editorQuestions") || "null") 
   );
   const [selected, setSelected] = useState<number>(0);
   const [saving, setSaving] = useState(false);
@@ -200,198 +204,6 @@ export default function DashboardPage() {
 
   if (!questions) return <div className="p-8">Loading...</div>;
 
-  // Multi-handle shared slider for a question's option upper-bounds
-// Multi-handle shared slider for a question's option upper-bounds
-const MultiRangeBar: React.FC<{ qIdx: number }> = ({ qIdx }) => {
-  const q = questions[qIdx];
-  const max = Math.max(1, q.max ?? 7);
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  // Get array of current ranges
-  const getRanges = () =>
-    q.options.map((o) => (typeof o.range === "number" ? o.range! : 0));
-
-  const clamp = (v: number) => Math.max(0, Math.min(max, Math.round(v)));
-
-  // Update state with new ranges
-  const updateRanges = (newRanges: number[]) => {
-    setQuestions((all) =>
-      all.map((qq, qi) =>
-        qi !== qIdx
-          ? qq
-          : {
-              ...qq,
-              options: qq.options.map((opt, i) => ({
-                ...opt,
-                range: newRanges[i],
-              })),
-            }
-      )
-    );
-  };
-
-  const [tooltip, setTooltip] = useState<{ x: number; val: number } | null>(
-    null
-  );
-
-  // Start dragging a handle
-  const startDrag = (handleIdx: number, e: React.PointerEvent) => {
-    // Last handle is fixed — no dragging
-    if (handleIdx === q.options.length - 1) return;
-    const track = trackRef.current;
-    if (!track) return;
-    e.preventDefault();
-
-    const orig = getRanges();
-    const { left, width } = track.getBoundingClientRect();
-
-    const onMove = (evt: PointerEvent) => {
-      let pct = (evt.clientX - left) / width;
-      pct = Math.max(0, Math.min(1, pct));
-      const val = clamp(pct * max);
-
-      const updated = [...orig];
-      updated[handleIdx] = val;
-
-      // enforce non‑decreasing
-      for (let i = handleIdx - 1; i >= 0; i--) {
-        updated[i] = Math.min(updated[i], updated[i + 1]);
-      }
-      for (let i = handleIdx + 1; i < updated.length; i++) {
-        updated[i] = Math.max(updated[i], updated[i - 1]);
-      }
-
-      // Fix last handle
-      updated[updated.length - 1] = orig[orig.length - 1];
-
-      updateRanges(updated);
-      setTooltip({ x: evt.clientX, val: updated[handleIdx] });
-    };
-
-    const onUp = () => {
-      setTooltip(null);
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerup", onUp);
-    };
-
-    document.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerup", onUp);
-  };
-
-  const ranges = getRanges();
-
-  // Build colored segments
-  const segments: { color: string; widthPct: number }[] = [];
-  const colors = [
-    "bg-orange-300",
-    "bg-yellow-300",
-    "bg-lime-300",
-    "bg-cyan-300",
-    "bg-indigo-300",
-    "bg-pink-300",
-    "bg-emerald-300",
-  ];
-  let prev = 0;
-  ranges.forEach((r, i) => {
-    segments.push({
-      color: colors[i % colors.length],
-      widthPct: ((r - prev) / max) * 100,
-    });
-    prev = r;
-  });
-  if (prev < max) {
-    segments.push({
-      color: "bg-slate-200",
-      widthPct: ((max - prev) / max) * 100,
-    });
-  }
-
-  return (
-    <div className="relative w-full space-y-1">
-      {/* Tooltip while dragging */}
-      {tooltip && (
-        <div
-          className="absolute px-2 py-0.5 text-xs font-semibold text-white bg-black rounded pointer-events-none"
-          style={{
-            left: tooltip.x,
-            transform: "translateX(-50%) translateY(-140%)",
-          }}
-        >
-          {tooltip.val}
-        </div>
-      )}
-
-      {/* Track with colored regions */}
-      <div
-        ref={trackRef}
-        className="relative flex h-4 rounded-full overflow-hidden cursor-pointer"
-        onPointerDown={(e) => {
-          const track = trackRef.current;
-          if (!track) return;
-          const { left, width } = track.getBoundingClientRect();
-          const pct = (e.clientX - left) / width;
-          const val = clamp(pct * max);
-
-          // find nearest draggable handle
-          let nearest = 0;
-          let best = Infinity;
-          ranges.forEach((rv, idx) => {
-            if (idx === ranges.length - 1) return;
-            const d = Math.abs(rv - val);
-            if (d < best) {
-              best = d;
-              nearest = idx;
-            }
-          });
-
-          startDrag(nearest, e);
-        }}
-      >
-        {segments.map((seg, idx) => (
-          <div
-            key={idx}
-            className={`${seg.color} h-full`}
-            style={{ width: `${seg.widthPct}%` }}
-          />
-        ))}
-      </div>
-
-      {/* Handles and labels */}
-      {ranges.map((r, i) => {
-        const leftPct = (r / max) * 100;
-        return (
-          <div
-            key={i}
-            className="absolute"
-            style={{ left: `${leftPct}%`, top: "50%" }}
-          >
-            <div
-              className={`${
-                i === ranges.length - 1 ? "bg-slate-600" : "bg-primary"
-              } w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-lg cursor-grab`}
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                startDrag(i, e);
-              }}
-            />
-            <div className="mt-6 text-xs font-semibold text-slate-800 text-center -translate-x-1/2">
-              {q.options[i].text} ≤ {r}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-
-
-
-
-
-
-
-
   return (
     <div className={`${montserrat.variable} font-sans min-h-screen bg-slate-50`}>
       <nav className="h-20 md:h-16 flex justify-center items-center w-full bg-primary text-white">
@@ -511,7 +323,33 @@ const MultiRangeBar: React.FC<{ qIdx: number }> = ({ qIdx }) => {
               ))}
 
               <div className="mb-4">
-                {questions[selected]?.slider ? <MultiRangeBar qIdx={selected} /> : <div className="text-sm text-slate-500">No range controls — this is not a slider question.</div>}
+                {questions[selected]?.slider ?
+                 <MultiRangeSlider
+                    outerClassName="w-full my-20"
+                    question={questions[selected]}
+                    onChange={(updatedRanges: number[]) => {
+                      // Update your JSON data here
+                
+                        setQuestions((questions) =>
+                          questions.map((question, questionIndex) => 
+                            questionIndex !== selected ?
+                              question
+                              :
+                              {
+                                ...question,
+                                options: question.options.map((option, optionIndex)=> ({
+                                  ...option,
+                                  range: updatedRanges[optionIndex]
+                                }))
+                              }
+                          )
+                        )
+                        
+                    }}
+                  />
+                  : 
+                  <div className="text-sm text-slate-500">No range controls — this is not a slider question.</div>
+                }
               </div>
 
               <div className="flex gap-2">
@@ -529,6 +367,13 @@ const MultiRangeBar: React.FC<{ qIdx: number }> = ({ qIdx }) => {
 
         <footer className="mt-6 text-sm text-slate-500">Edits are stored to localStorage. Click "Save to pageText.json" to persist to disk (dev server only).</footer>
       </div>
+      <style jsx>
+        {`
+          input:focus-within{
+            background-color: #FFF;
+          }
+        `}
+      </style>
     </div>
   );
 }

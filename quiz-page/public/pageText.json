@@ -45,7 +45,7 @@
           },
           {
             "text": "Intermediate",
-            "range": 5,
+            "range": 4,
             "weights": [
               0,
               1000,
@@ -64,7 +64,7 @@
           },
           {
             "text": "Intermediate+",
-            "range": 3,
+            "range": 6,
             "weights": [
               0,
               0,
@@ -83,7 +83,7 @@
           },
           {
             "text": "Advanced",
-            "range": 17,
+            "range": 8,
             "weights": [
               0,
               0,
@@ -147,7 +147,7 @@
           },
           {
             "text": "Advanced",
-            "range": 100,
+            "range": 5,
             "weights": [
               0,
               0,
