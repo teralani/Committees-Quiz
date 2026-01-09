@@ -70,21 +70,23 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 
 const questions = pageContent[1].questions as Array<Question>
 
-const indexing = [
-  "UNODC",
-  "UNCLOS",
-  "LoN",
-  "UNECA",
-  "UNPFII",
-  "TSR",
-  "NCOG",
-  "C-3301",
-  "AD-HOC",
-  "H-CAB",
-  "ECC",
-  "FCC",
-  "LoI",
-];
+const indexing = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
+
+// const indexing = [
+//   "UNODC",
+//   "UNCLOS",
+//   "LoN",
+//   "UNECA",
+//   "UNPFII",
+//   "TSR",
+//   "NCOG",
+//   "C-3301",
+//   "AD-HOC",
+//   "H-CAB",
+//   "ECC",
+//   "FCC",
+//   "LoI",
+// ];
 
 export default function CommitteeQuizPage() {
   const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>(
