@@ -251,7 +251,7 @@ export default function CommitteeQuizPage() {
 
     setResults(topThree);
     localStorage.setItem("quizResults", JSON.stringify(topThree));
-    window.location.href = "/results";
+    window.location.href = "/kingmun/results";
   };
 
 
@@ -264,7 +264,7 @@ export default function CommitteeQuizPage() {
     <div className="relative flex flex-col items-center min-h-screen">
       {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
-      <nav className="h-16 flex justify-center align-center w-full bg-primary" >
+      <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
           <div className="hidden md:block" id="LOGO"></div> 
           <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
       </nav>
@@ -276,21 +276,21 @@ export default function CommitteeQuizPage() {
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-primary to-secondary rounded-full transition-all duration-500"
+              className="h-full bg-linear-to-r from-kingmun-primary to-kingmun-secondary rounded-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             ></div>
           </div>
         </div>
 
         <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-          <p className="text-xl md:text-2xl font-bold text-primary mb-6">
+          <p className="text-xl md:text-2xl font-bold text-kingmun-primary mb-6">
             {questions[questionNumber].text}
           </p>
 
           {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
             <div className="flex flex-col items-center mt-10 gap-10 h-full">
-              <p className="md:mt-8 mb-8 text-lg font-bold text-secondary">
+              <p className="md:mt-8 mb-8 text-lg font-bold text-kingmun-secondary">
                 {sliderValues[questionNumber] < questions[questionNumber].max!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
               </p>
               <input
@@ -301,7 +301,7 @@ export default function CommitteeQuizPage() {
                 onChange={(e) =>
                   handleSliderChange(questionNumber, parseInt(e.target.value))
                 }
-                className="w-full accent-secondary slider-gradient md:mb-8"
+                className="w-full accent-kingmun-secondary slider-gradient md:mb-8"
               />
 
               <div className="relative md:mt-8 mb-2 flex justify-between w-full px-10">
@@ -324,7 +324,7 @@ export default function CommitteeQuizPage() {
                     }
                     goToNextQuestion()
                   }}
-                  className={`btn-retry ${questionNumber == questions.length - 1? "bg-primary text-white" : "text-gray-500"}  shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
+                  className={`btn-retry ${questionNumber == questions.length - 1? "bg-kingmun-primary text-white" : "text-gray-500"}  shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
                 >
                   {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform=""><path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M184 112l144 144-144 144"/></svg>}
                 </button>
@@ -362,7 +362,7 @@ export default function CommitteeQuizPage() {
                 <button
                   onClick={goToNextQuestion}
                   disabled={selectedOptions[questionNumber] === null}
-                  className={`max-md:text-sm btn-retry ${questionNumber == questions.length - 1 && selectedOptions[questionNumber] !== null? "bg-primary text-white" : "text-gray-500"} shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
+                  className={`max-md:text-sm btn-retry ${questionNumber == questions.length - 1 && selectedOptions[questionNumber] !== null? "bg-kingmun-primary text-white" : "text-gray-500"} shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
                 >
                   {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform=""><path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M184 112l144 144-144 144"/></svg>}
                 </button>
@@ -373,7 +373,7 @@ export default function CommitteeQuizPage() {
       </div>
 
 
-        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-secondary">
+        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-kingmun-secondary">
           <h2 className="text-white text-center my-auto">
             © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
           </h2>
@@ -427,13 +427,13 @@ export default function CommitteeQuizPage() {
         }
         .btn-option:hover {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: var(--color-primary);
+          border-color: var(--color-kingmun-primary);
           border-thickness: 5px;
           transform: translateY(-2px);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .btn-option.selected {
-          border-color: var(--color-primary);
+          border-color: var(--color-kingmun-primary);
           border-thickness: 5px;
           background: #f3fcf2;
         }
@@ -450,7 +450,7 @@ export default function CommitteeQuizPage() {
         }
         .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-primary) 50%, transparent);
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-kingmun-primary) 50%, transparent);
         }
         .fade-in {
           animation: fadeIn 0.6s ease-out forwards;

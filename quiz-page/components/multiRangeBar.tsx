@@ -122,7 +122,7 @@ export default function CustomMultiSlider({ question, onChange, outerClassName }
           >
             <div
               className={`${i === selected ? 'z-50' : 'z-0'} border-white border-2 absolute -top-10 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded-sm bg-black text-white text-md whitespace-nowrap`}
-              style={{ transform: 'translateX(-50%)' }}
+              style={{ transform: 'translateX(-50%)', userSelect: "none" }}
             >
               {question.options[i]?.text ?? ''}≤ {value}
             </div>

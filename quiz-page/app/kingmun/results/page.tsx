@@ -141,14 +141,14 @@ export default function CommitteeQuizPage() {
   
     const clearResults = () => {
         localStorage.removeItem("quizResults");
-        window.location.href = "/";
+        window.location.href = "/kingmun";
     };
 
   return (
     <div className="relative flex flex-col items-center min-h-screen">
         {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
 
-        <nav className="h-20 md:h-16 flex justify-center align-center w-full bg-primary" >
+        <nav className="h-20 md:h-16 flex justify-center align-center w-full bg-kingmun-primary" >
             <div className="hidden md:block" id="LOGO"></div> 
             <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
         </nav>
@@ -162,11 +162,11 @@ export default function CommitteeQuizPage() {
             wrapperClassName="p-10 my-10 "
           >
             <Link href={{
-                pathname: '/quiz'
+                pathname: '/kingmun'
             }}>
                 <button
                     onClick={clearResults}
-                    className="bg-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary"
+                    className="bg-kingmun-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-kingmun-secondary hover:bg-kingmun-secondary"
                     >
                     Try Again
                 </button>
@@ -177,14 +177,14 @@ export default function CommitteeQuizPage() {
             <div key={i} className="mb-4 w-full bg-white md:pr-10 md:pl-5 max-md:px-10 pb-10 py-5 rounded-2xl">
               <div className="flex justify-between pb-2 align-middle w-full">
                 <div
-                  className={`${showPercentage? "" : "hidden"} relative h-7 md:h-5 bg-linear-to-r from-primary to-secondary rounded-r-full md:rounded-full transition-all duration-500`}
+                  className={`${showPercentage? "" : "hidden"} relative h-7 md:h-5 bg-linear-to-r from-kingmun-primary to-kingmun-secondary rounded-r-full md:rounded-full transition-all duration-500`}
                   style={{ width: `${r.percentage}%` }}
                 ><p className={`text-sm right-4 text-white font-bold absolute max-md:mt-1`}>{r.percentage}% match</p></div>
                 
             </div>
             <div className="flex gap-8 lg:mt-3 md:gap-10 max-md:flex-col">
                 <div className="max-md:relative max-md:-top-10.5 max-md:-left-8 max-md:h-0 md:min-h-max w-0 md:flex md:flex-col md:justify-around md:align-middle">
-                    <div className="text-center font-bold flex flex-col justify-around text-white rounded-full bg-primary text-2xl w-10 h-10">{i+1}</div>
+                    <div className="text-center font-bold flex flex-col justify-around text-white rounded-full bg-kingmun-primary text-2xl w-10 h-10">{i+1}</div>
                 </div>
               <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-60 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
                 <img
@@ -196,7 +196,7 @@ export default function CommitteeQuizPage() {
               </div>
 
               <div className="w-full">
-                <p className="text-left text-2xl font-bold text-primary my-2">
+                <p className="text-left text-2xl font-bold text-kingmun-primary my-2">
                   {r.name}
                 </p>
                 <p className="md:text-sm lg:text-md  text-start text-gray-600">{committees[r.idx].description}</p>
@@ -212,7 +212,7 @@ export default function CommitteeQuizPage() {
     
                 </div>
                 <Link href={`https://kingmun.org/committees/${committees[r.idx].acronym.replace("-", "").toLowerCase()}`} target="_blank">
-                  <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-primary hover:bg-secondary hover:-translate-y-0.5 transition">
+                  <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-kingmun-primary hover:bg-kingmun-secondary hover:-translate-y-0.5 transition">
                     <p className="text-white font-bold text-sm">Learn more about {committees[r.idx].acronym}</p>
                   </button>
                 </Link>
@@ -222,23 +222,23 @@ export default function CommitteeQuizPage() {
             </div>
           ))}
 
-            <div id="disclaimer" className="flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
+            <div id="disclaimer" className="flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-kingmun-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
                 <div className="flex">
                     <svg className="h-6 w-6 text-[#2E4A20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"></path>
                 </svg>
-                <h1 className="text-primary font-bold text-xl mb-2">Disclaimer & Contact</h1>
+                <h1 className="text-kingmun-primary font-bold text-xl mb-2">Disclaimer & Contact</h1>
                 </div>
                 
-                <p className="text-sm text-primary mb-3">
+                <p className="text-sm text-kingmun-primary mb-3">
                     Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                 </p>
-                <p className="text-sm text-primary">For questions, feedback, or further guidance, contact us at <a className="text-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
+                <p className="text-sm text-kingmun-primary">For questions, feedback, or further guidance, contact us at <a className="text-kingmun-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
             </div>
         </div>
 
 
-        <footer className="absolute bottom-0 min-h-16 md:min-h-14 flex justify-center w-full bg-secondary">
+        <footer className="absolute bottom-0 min-h-16 md:min-h-14 flex justify-center w-full bg-kingmun-secondary">
           <h2 className="text-white text-center my-auto">
             © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
           </h2>
@@ -277,7 +277,7 @@ export default function CommitteeQuizPage() {
         }
         .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-primary) 50%, transparent);
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-kingmun-primary) 50%, transparent);
         }
         .fade-in {
           animation: fadeIn 0.6s ease-out forwards;
@@ -293,7 +293,7 @@ export default function CommitteeQuizPage() {
           }
         }
         .card-img {
-          background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center, var(--color-primary);
+          background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center, var(--color-kingmun-primary);
           background-size: 10rem;
           color: transparent;
         }

@@ -1,5 +1,4 @@
 "use client"
-import MultiRangeSlider from "@/components/multiRangeBar";
 import pageContent from "@/public/pageText.json"
 
 export default function Testing() {
@@ -17,18 +16,7 @@ export default function Testing() {
     return (
         <div className="bg-white border w-1/2 h-screen mx-auto flex flex-col justify-center">
 
-            {/* <MultiRangeBar
-                outerClassName="border border-2 my-5 p-2 h-15"
-                question={questions[0]}
-            /> */}
-            <MultiRangeSlider
-                outerClassName="w-1/2"
-                question={questions[0]}
-                onChange={(updatedRanges:Array<number>) => {
-                    // Update your JSON data here
-                    console.log("New knob positions:", updatedRanges);
-                }}
-            />
+            
 
         </div>
     )
