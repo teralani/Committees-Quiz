@@ -221,7 +221,7 @@ export default function DashboardContent() {
 
                     <button className="px-4 py-2 bg-indigo-600 text-white rounded" onClick={exportJson}>Export</button>
 
-                    <button className="px-4 py-2 bg-primary/90 text-white rounded" onClick={saveToFile} disabled={saving}>
+                    <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded" onClick={saveToFile} disabled={saving}>
                     {saving ? "Saving…" : "Save to pageText.json"}
                     </button>
                 </div>

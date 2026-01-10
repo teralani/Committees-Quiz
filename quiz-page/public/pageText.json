@@ -1,7 +1,7 @@
 [
   {
     "name": "Home",
-    "DA": {
+    "Conference": {
       "name": "Conference",
       "img": "c.png",
       "text": "From finding an interesting topic to selecting your ideal ROP, choosing your perfect committee can be difficult. We hope that this committee quiz can make this process less overwhelming and more fun! "
@@ -19,7 +19,6 @@
   },
   {
     "name": "Quiz",
-    "content": "This is the Quiz page.",
     "questions": [
       {
         "text": "How many conferences have you attended?",

@@ -36,7 +36,7 @@ export default function Home() {
                 <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
                 <div className="flex justify-center pb-10 md:flex-col items-center flex-col">
                         <div className="flex flex-wrap w-full justify-center gap-2 my-10">
-                            {[content.DA, content.SG, content.IS].map((team, idx) => {
+                            {[content.Conference, content.SG, content.IS].map((team, idx) => {
                                 return (<Card
                                 key={idx}
                                 imageSrc={undefined}
@@ -78,20 +78,20 @@ export default function Home() {
                             <p className="text-sm text-kingmun-primary mb-3">
                                 Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                             </p>
-                            <p className="text-sm text-kingmun-primary">For questions, feedback, or further guidance, contact us at <a className="text-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
+                            <p className="text-sm text-kingmun-primary">For questions, feedback, or further guidance, contact us at <a className="text-kingmun-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
                         </div>
                         <Magnet
                             padding={30}
                             wrapperClassName="mt-20 mb-10"
                         >
                             <Link href="kingmun/quiz">
-                                <button className="bg-kingmun-primary/80 backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-secondary hover:bg-secondary">Take the Quiz Now!</button>
+                                <button className="bg-kingmun-primary/80 backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-kingmun-secondary hover:bg-kingmun-secondary">Take the Quiz Now!</button>
                             </Link>
                         </Magnet>
                 </div>
             </div>
             <CommitteesSection display={false} />
-            <footer className=" min-h-14 max-h-min flex justify-center align-center w-full bg-secondary">
+            <footer className=" min-h-14 max-h-min flex justify-center align-center w-full bg-kingmun-secondary">
                 <h2 className="text-white text-center my-auto">© {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.</h2>
             </footer>
             <style jsx>{`
