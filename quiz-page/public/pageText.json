@@ -1,107 +1,724 @@
 [
-    {
-        "name": "Home",
-        "DA": {
-            "name": "Conference",
-            "img": "c.png",
-            "text": "From finding an interesting topic to selecting your ideal ROP, choosing your perfect committee can be difficult. We hope that this committee quiz can make this process less overwhelming and more fun! "
-        },
-        "SG": {
-            "name": "Secretary-General",
-            "img": "sg.png",
-            "text": "[Insert Text]"
-        },
-        "IS": {
-            "name": "Internal Secretariat",
-            "img": "is.png",
-            "text": "[Insert Text]"
-        }
+  {
+    "name": "Home",
+    "Conference": {
+      "name": "Conference",
+      "img": "c.png",
+      "text": "From finding an interesting topic to selecting your ideal ROP, choosing your perfect committee can be difficult. We hope that this committee quiz can make this process less overwhelming and more fun! "
     },
-    {
-        "name": "Quiz",
-        "content": "This is the Quiz page.",
-        "questions" : [
-            {
-                "text": "How many conferences have you attended?",
-                 "options": [
-                { "text": "Introductory", "weights": [1,0,1,1,0,0,0,0,0,0,0,0,0] },
-                { "text": "Intermediate", "weights": [0,1,0,0,2,0,2,2,0,0,0,0,0] },
-                { "text": "Intermediate+", "weights": [0,0,2,0,0,2,0,2,2,0,2,0,0] },
-                { "text": "Advanced", "weights": [0,0,0,0,0,0,0,0,3,3,0,0,3] }
-                ],
-                "slider": true,
-                "max": 8
-            },
-            {
-                "text": "How many specialized or crisis committees have you attended?",
-                "options": [
-                { "text": "Introductory", "weights": [1,0,0,1,1,0,2,0,0,0,1,0,0] },
-                { "text": "Intermediate", "weights": [0,0,0,0,0,0,0,2,0,0,0,3,0] },
-                { "text": "Advanced", "weights": [0,0,0,0,0,0,0,0,3,3,0,0,3] }
-                ],
-                "slider": true,
-                "max": 5
-            },
-            {
-                "text": "What’s your favorite subject in school?",
-                "options": [
-                { "text": "History📖", "weights": [0,0,3,0,0,4,0,0,2,3,0,0,2] },
-                { "text": "Economics💵", "weights": [2,0,0,4,3,0,3,0,0,0,0,4,0] },
-                { "text": "Math/Science🔬", "weights": [0,3,0,0,0,0,0,3,0,0,4,0,0] }
-                ]
-            },
-            {
-                "text": "What type of debate style excites you the most?",
-                "options": [
-                { "text": "Formal, structured, clear rules📋", "weights": [4,0,0,4,0,0,0,0,0,0,0,0,0] },
-                { "text": "Formal with a few twists🔥", "weights": [0,3,3,0,3,0,0,0,0,0,0,0,0] },
-                { "text": "Fast paced, crisis-driven⚡", "weights": [0,0,0,0,0,0,0,0,0,0,4,4,4] },
-                { "text": "Cabinet-style🤝", "weights": [0,0,3,0,0,3,3,0,3,3,0,0,0] }
-                ]
-            },
-            {
-                "text": "If you could time-travel, where would you go?",
-                "options": [
-                { "text": "Stay in the present day📅", "weights": [3,0,0,3,3,0,0,0,0,0,0,2,0] },
-                { "text": "20th century🎞️", "weights": [0,0,3,0,0,3,3,0,3,3,0,0,0] },
-                { "text": "The Ancient World🏛️", "weights": [0,0,0,0,0,4,0,0,0,0,0,0,4] },
-                { "text": "The Future🔮", "weights": [0,3,0,0,0,0,0,0,0,0,3,0,0] }
-                ]
-            },
-            {
-                "text": "Your perfect weekend looks like:",
-                "options": [
-                { "text": "Relaxing with a light book🍿📖", "weights": [3,0,0,3,0,0,2,0,0,0,2,0,0] },
-                { "text": "Intellectually challenging🧠🔍", "weights": [0,3,0,0,3,0,0,3,2,0,0,3,0] },
-                { "text": "Digging deep into history🏺📚", "weights": [0,0,3,0,0,4,3,0,0,3,0,0,2] },
-                { "text": "Solving puzzles/codes🧩🔐", "weights": [0,0,0,0,0,0,0,3,3,3,0,0,0] }
-                ]
-            },
-            {
-                "text": "Your ideal conference snack would be:",
-                "options": [
-                { "text": "Classic chips & soda🥤", "weights": [3,0,0,3,0,0,0,0,0,0,0,0,0] },
-                { "text": "Trail mix + coffee☕", "weights": [0,3,0,0,3,0,0,0,0,0,0,0,3] },
-                { "text": "Tea and biscotti🍵", "weights": [0,0,3,0,0,0,3,0,0,0,0,0,0] },
-                { "text": "Energy drinks & bars⚡", "weights": [0,0,0,0,0,0,2,2,3,3,0,0,0] },
-                { "text": "Electrolyte drinks🧃", "weights": [0,0,0,0,0,0,0,0,0,0,3,3,0] }
-                ]
-            },
-            {
-                "text": "If your ideal committee were a movie genre, it would be:",
-                "options": [
-                { "text": "Political documentary🎬",          "weights": [4,0,0,4,0,0,0,0,0,0,0,0,0] },
-                { "text": "Epic historical drama🏰",         "weights": [0,0,4,0,0,4,0,0,0,0,0,0,0] },
-                { "text": "Detective/codes🔍",               "weights": [0,0,0,0,0,0,0,4,0,0,0,0,0] },
-                { "text": "Historical fiction + finance💼", "weights": [0,0,0,0,0,0,0,0,0,0,0,4,0] },
-                { "text": "Mythological fantasy🧙‍♂️",         "weights": [0,0,0,0,0,0,0,0,0,0,0,0,4] },
-                { "text": "Historical period piece📜",      "weights": [0,0,0,0,0,0,3,0,0,0,0,0,0] },
-                { "text": "National Geographic Documentary🌍",                   "weights": [0,0,0,0,0,0,0,0,0,0,4,0,0] },
-                { "text": "Classic pirate movie🏴‍☠️",         "weights": [0,4,0,0,0,0,0,0,0,0,0,0,0] },
-                { "text": "Espionage mystery🕵️‍♀️",            "weights": [0,0,0,0,0,0,0,0,4,0,0,0,0] }
-                ]
-            }
-        ]
-                
+    "SG": {
+      "name": "Secretary-General",
+      "img": "sg.png",
+      "text": "[Insert Text]"
+    },
+    "IS": {
+      "name": "Internal Secretariat",
+      "img": "is.png",
+      "text": "[Insert Text]"
     }
+  },
+  {
+    "name": "Quiz",
+    "questions": [
+      {
+        "text": "How many conferences have you attended?",
+        "options": [
+          {
+            "text": "Introductory",
+            "range": 2,
+            "weights": [
+              1000,
+              800,
+              0,
+              1000,
+              800,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Intermediate",
+            "range": 4,
+            "weights": [
+              900,
+              1000,
+              0,
+              900,
+              1100,
+              0,
+              1100,
+              1000,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Intermediate+",
+            "range": 6,
+            "weights": [
+              0,
+              1000,
+              1100,
+              0,
+              1000,
+              1000,
+              0,
+              1100,
+              800,
+              0,
+              1000,
+              1100,
+              1100
+            ]
+          },
+          {
+            "text": "Advanced",
+            "range": 8,
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              1200,
+              0,
+              0,
+              1300,
+              1300,
+              0,
+              0,
+              800
+            ]
+          }
+        ],
+        "slider": true,
+        "max": 8
+      },
+      {
+        "text": "How many specialized or crisis committees have you attended?",
+        "options": [
+          {
+            "text": "Introductory",
+            "range": 1,
+            "weights": [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              0,
+              1100,
+              0,
+              0,
+              0,
+              1000,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Intermediate",
+            "range": 3,
+            "weights": [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              0,
+              1000,
+              1100,
+              0,
+              0,
+              1000,
+              1300,
+              0
+            ]
+          },
+          {
+            "text": "Advanced",
+            "range": 5,
+            "weights": [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1300,
+              1300,
+              1000,
+              1000,
+              1300
+            ]
+          }
+        ],
+        "slider": true,
+        "max": 5
+      },
+      {
+        "text": "What’s your favorite subject in school?",
+        "options": [
+          {
+            "text": "History📖",
+            "weights": [
+              0,
+              0,
+              3,
+              0,
+              0,
+              4,
+              0,
+              0,
+              2,
+              3,
+              0,
+              0,
+              2
+            ]
+          },
+          {
+            "text": "Economics💵",
+            "weights": [
+              2,
+              0,
+              0,
+              4,
+              3,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0
+            ]
+          },
+          {
+            "text": "Math/Science🔬",
+            "weights": [
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3,
+              0,
+              0,
+              4,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "text": "What type of debate style excites you the most?",
+        "options": [
+          {
+            "text": "Formal, structured, clear rules📋",
+            "weights": [
+              4,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Formal with a few twists🔥",
+            "weights": [
+              0,
+              3,
+              3,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Fast paced, crisis-driven⚡",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              4,
+              4
+            ]
+          },
+          {
+            "text": "Cabinet-style🤝",
+            "weights": [
+              0,
+              0,
+              3,
+              0,
+              0,
+              3,
+              3,
+              0,
+              3,
+              3,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "text": "If you could time-travel, where would you go?",
+        "options": [
+          {
+            "text": "Stay in the present day📅",
+            "weights": [
+              3,
+              0,
+              0,
+              3,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2,
+              0
+            ]
+          },
+          {
+            "text": "20th century🎞️",
+            "weights": [
+              0,
+              0,
+              3,
+              0,
+              0,
+              3,
+              3,
+              0,
+              3,
+              3,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "The Ancient World🏛️",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "text": "The Future🔮",
+            "weights": [
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "text": "Your perfect weekend looks like:",
+        "options": [
+          {
+            "text": "Relaxing with a light book🍿📖",
+            "weights": [
+              3,
+              0,
+              0,
+              3,
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              2,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Intellectually challenging🧠🔍",
+            "weights": [
+              0,
+              3,
+              0,
+              0,
+              3,
+              0,
+              0,
+              3,
+              2,
+              0,
+              0,
+              3,
+              0
+            ]
+          },
+          {
+            "text": "Digging deep into history🏺📚",
+            "weights": [
+              0,
+              0,
+              3,
+              0,
+              0,
+              4,
+              3,
+              0,
+              0,
+              3,
+              0,
+              0,
+              2
+            ]
+          },
+          {
+            "text": "Solving puzzles/codes🧩🔐",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3,
+              3,
+              3,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "text": "Your ideal conference snack would be:",
+        "options": [
+          {
+            "text": "Classic chips & soda🥤",
+            "weights": [
+              3,
+              0,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Trail mix + coffee☕",
+            "weights": [
+              0,
+              3,
+              0,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ]
+          },
+          {
+            "text": "Tea and biscotti🍵",
+            "weights": [
+              0,
+              0,
+              3,
+              0,
+              0,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Energy drinks & bars⚡",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2,
+              2,
+              3,
+              3,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Electrolyte drinks🧃",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3,
+              3,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "text": "If your ideal committee were a movie genre, it would be:",
+        "options": [
+          {
+            "text": "Political documentary🎬",
+            "weights": [
+              4,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Epic historical drama🏰",
+            "weights": [
+              0,
+              0,
+              4,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Detective/codes🔍",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Historical fiction + finance💼",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0
+            ]
+          },
+          {
+            "text": "Mythological fantasy🧙‍♂️",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "text": "Historical period piece📜",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "National Geographic Documentary🌍",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Classic pirate movie🏴‍☠️",
+            "weights": [
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "text": "Espionage mystery🕵️‍♀️",
+            "weights": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  }
 ]

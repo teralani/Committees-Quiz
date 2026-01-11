@@ -2,9 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
-import Magnet from "@/components/magneticButton";
-import Link from "next/link";
 import pageContent from "@/public/pageText.json"
+import { createBrowserClient } from "@supabase/ssr";
 
 // --- QUIZ DATA ---
 type Question = {
@@ -17,90 +16,104 @@ type Question = {
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
-// const questions: Question[] = [
-//   {
-//     text: "How many conferences have you attended?",
-//     options: [
-//       { text: "Introductory", range: 2, tags: ["UNODC", "UNECA", "UNCLOS"] },
-//       { text: "Intermediate", range: 4, tags: ["UNPFII", "UNCLOS", "ECC", "NCOG"] },
-//       { text: "Intermediate+", range: 6, tags: ["LoN", "C-3301", "FCC", "TSR"] },
-//       { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
-//     ],
-//     slider: true,
-//     max: 8,
-//   },
-//   {
-//     text: "How many specialized or crisis committees have you attended?",
-//     options: [
-//       { text: "Introductory", range: 0, tags: ["ECC", "NCOG"] },
-//       { text: "Intermediate", range: 2, tags: ["C-3301", "FCC"] },
-//       { text: "Advanced", tags: ["AD-HOC", "H-CAB", "LoI"] },
-//     ],
-//     slider: true,
-//     max: 5,
-//   },
-//   {
-//     text: "What’s your favorite subject in school?",
-//     options: [
-//       { text: "History", tags: ["TSR", "LoN", "H-CAB", "AD-HOC", "LoI"] },
-//       { text: "Economics", tags: ["UNECA", "FCC", "NCOG", "UNODC"] },
-//       { text: "Math/Science", tags: ["ECC", "C-3301", "UNCLOS"] },
-//     ],
-//   },
-//   {
-//     text: "What type of debate style excites you the most?",
-//     options: [
-//       { text: "Formal, structured, clear rules", tags: ["UNODC", "UNECA"] },
-//       { text: "Formal with a few twists", tags: ["UNCLOS", "UNPFII", "LoN"] },
-//       { text: "Fast paced, crisis-driven", tags: ["ECC", "FCC", "LoI"] },
-//       {
-//         text: "Cabinet-style",
-//         tags: ["TSR", "C-3301", "AD-HOC", "H-CAB", "NCOG"],
-//       },
-//     ],
-//   },
-//   {
-//     text: "If you could time-travel, where would you go?",
-//     options: [
-//       { text: "Stay in the present day", tags: ["UNODC", "UNECA", "UNPFII", "FCC"] },
-//       { text: "20th century", tags: ["LoN", "NCOG", "AD-HOC", "H-CAB"] },
-//       { text: "The Ancient World", tags: ["LoI", "TSR"] },
-//       { text: "The Future", tags: ["ECC", "UNCLOS"] },
-//     ],
-//   },
-// ];
-
-const questions = pageContent[1].questions as Array<Question>
-
-const indexing = [
-  "UNODC",
-  "UNCLOS",
-  "LoN",
-  "UNECA",
-  "UNPFII",
-  "TSR",
-  "NCOG",
-  "C-3301",
-  "AD-HOC",
-  "H-CAB",
-  "ECC",
-  "FCC",
-  "LoI",
-];
+const indexing = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
 export default function CommitteeQuizPage() {
-  const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>(
-    Array(questions.length).fill(null)
-  );
-  const [sliderValues, setSliderValues] = useState<Array<number>>(
-    Array(questions.length).fill(0)
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+  let conference = 'KINGMUN'
+
+  type Data = {
+      id: string;
+      name: string;
+      pages: {
+          id: string;
+          name: string;
+          quiz_questions: {
+              id: string;
+              text: string;
+              slider: boolean;
+              max: number;
+              question_options: {
+                  id: string;
+                  text: string;
+                  range: number;
+                  option_weights: {
+                      weight: number;
+                  }[];
+              }[];
+          }[];
+      }[];
+  }[]
+
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>([]);
+  const [sliderValues, setSliderValues] = useState<Array<number>>([]);
   const [results, setResults] = useState<
     { idx: number; name: string; percentage: number }[] | null
   >(null);
   const [questionNumber, setQuestionNumber] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+
+    async function fetchQuestions() {
+      setLoading(true);
+      const {data, error} = await supabase
+          .from('conferences')
+          .select(`
+              id, 
+              name, 
+              pages (
+                  id, 
+                  name,
+                  quiz_questions (
+                      id,
+                      text,
+                      slider,
+                      max,
+                      question_options (
+                          id,
+                          text,
+                          range,
+                          option_weights (
+                              weight
+                          )
+                      )
+                  )
+              )
+          `)
+          .eq('name', conference).eq('pages.name', 'Quiz')
+
+      if (!data || data.length === 0) {
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+
+      const kingmunInfo: Data = data as Data;
+      const q = kingmunInfo[0]["pages"][0]["quiz_questions"] || [];
+      setQuestions(q);
+      setSelectedOptions(Array(q.length).fill(null));
+      setSliderValues(Array(q.length).fill(0));
+      setQuestionNumber(0);
+      setLoading(false);
+    }
+
+    fetchQuestions();
+  }, [supabaseUrl, supabaseKey]);
+
+  // initialize selection arrays when questions load
+  useEffect(() => {
+    setSelectedOptions(Array(questions.length).fill(null));
+    setSliderValues(Array(questions.length).fill(0));
+    setQuestionNumber(0);
+  }, [questions.length]);
 
   // confetti effect when results appear
   useEffect(() => {
@@ -172,6 +185,10 @@ export default function CommitteeQuizPage() {
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) draw();
 
     return () => cancelAnimationFrame(animationFrameId);
+
+
+
+    console.log(results)
   }, [results]);
 
   // — HANDLERS —
@@ -179,6 +196,8 @@ export default function CommitteeQuizPage() {
     const newSelections = [...selectedOptions];
     newSelections[qIdx] = optIdx;
     setSelectedOptions(newSelections);
+
+    console.log(selectedOptions)
   };
 
   const handleSliderChange = (qIdx: number, value: number) => {
@@ -209,21 +228,25 @@ export default function CommitteeQuizPage() {
     selectedOptions.forEach((sel, qIdx) => {
       const question = questions[qIdx];
 
+      if (!question) return;
+
       if (question.slider && sel !== null) {
-        question.options.forEach((opt) => {
+        question["question_options"].forEach((opt: any) => {
           if (opt.range !== undefined && (sel as number) <= opt.range) {
-            if (opt.weights) {
-              opt.weights.forEach((w, committeeIdx) => {
-                tally[committeeIdx] += w;
+            if (opt["option_weights"]) {
+              opt["option_weights"].forEach((w: any, committeeIdx: number) => {
+                  // const weight = typeof w === "number" ? w : (w?.weight ?? 0);
+                  tally[committeeIdx] += Number(w.weight);
               });
             }
           }
         });
       } else if (sel !== null) {
-        const chosen = question.options[sel];
-        if (chosen.weights) {
-          chosen.weights.forEach((w, committeeIdx) => {
-            tally[committeeIdx] += w;
+        const chosen = question["question_options"][sel];
+        if (chosen && chosen["option_weights"]) {
+          chosen["option_weights"].forEach((w: any, committeeIdx: number) => {
+              // const weight = typeof w === "number" ? w : (w?.weight ?? 0);
+              tally[committeeIdx] += Number(w.weight);
           });
         }
       }
@@ -251,20 +274,48 @@ export default function CommitteeQuizPage() {
 
     setResults(topThree);
     localStorage.setItem("quizResults", JSON.stringify(topThree));
-    window.location.href = "/results";
+    window.location.href = "/kingmun/results";
   };
 
+  const progressPercent = questions.length ? (questionNumber / questions.length) * 100 : 0;
 
+  if (loading) {
+    return (
+      <div className="relative flex flex-col items-center min-h-screen">
+        <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+          <div className="hidden md:block" id="LOGO"></div>
+          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+        </nav>
+        <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
+          <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+            <p>Loading quiz...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-
-  const progressPercent = (questionNumber / questions.length) * 100;
-
+  if (questions.length === 0) {
+    return (
+      <div className="relative flex flex-col items-center min-h-screen">
+        <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+          <div className="hidden md:block" id="LOGO"></div>
+          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+        </nav>
+        <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
+          <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+            <p>No quiz data available.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex flex-col items-center min-h-screen">
       {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
-      <nav className="h-16 flex justify-center align-center w-full bg-primary" >
+      <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
           <div className="hidden md:block" id="LOGO"></div> 
           <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
       </nav>
@@ -276,32 +327,32 @@ export default function CommitteeQuizPage() {
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-primary to-secondary rounded-full transition-all duration-500"
+              className="h-full bg-linear-to-r from-kingmun-primary to-kingmun-secondary rounded-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             ></div>
           </div>
         </div>
 
         <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-          <p className="text-xl md:text-2xl font-bold text-primary mb-6">
+          <p className="text-xl md:text-2xl font-bold text-kingmun-primary mb-6">
             {questions[questionNumber].text}
           </p>
 
           {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
             <div className="flex flex-col items-center mt-10 gap-10 h-full">
-              <p className="md:mt-8 mb-8 text-lg font-bold text-secondary">
-                {sliderValues[questionNumber] < questions[questionNumber].max!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
+              <p className="md:mt-8 mb-8 text-lg font-bold text-kingmun-secondary">
+                {sliderValues[questionNumber] < questions[questionNumber]["max"]!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
               </p>
               <input
                 type="range"
                 min={0}
-                max={questions[questionNumber].max!.toString()}
+                max={questions[questionNumber]["max"]!.toString()}
                 value={sliderValues[questionNumber]}
                 onChange={(e) =>
                   handleSliderChange(questionNumber, parseInt(e.target.value))
                 }
-                className="w-full accent-secondary slider-gradient md:mb-8"
+                className="w-full accent-kingmun-secondary slider-gradient md:mb-8"
               />
 
               <div className="relative md:mt-8 mb-2 flex justify-between w-full px-10">
@@ -324,16 +375,16 @@ export default function CommitteeQuizPage() {
                     }
                     goToNextQuestion()
                   }}
-                  className={`btn-retry ${questionNumber == questions.length - 1? "bg-primary text-white" : "text-gray-500"}  shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
+                  className={`btn-retry ${questionNumber == questions.length - 1? "bg-kingmun-primary text-white" : "text-gray-500"}  shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
                 >
-                  {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform="rotate(180)"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><title>ionicons-v5-a</title><polyline points="328 112 184 256 328 400" style={{fill: "none", stroke: "#6a7282", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "48px"}}></polyline></g></svg>}
+                  {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform=""><path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M184 112l144 144-144 144"/></svg>}
                 </button>
               </div>
             </div>
           ) : (
             <>
               <div className="flex flex-col gap-4">
-                {questions[questionNumber].options.map((opt, idx) => (
+                {questions[questionNumber]["question_options"].map((opt: any, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => handleOptionSelect(questionNumber, idx)}
@@ -362,9 +413,9 @@ export default function CommitteeQuizPage() {
                 <button
                   onClick={goToNextQuestion}
                   disabled={selectedOptions[questionNumber] === null}
-                  className={`max-md:text-sm btn-retry ${questionNumber == questions.length - 1 && selectedOptions[questionNumber] !== null? "bg-primary text-white" : "text-gray-500"} shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
+                  className={`max-md:text-sm btn-retry ${questionNumber == questions.length - 1 && selectedOptions[questionNumber] !== null? "bg-kingmun-primary text-white" : "text-gray-500"} shadow-md shadow-gray-400 max-h-72 max-w-min flex flex-col items-center justify-center`}
                 >
-                  {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform="rotate(180)"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><title>ionicons-v5-a</title><polyline points="328 112 184 256 328 400" style={{fill: "none", stroke: "#6a7282", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "48px"}}></polyline></g></svg>}
+                  {questionNumber === questions.length - 1 ? "Submit" : <svg width="30px" height="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000000" transform=""><path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M184 112l144 144-144 144"/></svg>}
                 </button>
               </div>
             </>
@@ -373,7 +424,7 @@ export default function CommitteeQuizPage() {
       </div>
 
 
-        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-secondary">
+        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-kingmun-secondary">
           <h2 className="text-white text-center my-auto">
             © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
           </h2>
@@ -427,13 +478,13 @@ export default function CommitteeQuizPage() {
         }
         .btn-option:hover {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: var(--color-primary);
+          border-color: var(--color-kingmun-primary);
           border-thickness: 5px;
           transform: translateY(-2px);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .btn-option.selected {
-          border-color: var(--color-primary);
+          border-color: var(--color-kingmun-primary);
           border-thickness: 5px;
           background: #f3fcf2;
         }
@@ -450,7 +501,7 @@ export default function CommitteeQuizPage() {
         }
         .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-primary) 50%, transparent);
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-kingmun-primary) 50%, transparent);
         }
         .fade-in {
           animation: fadeIn 0.6s ease-out forwards;
