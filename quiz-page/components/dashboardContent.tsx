@@ -16,58 +16,65 @@ const persistQuestions = async (questions: any) => {
     }
 
     const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-    
-    // Get the Quiz page id for the conference
+
+    // find conference + Quiz page
     const { data: confData, error: confError } = await supabase
       .from("conferences")
       .select("id, pages(id, name)")
       .eq("name", conferenceName)
       .limit(1)
       .maybeSingle();
-    if (confError) {
-      console.error("Supabase conference lookup error:", confError);
-      return false;
-    }
+    console.debug("confData", confData, "confError", confError);
+    if (confError) return false;
     if (!confData || !Array.isArray(confData.pages)) {
-      console.error("Conference or pages not found");
+      console.error("Conference or pages not found", confData);
       return false;
     }
 
     const quizPage = confData.pages.find((p: any) => p.name === "Quiz");
     if (!quizPage) {
-      console.error("Quiz page not found for conference");
+      console.error("Quiz page not found for conference", confData.pages);
       return false;
     }
     const pageId = quizPage.id;
-
     const body = JSON.stringify({ questions });
 
-    // Check for existing draft section
+    // check existing section (get id and current body)
     const { data: existing, error: selErr } = await supabase
       .from("page_sections")
-      .select("id")
+      .select("id, body")
       .eq("page_id", pageId)
       .eq("key", "quiz_draft")
       .limit(1)
       .maybeSingle();
-
-    if (selErr) {
-      console.error("Error checking existing draft:", selErr);
-      return false;
-    }
+    console.debug("existing section", existing, "select error", selErr);
+    if (selErr) return false;
 
     if (existing && existing.id) {
-      const { error: updateError } = await supabase
+      // update and request returned rows to inspect
+      const { data: updateData, error: updateError } = await supabase
         .from("page_sections")
         .update({ body, title: "Quiz Draft" })
-        .eq("id", existing.id);
-      if (updateError) {
-        console.error("Error updating draft:", updateError);
+        .eq("id", existing.id)
+        .select("id, body")
+        .maybeSingle();
+      console.debug("updateData", updateData, "updateError", updateError);
+      if (updateError) return false;
+      // verify save by refetching the row
+      const { data: verify, error: verifyErr } = await supabase
+        .from("page_sections")
+        .select("id, body")
+        .eq("id", existing.id)
+        .maybeSingle();
+      console.debug("verify after update", verify, verifyErr);
+      if (verifyErr) return false;
+      if (!verify || verify.body !== body) {
+        console.error("Updated body does not match payload", { verifyBody: verify?.body, expected: body });
         return false;
       }
       return true;
     } else {
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from("page_sections")
         .insert({
           page_id: pageId,
@@ -75,9 +82,21 @@ const persistQuestions = async (questions: any) => {
           title: "Quiz Draft",
           body,
           position: 0,
-        });
-      if (insertError) {
-        console.error("Error inserting draft:", insertError);
+        })
+        .select("id, body")
+        .maybeSingle();
+      console.debug("insertData", insertData, "insertError", insertError);
+      if (insertError) return false;
+      // verify insert
+      const { data: verifyInsert, error: verifyInsertErr } = await supabase
+        .from("page_sections")
+        .select("id, body")
+        .eq("id", insertData?.id)
+        .maybeSingle();
+      console.debug("verify after insert", verifyInsert, verifyInsertErr);
+      if (verifyInsertErr) return false;
+      if (!verifyInsert || verifyInsert.body !== body) {
+        console.error("Inserted body does not match payload", { verifyBody: verifyInsert?.body, expected: body });
         return false;
       }
       return true;
@@ -179,6 +198,28 @@ export default function DashboardContent() {
               }
             } catch {
               // fall through to use DB version
+            }
+          }
+
+          // prefer saved draft in page_sections if present
+          const { data: draft, error: draftErr } = await supabase
+            .from("page_sections")
+            .select("body")
+            .eq("page_id", page?.id)
+            .eq("key", "quiz_draft")
+            .limit(1)
+            .maybeSingle();
+          console.debug("draft", draft, "draftErr", draftErr);
+
+          if (draft && draft.body) {
+            try {
+              const parsed = JSON.parse(draft.body);
+              if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+                setQuestions(parsed.questions);
+                return;
+              }
+            } catch (e) {
+              console.warn("Failed to parse draft.body", e);
             }
           }
 
