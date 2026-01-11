@@ -14,7 +14,7 @@ export default async function SignupPage() {
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.45)]">
           <div className="border-b border-white/10 px-8 py-6">
             <h1 className="text-xl font-semibold tracking-tight">Create your account</h1>
-            <p className="text-sm text-zinc-400">Start using Brainwave in seconds</p>
+            <p className="text-sm text-zinc-400">Start using the Committee Quiz Editor!</p>
           </div>
 
           <div className="px-8 py-6">
@@ -47,7 +47,7 @@ export default async function SignupPage() {
           </div>
 
           <div className="rounded-b-2xl border-t border-white/10 bg-black/20 px-8 py-4 text-xs text-zinc-500">
-            By continuing you agree to our terms.
+            © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
           </div>
         </div>
       </div>
