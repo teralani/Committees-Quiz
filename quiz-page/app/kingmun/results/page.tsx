@@ -13,130 +13,111 @@ export default function CommitteeQuizPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const showPercentage = true;
 
-    useEffect(() => {
-        const stored = localStorage.getItem("quizResults")
-        if (stored) {
-          console.log(JSON.parse(stored))
-          setResults(JSON.parse(stored))
-        }
+useEffect(() => {
+  const stored = localStorage.getItem("quizResults");
+  if (stored) {
+    setResults(JSON.parse(stored));
+  }
 
-        var isMobile = window.matchMedia("only screen and (max-width: 760px)").matches
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
 
-        // Set canvas dimensions
-        window.addEventListener("resize", () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        })
+  const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+  const MAX_PARTICLES = isMobile ? 80 : 200;
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-        type Particle = {
-            x: number;
-            y: number;
-            r: number;
-            d: number;
-            color: string;
-            tilt: number;
-            tiltAngleIncrement: number;
-            tiltAngle: number;
-            emoji?: string;
-        };
+  type Particle = {
+    x: number;
+    y: number;
+    r: number;
+    d: number;
+    color: string;
+    tilt: number;
+    tiltAngle: number;
+    tiltAngleIncrement: number;
+    emoji?: string;
+  };
 
-        const colors = [
-            "DodgerBlue", "OliveDrab", "Gold", "pink", "SlateBlue",
-            "lightblue", "Violet", "PaleGreen", "SteelBlue",
-            "SandyBrown", "Chocolate", "Crimson"
-        ];
+  const colors = [
+    "DodgerBlue", "OliveDrab", "Gold", "pink", "SlateBlue",
+    "lightblue", "Violet", "PaleGreen", "SteelBlue",
+    "SandyBrown", "Chocolate", "Crimson"
+  ];
 
-        const particles: Particle[] = [];
-        const mp = isMobile? 80 : 200; // max particle count
+  const random = (min: number, max: number) => Math.random() * (max - min) + min;
 
-        function random(min: number, max: number) {
-            return Math.random() * (max - min) + min;
-        }
+  // Create initial particles
+  let particles: Particle[] = [];
+  for (let i = 0; i < MAX_PARTICLES; i++) {
+    particles.push({
+      x: random(0, canvas.width),
+      y: random(-canvas.height, 0),
+      r: random(10, 30),
+      d: random(10, MAX_PARTICLES),
+      color: colors[i % colors.length],
+      tilt: random(-10, 10),
+      tiltAngle: 0,
+      tiltAngleIncrement: random(0.05, 0.12),
+      emoji: Math.random() < 0.25
+        ? (Math.random() < 0.5 ? "🎉" : "👑")
+        : undefined,
+    });
+  }
 
-        // Initialize particles
-        for (let i = 0; i < mp; i++) {
-            particles.push({
-            x: random(0, canvas.width),
-            y: random(-canvas.height, 0),
-            r: random(10, 30),
-            d: random(10, mp),
-            color: colors[i % colors.length],
-            tilt: random(-10, 10),
-            tiltAngleIncrement: random(0.05, 0.12),
-            tiltAngle: 0,
-            emoji: Math.random() < 0.25
-                ? (Math.random() < 0.5 ? "🎉" : "👑")
-                : undefined,
-            });
-        }
+  let angle = 0;
+  let animationFrameId: number;
 
-        let angle = 0;
-        let animationFrameId: number;
+  function draw() {
+    ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
 
-        function draw() {
-            if(!ctx || !canvas) {return}
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Update particles
+    particles = particles.filter((p) => {
+      // update tilt
+      p.tiltAngle += p.tiltAngleIncrement;
+      p.tilt = Math.sin(p.tiltAngle) * 15;
 
-            particles.forEach((p, idx) => {
-            // update tilt angle
-            p.tiltAngle += p.tiltAngleIncrement;
+      // draw
+      if (p.emoji) {
+        ctx!.font = `${p.r * 0.7}px serif`;
+        ctx!.fillText(p.emoji, p.x + p.tilt, p.y);
+      } else {
+        ctx!.beginPath();
+        ctx!.lineWidth = p.r / 2;
+        ctx!.strokeStyle = p.color;
+        ctx!.moveTo(p.x + p.tilt + p.r / 4, p.y);
+        ctx!.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 4);
+        ctx!.stroke();
+      }
 
-            // update tilt (bending/rotation)
-            p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
+      // update position
+      p.y += (Math.cos(angle + p.d) + 2 + p.r / 2) * 2 / 2.5;
+      p.x += Math.sin(angle) * 2;
 
-            // Draw either emoji or line confetti
-            if (p.emoji) {
-                // draw an emoji centered at particle
-                ctx.font = `${p.r * 0.7}px serif`;
-                ctx.fillText(p.emoji, p.x + p.tilt, p.y);
-            } else {
-                ctx.beginPath();
-                ctx.lineWidth = p.r / 2;
-                ctx.strokeStyle = p.color;
-                ctx.moveTo(p.x + p.tilt + (p.r / 4), p.y);
-                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + (p.r / 4));
-                ctx.stroke();
-            }
+      // keep only if still onscreen
+      const onScreen = !(p.x > canvas!.width + 20 || p.x < -20 || p.y > canvas!.height);
+      return onScreen;
+    });
 
-            // update physics
-            p.y += 1.75* (Math.cos(angle + p.d) + 2 + p.r / 2) / 3;
-            p.x += 1.75* Math.sin(angle);
+    // stop when no particles left
+    if (particles.length === 0) {
+      cancelAnimationFrame(animationFrameId);
+      return;
+    }
 
-            // reposition when off-screen
-            if ( (p.x > canvas.width + 20 || p.x < -20 || p.y > canvas.height)) {
-                if (idx % 5 > 0 || idx % 2 === 0) {
-                p.x = Math.random() * canvas.width;
-                p.y = -10;
-                } else {
-                if (Math.sin(angle) > 0) {
-                    p.x = -20;
-                    p.y = Math.random() * canvas.height;
-                } else {
-                    p.x = canvas.width + 20;
-                    p.y = Math.random() * canvas.height;
-                }
-                }
-                particles.splice(idx, 1)
-            }
-            });
+    angle += 0.01;
+    animationFrameId = requestAnimationFrame(draw);
+  }
+
+  draw();
+
+  return () => cancelAnimationFrame(animationFrameId);
+}, []);
 
 
-            angle += 0.01; // global drift
-
-            animationFrameId = requestAnimationFrame(draw);
-        }
-
-        draw();
-
-        return () => cancelAnimationFrame(animationFrameId);
-    }, []);
 
   
     const clearResults = () => {

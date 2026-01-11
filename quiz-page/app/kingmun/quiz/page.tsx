@@ -115,81 +115,6 @@ export default function CommitteeQuizPage() {
     setQuestionNumber(0);
   }, [questions.length]);
 
-  // confetti effect when results appear
-  useEffect(() => {
-    if (!results) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    type Particle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      color: string;
-      size: number;
-      opacity: number;
-      emoji?: string;
-    };
-
-    const colors = ["#F59E0B", "#EF4444", "#10B981", "#3B82F6", "#A855F7"];
-    const particles: Particle[] = [];
-
-    function random(min: number, max: number) {
-      return Math.random() * (max - min) + min;
-    }
-
-    for (let i = 0; i < 200; i++) {
-      const isEmoji = Math.random() < 0.3;
-      particles.push({
-        x: random(0, canvas.width),
-        y: random(-canvas.height, 0),
-        vx: random(-1.5, 1.5),
-        vy: random(2, 5),
-        color: colors[Math.floor(Math.random() * colors.length)],
-        size: random(3, 6),
-        opacity: 1-Math.random()*0.05,
-        emoji: isEmoji ? (Math.random() < 0.5 ? "👑" : "🎉") : undefined,
-      });
-    }
-
-    let animationFrameId: number;
-    function draw() {
-      if (!canvas || !ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
-        ctx.globalAlpha = p.opacity;
-        if (p.emoji) {
-          ctx.font = `${p.size * 5}px Arial`;
-          ctx.fillText(p.emoji, p.x, p.y);
-        } else {
-          ctx.fillStyle = p.color;
-          ctx.fillRect(p.x, p.y, p.size, p.size * 2);
-        }
-        p.x += p.vx;
-        p.y += p.vy;
-        p.opacity -= 0.0005;
-        if (p.y > canvas.height || p.opacity <= 0) {
-          p.x = random(0, canvas.width);
-          p.y = random(-canvas.height, -20);
-          p.opacity = 1;
-        }
-      });
-      animationFrameId = requestAnimationFrame(draw);
-    }
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) draw();
-
-    return () => cancelAnimationFrame(animationFrameId);
-
-
-
-    console.log(results)
-  }, [results]);
 
   // — HANDLERS —
   const handleOptionSelect = (qIdx: number, optIdx: number) => {
@@ -252,7 +177,7 @@ export default function CommitteeQuizPage() {
       }
     });
 
-    const temperature = 2.5;
+    const temperature = 2.2;
 
     const highestRaw = Math.max(...tally);
 
