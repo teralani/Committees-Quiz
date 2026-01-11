@@ -3,15 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #2E4A20;
-  --secondary: #745995;
+  --kingmun-primary: #2E4A20;
+  --kingmun-secondary: #745995;
+  --munnorthwest-primary: rgb(0, 68, 103);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-kingmun-primary: var(--primary);
-  --color-kingmun-secondary: var(--secondary);
+  --color-kingmun-primary: var(--kingmun-primary);
+  --color-kingmun-secondary: var(--kingmun-secondary);
+  --color-munnorthwest-primary: var(--munnorthwest-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -43,6 +45,12 @@ body {
   transition: background-color 0.25s;
 }
 figure:hover .hover-border {
-  background-color: var(--color-secondary);
+  background-color: var(--color-kingmun-secondary);
 }
-
+#MUNNWLOGO{
+  position: relative;
+  width: 45px;
+  height: auto;
+  background: url(https://lh3.googleusercontent.com/GwzOH8iDRpE2Fi2fYBEUj1GSUpnpt1V5B5MZLSEBro1YyCi9wYq2D3rGUy-Cyx7sfZnJ43rWGccnN1qlq04=s120) no-repeat center;
+  background-size: contain;
+}

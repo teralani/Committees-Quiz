@@ -16,7 +16,8 @@ export default function CommitteeQuizPage() {
     useEffect(() => {
         const stored = localStorage.getItem("quizResults")
         if (stored) {
-            setResults(JSON.parse(stored))
+          console.log(JSON.parse(stored))
+          setResults(JSON.parse(stored))
         }
 
         var isMobile = window.matchMedia("only screen and (max-width: 760px)").matches
@@ -123,7 +124,6 @@ export default function CommitteeQuizPage() {
                 }
                 }
                 particles.splice(idx, 1)
-                console.log(animationFrameId + " " +  particles.length)
             }
             });
 
@@ -145,7 +145,7 @@ export default function CommitteeQuizPage() {
     };
 
   return (
-    <div className="relative flex flex-col items-center min-h-screen">
+    <div className="relative flex flex-col items-center min-h-screen overflow-x-clip">
         {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
 
         <nav className="h-20 md:h-16 flex justify-center align-center w-full bg-kingmun-primary" >
