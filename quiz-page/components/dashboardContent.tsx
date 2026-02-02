@@ -8,105 +8,24 @@ const conferenceName = "KINGMUN";
 
 const persistQuestions = async (questions: any) => {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    const res = await fetch("/api/saveQuiz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questions }),
+    });
+    if (!res.ok) {
+      console.error("Save failed:", await res.text());
       return false;
     }
-
-    const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-
-    // find conference + Quiz page
-    const { data: confData, error: confError } = await supabase
-      .from("conferences")
-      .select("id, pages(id, name)")
-      .eq("name", conferenceName)
-      .limit(1)
-      .maybeSingle();
-    console.debug("confData", confData, "confError", confError);
-    if (confError) return false;
-    if (!confData || !Array.isArray(confData.pages)) {
-      console.error("Conference or pages not found", confData);
-      return false;
-    }
-
-    const quizPage = confData.pages.find((p: any) => p.name === "Quiz");
-    if (!quizPage) {
-      console.error("Quiz page not found for conference", confData.pages);
-      return false;
-    }
-    const pageId = quizPage.id;
-    const body = JSON.stringify({ questions });
-
-    // check existing section (get id and current body)
-    const { data: existing, error: selErr } = await supabase
-      .from("page_sections")
-      .select("id, body")
-      .eq("page_id", pageId)
-      .eq("key", "quiz_draft")
-      .limit(1)
-      .maybeSingle();
-    console.debug("existing section", existing, "select error", selErr);
-    if (selErr) return false;
-
-    if (existing && existing.id) {
-      // update and request returned rows to inspect
-      const { data: updateData, error: updateError } = await supabase
-        .from("page_sections")
-        .update({ body, title: "Quiz Draft" })
-        .eq("id", existing.id)
-        .select("id, body")
-        .maybeSingle();
-      console.debug("updateData", updateData, "updateError", updateError);
-      if (updateError) return false;
-      // verify save by refetching the row
-      const { data: verify, error: verifyErr } = await supabase
-        .from("page_sections")
-        .select("id, body")
-        .eq("id", existing.id)
-        .maybeSingle();
-      console.debug("verify after update", verify, verifyErr);
-      if (verifyErr) return false;
-      if (!verify || verify.body !== body) {
-        console.error("Updated body does not match payload", { verifyBody: verify?.body, expected: body });
-        return false;
-      }
-      return true;
-    } else {
-      const { data: insertData, error: insertError } = await supabase
-        .from("page_sections")
-        .insert({
-          page_id: pageId,
-          key: "quiz_draft",
-          title: "Quiz Draft",
-          body,
-          position: 0,
-        })
-        .select("id, body")
-        .maybeSingle();
-      console.debug("insertData", insertData, "insertError", insertError);
-      if (insertError) return false;
-      // verify insert
-      const { data: verifyInsert, error: verifyInsertErr } = await supabase
-        .from("page_sections")
-        .select("id, body")
-        .eq("id", insertData?.id)
-        .maybeSingle();
-      console.debug("verify after insert", verifyInsert, verifyInsertErr);
-      if (verifyInsertErr) return false;
-      if (!verifyInsert || verifyInsert.body !== body) {
-        console.error("Inserted body does not match payload", { verifyBody: verifyInsert?.body, expected: body });
-        return false;
-      }
-      return true;
-    }
+    const parsed = await res.json();
+    if (parsed?.ok) return true;
+    console.error("Save response error:", parsed);
+    return false;
   } catch (err) {
     console.error("persistQuestions unexpected error:", err);
     return false;
   }
 };
-
 type Option = {
   text: string;
   weights?: number[];
@@ -140,87 +59,90 @@ export default function DashboardContent() {
 
       async function fetchQuestionsFromDb() {
         try {
-          const { data, error } = await supabase
+          // Always fetch fresh data from database to ensure sync with quiz page
+          // (localStorage caching disabled to prevent stale data issues)
+          
+          // 1) Resolve conference -> page id (explicit queries for stable results)
+          const { data: confRow, error: confErr } = await supabase
             .from("conferences")
-            .select(`
-              id,
-              name,
-              pages (
-                id,
-                name,
-                quiz_questions (
-                  id,
-                  text,
-                  slider,
-                  max,
-                  question_options (
-                    id,
-                    text,
-                    range,
-                    option_weights (
-                      weight
-                    )
-                  )
-                )
-              )
-            `)
+            .select("id")
             .eq("name", conferenceName)
-            .eq("pages.name", "Quiz")
             .limit(1)
             .maybeSingle();
-
-          if (error) {
-            console.error("fetch error", error);
+          if (confErr || !confRow) {
+            console.error("Conference not found", confErr);
             return;
           }
-          if (!data) return;
+          const confId = confRow.id;
 
-          const page = (data.pages || []).find((p: any) => p.name === "Quiz");
-          const dbQuestions = (page?.quiz_questions || []).map((qq: any) => ({
-            text: qq.text ?? "",
-            slider: !!qq.slider,
-            max: typeof qq.max === "number" ? qq.max : undefined,
-            options: (qq.question_options || []).map((opt: any) => ({
-              text: opt.text ?? "",
-              range: typeof opt.range === "number" ? opt.range : undefined,
-              weights: (opt.option_weights || []).map((w: any) => Number(w?.weight ?? 0)),
-            })),
-          }));
-
-          // If user has a local edit buffer, prefer that (per your requirement)
-          const local = localStorage.getItem("editorQuestions");
-          if (local) {
-            try {
-              const parsed = JSON.parse(local);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setQuestions(parsed);
-                return;
-              }
-            } catch {
-              // fall through to use DB version
-            }
-          }
-
-          // prefer saved draft in page_sections if present
-          const { data: draft, error: draftErr } = await supabase
-            .from("page_sections")
-            .select("body")
-            .eq("page_id", page?.id)
-            .eq("key", "quiz_draft")
+          const { data: pageRow, error: pageErr } = await supabase
+            .from("pages")
+            .select("id")
+            .eq("conference_id", confId)
+            .eq("name", "Quiz")
             .limit(1)
             .maybeSingle();
-          console.debug("draft", draft, "draftErr", draftErr);
+          if (pageErr || !pageRow) {
+            console.error("Quiz page not found", pageErr);
+            return;
+          }
+          const pageId = pageRow.id;
 
-          if (draft && draft.body) {
-            try {
-              const parsed = JSON.parse(draft.body);
-              if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
-                setQuestions(parsed.questions);
-                return;
-              }
-            } catch (e) {
-              console.warn("Failed to parse draft.body", e);
+          // 2) Fetch canonical quiz_questions in stable order and then options/weights per row
+          // (Skip page_sections draft to ensure we show exactly what the quiz page shows)
+          const { data: questionsRows, error: qErr } = await supabase
+            .from("quiz_questions")
+            .select("id, text, slider, max")
+            .eq("page_id", pageId)
+            .order("position", { ascending: true });
+
+          if (qErr) {
+            console.error("fetch quiz_questions error", qErr);
+            return;
+          }
+
+          const dbQuestions: Question[] = [];
+          for (const qq of (questionsRows || [])) {
+            const { data: optsRows, error: optErr } = await supabase
+              .from("question_options")
+              .select("id, text, range")
+              .eq("question_id", qq.id)
+              .order("position", { ascending: true });
+
+            if (optErr) {
+              console.error("Error fetching options for question", qq.id, ":", optErr?.message || optErr);
+              continue; // Skip this question but continue with others
             }
+
+            const options = [];
+            for (const opt of (optsRows || [])) {
+              const { data: weightsRows, error: wErr } = await supabase
+                .from("option_weights")
+                .select("weight")
+                .eq("option_id", opt.id)
+                .order("weight_index", { ascending: true });
+
+              if (wErr) {
+                console.error("Error fetching weights for option", opt.id, ":", wErr?.message || wErr);
+                continue; // Skip this option but continue with others
+              }
+
+              const weights = (weightsRows || []).map((w: any) => Number(w?.weight ?? 0));
+              const padded = Array.from({ length: INDEXING.length }, (_, i) => weights[i] ?? 0);
+
+              options.push({
+                text: opt.text ?? "",
+                range: typeof opt.range === "number" ? opt.range : undefined,
+                weights: padded,
+              });
+            }
+
+            dbQuestions.push({
+              text: qq.text ?? "",
+              slider: !!qq.slider,
+              max: typeof qq.max === "number" ? qq.max : undefined,
+              options,
+            });
           }
 
           setQuestions(dbQuestions);
@@ -228,13 +150,15 @@ export default function DashboardContent() {
           console.error("unexpected fetchQuestionsFromDb error", err);
         }
       }
-
       fetchQuestionsFromDb();
     }, []);
 
-    // Keep a local-edit buffer in localStorage for UX only; server updates only on Save.
+    // Auto-save edits locally for draft persistence (UX improvement)
+    // Note: This is just for in-session editing; the source of truth is always the database
     useEffect(() => {
-        localStorage.setItem("editorQuestions", JSON.stringify(questions));
+        if (questions.length > 0) {
+            localStorage.setItem("editorQuestions", JSON.stringify(questions));
+        }
     }, [questions]);
 
     useEffect(() => {
@@ -366,15 +290,19 @@ export default function DashboardContent() {
 
     // Only persist to server when user presses Save
     const saveToFile = async () => {
-        setSaving(true);
-        const ok = await persistQuestions(questions);
-        setSaving(false);
-        if (ok) {
+      setSaving(true);
+      const ok = await persistQuestions(questions);
+      setSaving(false);
+      if (ok) {
+        // Clear local edit buffer so subsequent load comes from DB
+        localStorage.removeItem("editorQuestions");
         setSavedAt(new Date().toLocaleString());
-        alert("Saved to Supabase");
-        } else {
+        // Force reload to ensure both dashboard and quiz page show same data
+        alert("Quiz saved successfully! Both dashboard and quiz page will now show the updated data.");
+        window.location.reload();
+      } else {
         alert("Save failed. Check server logs.");
-        }
+      }
     };
 
     // reset will re-fetch from DB (keeps UI label identical)
@@ -385,6 +313,45 @@ export default function DashboardContent() {
       // simple hack: reload the window to ensure fresh DB state; alternatively call fetch logic again
       window.location.reload();
     };
+
+
+    const printDebug = async () => {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseKey) {
+        console.error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+        return;
+      }
+      const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+      const conferenceName = "KINGMUN";
+      const {data, error} = await supabase
+        .from('conferences')
+        .select(`
+            id, 
+            name, 
+            pages (
+                id, 
+                name,
+                quiz_questions (
+                    id,
+                    text,
+                    slider,
+                    max,
+                    question_options (
+                        id,
+                        text,
+                        range,
+                        option_weights (
+                            weight
+                        )
+                    )
+                )
+            )
+        `)
+        .eq('name', conferenceName).eq('pages.name', 'Quiz')
+
+      console.log(data)
+    }
 
     if (!questions) return <div className="p-8">Loading...</div>;
     return (
@@ -410,6 +377,13 @@ export default function DashboardContent() {
                     Import
                     <input className="hidden" type="file" accept="application/json" onChange={(e) => importJson(e.target.files?.[0] || null)} />
                     </label>
+
+                    <button
+                    className="px-4 py-2 bg-orange-500 text-white rounded cursor-pointer"
+                    onClick={printDebug}
+                    >
+                    Print
+                    </button>
 
                     <button className="px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer" onClick={exportJson}>Export</button>
 

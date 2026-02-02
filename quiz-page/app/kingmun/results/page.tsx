@@ -169,8 +169,8 @@ useEffect(() => {
                 </div>
               <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-60 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
                 <img
-                    className="card-img object-fill h-full w-full"
-                    src={`https://files.munnorthwest.org/image/kingmun/12867126dc81167bd82c00bf2571a19a863625f07b831494889df6c83cc0d97d/${committees[r.idx].acronym.replaceAll("-", "")}%20committee%20photo.jpeg`}
+                    className="card-img object-cover h-full w-full"
+                    src={committees[r.idx].imgURL}
 
                     alt={committees[r.idx].acronym}
                 />
@@ -182,8 +182,8 @@ useEffect(() => {
                 </p>
                 <p className="md:text-sm lg:text-md  text-start text-gray-600">{committees[r.idx].description}</p>
                 <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committees[r.idx].difficulty == "Advanced"? 'text-red-600 bg-red-100' : committees[r.idx].difficulty == "Intermediate"? "text-amber-600 bg-amber-100" : "text-green-700 bg-green-100"}`}>{committees[r.idx].difficulty} </p>
-                <p className="text-start font-bold mt-5">Topics: </p>
-                <div className="my-2 flex max-w-min gap-3">
+                <p className="text-start font-bold mt-5">Topic{committees[r.idx].topics.length>1? "s" : ""}: </p>
+                <div className="my-2 flex gap-3 w-full">
                   {committees[r.idx].topics.map((topic, idx) => {
                     return (
                     <p key={idx} className="rounded-full py-1 px-3 bg-gray-200">

@@ -1,14 +1,17 @@
 import Link from 'next/link';
 import { signup } from '@/app/api/auth/actions';
+import { Montserrat } from "next/font/google";
 
 import { redirectIfAuthenticated } from '@/utils/redirectIfAuthenticated';
 import SubmitButton from '@/components/submitButton';
+
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 export default async function SignupPage() {
   await redirectIfAuthenticated()
 
   return (
-    <div className="relative min-h-screen bg-[radial-gradient(60%_80%_at_50%_0%,#0b1220_0%,#0a0a0b_60%,#060607_100%)] text-zinc-100">
+    <div className={`${montserrat.className} relative min-h-screen bg-[radial-gradient(60%_80%_at_50%_0%,#0b1220_0%,#0a0a0b_60%,#060607_100%)] text-zinc-100`}>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.04),transparent_20%),linear-gradient(to_right,rgba(255,255,255,0.03),transparent_20%)] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]" />
       <div className="relative mx-auto flex min-h-screen max-w-7xl items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.45)]">
@@ -47,7 +50,7 @@ export default async function SignupPage() {
           </div>
 
           <div className="rounded-b-2xl border-t border-white/10 bg-black/20 px-8 py-4 text-xs text-zinc-500">
-            © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
+            © {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.
           </div>
         </div>
       </div>

@@ -59,54 +59,218 @@ export default function CommitteeQuizPage() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+useEffect(() => {
+  const supabase = createBrowserClient(supabaseUrl, supabaseKey);
 
-    async function fetchQuestions() {
-      setLoading(true);
-      const {data, error} = await supabase
-          .from('conferences')
-          .select(`
-              id, 
-              name, 
-              pages (
-                  id, 
-                  name,
-                  quiz_questions (
-                      id,
-                      text,
-                      slider,
-                      max,
-                      question_options (
-                          id,
-                          text,
-                          range,
-                          option_weights (
-                              weight
-                          )
-                      )
-                  )
+  async function fetchQuestions() {
+    setLoading(true);
+    try {
+      // 1) Try nested select first (original approach that sometimes works)
+      const { data: nestedData, error: nestedErr } = await supabase
+        .from("conferences")
+        .select(`
+          id,
+          name,
+          pages (
+            id,
+            name,
+            quiz_questions (
+              id,
+              text,
+              slider,
+              max,
+              question_options (
+                id,
+                text,
+                range,
+                option_weights ( weight )
               )
-          `)
-          .eq('name', conference).eq('pages.name', 'Quiz')
+            )
+          )
+        `)
+        .eq("name", conference)
+        .eq("pages.name", "Quiz")
+        .limit(1)
+        .maybeSingle();
 
-      if (!data || data.length === 0) {
+      if (nestedErr) {
+        console.debug("nested select returned error (continuing to fallback):", nestedErr);
+      } else if (nestedData && Array.isArray(nestedData.pages) && nestedData.pages.length > 0) {
+        // Build the exact nested shape the quiz UI expects
+        const page = nestedData.pages.find((p: any) => p.name === "Quiz");
+        const nestedQuestions = (page?.quiz_questions || []).map((qq: any) => ({
+          id: qq.id,
+          text: qq.text ?? "",
+          slider: !!qq.slider,
+          max: typeof qq.max === "number" ? qq.max : null,
+          question_options: (qq.question_options || []).map((opt: any) => ({
+            id: opt.id,
+            text: opt.text ?? "",
+            range: typeof opt.range === "number" ? opt.range : null,
+            option_weights: (opt.option_weights || []).map((w: any) => ({ weight: Number(w?.weight ?? 0) })),
+          })),
+        }));
+
+        setQuestions(nestedQuestions);
+        setSelectedOptions(Array(nestedQuestions.length).fill(null));
+        setSliderValues(Array(nestedQuestions.length).fill(0));
+        setQuestionNumber(0);
+        setLoading(false);
+        return;
+      }
+
+      // 2) Fallback to explicit, ordered per-table queries (stable and predictable)
+      // Resolve conference id
+      const { data: confRow, error: confErr } = await supabase
+        .from("conferences")
+        .select("id")
+        .eq("name", conference)
+        .limit(1)
+        .maybeSingle();
+      if (confErr || !confRow) {
+        console.error("conference query failed:", confErr);
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+      const confId = confRow.id;
+
+      // Resolve page id
+      const { data: pageRow, error: pageErr } = await supabase
+        .from("pages")
+        .select("id")
+        .eq("conference_id", confId)
+        .eq("name", "Quiz")
+        .limit(1)
+        .maybeSingle();
+      if (pageErr || !pageRow) {
+        console.error("page query failed:", pageErr);
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+      const pageId = pageRow.id;
+
+      // Fetch questions in stable order
+      const { data: questionsRows, error: qErr } = await supabase
+        .from("quiz_questions")
+        .select("id, text, slider, max")
+        .eq("page_id", pageId)
+        .order("position", { ascending: true });
+
+      if (qErr) {
+        console.error("fetch quiz_questions error:", qErr);
         setQuestions([]);
         setLoading(false);
         return;
       }
 
-      const kingmunInfo: Data = data as Data;
-      const q = kingmunInfo[0]["pages"][0]["quiz_questions"] || [];
-      setQuestions(q);
-      setSelectedOptions(Array(q.length).fill(null));
-      setSliderValues(Array(q.length).fill(0));
+      const assembled: any[] = [];
+      for (const qq of questionsRows || []) {
+        // Fetch options for this question in stable order
+        let { data: optsRows, error: optErr } = await supabase
+          .from("question_options")
+          .select("id, text, range")
+          .eq("question_id", qq.id)
+          .order("position", { ascending: true });
+
+        if (optErr) {
+          console.error("fetch question_options error (per-row):", optErr);
+          // Attempt a nested fallback for this question specifically
+          try {
+            const { data: nested2, error: nested2Err } = await supabase
+              .from("conferences")
+              .select(`
+                pages (
+                  id,
+                  quiz_questions (
+                    id,
+                    question_options (
+                      id,
+                      text,
+                      range,
+                      option_weights ( weight )
+                    )
+                  )
+                )
+              `)
+              .eq("name", conference)
+              .eq("pages.id", pageId)
+              .eq("pages.quiz_questions.id", qq.id)
+              .limit(1);
+
+            if (nested2Err) {
+              console.error("nested fallback for options failed:", nested2Err);
+              optsRows = [];
+            } else {
+              optsRows = nested2?.[0]?.pages?.[0]?.quiz_questions?.[0]?.question_options || [];
+            }
+          } catch (e) {
+            console.error("exception in nested fallback for options:", e);
+            optsRows = [];
+          }
+        }
+
+        const qOptions: any[] = [];
+        for (const opt of optsRows || []) {
+          // Fetch weights for this option in stable order
+          const { data: weightsRows, error: wErr } = await supabase
+            .from("option_weights")
+            .select("weight")
+            .eq("option_id", opt.id)
+            .order("weight_index", { ascending: true });
+
+          if (wErr) {
+            console.error("fetch option_weights error for option", opt.id, ":", wErr?.message || wErr);
+            // Still add the option with empty weights rather than stopping
+            qOptions.push({
+              id: opt.id,
+              text: opt.text ?? "",
+              range: typeof opt.range === "number" ? opt.range : null,
+              option_weights: [],
+            });
+            continue;
+          }
+
+          const optionWeights = (weightsRows || []).map((w: any) => ({ weight: Number(w?.weight ?? 0) }));
+
+          qOptions.push({
+            id: opt.id,
+            text: opt.text ?? "",
+            range: typeof opt.range === "number" ? opt.range : null,
+            option_weights: optionWeights,
+          });
+        }
+
+        assembled.push({
+          id: qq.id,
+          text: qq.text ?? "",
+          slider: !!qq.slider,
+          max: typeof qq.max === "number" ? qq.max : null,
+          question_options: qOptions,
+        });
+        
+        console.log(`Loaded question ${assembled.length}: "${qq.text}" with ${qOptions.length} options`);
+      }
+
+      setQuestions(assembled);
+      setSelectedOptions(Array(assembled.length).fill(null));
+      setSliderValues(Array(assembled.length).fill(0));
       setQuestionNumber(0);
       setLoading(false);
+      
+      // Debug: log loaded questions
+      console.log("Loaded questions count:", assembled.length);
+      console.log("Questions:", assembled.map(q => ({ text: q.text, optionsCount: q.question_options?.length })));
+    } catch (err) {
+      console.error("fetchQuestions unexpected error", err);
+      setQuestions([]);
+      setLoading(false);
     }
+  }
 
-    fetchQuestions();
-  }, [supabaseUrl, supabaseKey]);
+  fetchQuestions();
+}, [supabaseUrl, supabaseKey]);
 
   // initialize selection arrays when questions load
   useEffect(() => {
@@ -177,7 +341,7 @@ export default function CommitteeQuizPage() {
       }
     });
 
-    const temperature = 2.2;
+    const temperature = 1;
 
     const highestRaw = Math.max(...tally);
 
@@ -247,7 +411,7 @@ export default function CommitteeQuizPage() {
       <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold text-white">Question {questionNumber + 1}</span>
+            <span className="text-sm font-semibold text-white">Question {questionNumber + 1} of {questions.length}</span>
             <span className="text-sm font-semibold text-white">{Math.round(progressPercent)}%</span>
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
