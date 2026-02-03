@@ -41,11 +41,13 @@ const INDEXING = (committees as Array<{name:string, acronym:string, description:
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 
 export default function DashboardContent() {
+    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug") ?? "kingmun") : "kingmun";
+
     const [selected, setSelected] = useState<number>(0);
     const [saving, setSaving] = useState(false);
     const [savedAt, setSavedAt] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [conferenceSlug, setConferenceSlug] = useState<string>("kingmun");
+    const [conferenceSlug, setConferenceSlug] = useState<string>(stored);
     const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -305,6 +307,7 @@ export default function DashboardContent() {
         setSavedAt(new Date().toLocaleString());
         // Force reload to ensure both dashboard and quiz page show same data
         alert("Quiz saved successfully! Both dashboard and quiz page will now show the updated data.");
+        localStorage.setItem("slug", conferenceSlug)
         window.location.reload();
       } else {
         alert("Save failed. Check server logs.");
