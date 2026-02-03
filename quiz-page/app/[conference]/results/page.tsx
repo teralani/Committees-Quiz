@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
 import Magnet from "@/components/magneticButton";
@@ -7,8 +8,14 @@ import Link from "next/link";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
+const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 
 export default function CommitteeQuizPage() {
+    const params = useParams();
+    const rawSlug = (params.conference as string || 'kingmun').toLowerCase();
+    const conferenceSlug = ALLOWED_SLUGS.includes(rawSlug) ? rawSlug : 'kingmun';
+    const conferenceName = conferenceSlug.toUpperCase();
+    
     const [results, setResults] = useState<{ idx: number; name: string; percentage: number }[] | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const showPercentage = true;
@@ -122,16 +129,16 @@ useEffect(() => {
   
     const clearResults = () => {
         localStorage.removeItem("quizResults");
-        window.location.href = "/kingmun";
+        window.location.href = `/${conferenceSlug}`;
     };
 
   return (
     <div className="relative flex flex-col items-center min-h-screen overflow-x-clip">
         {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
 
-        <nav className="h-20 md:h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+        <nav className="h-20 md:h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
             <div className="hidden md:block" id="LOGO"></div> 
-            <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+            <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} 2026 Committee Quiz</h1>
         </nav>
 
         <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">
@@ -142,12 +149,16 @@ useEffect(() => {
             padding={30}
             wrapperClassName="p-10 my-10 "
           >
-            <Link href={{
-                pathname: '/kingmun'
-            }}>
+            <Link href={`/${conferenceSlug}`}>
                 <button
                     onClick={clearResults}
-                    className="bg-kingmun-primary/80 backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl shadow-kingmun-secondary hover:bg-kingmun-secondary"
+                    className="backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl"
+                    style={{ 
+                        backgroundColor: `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`,
+                        boxShadow: `0 0 15px var(--color-${conferenceSlug}-secondary)` 
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-secondary)`}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`}
                     >
                     Try Again
                 </button>
@@ -158,14 +169,17 @@ useEffect(() => {
             <div key={i} className="mb-4 w-full bg-white md:pr-10 md:pl-5 max-md:px-10 pb-10 py-5 rounded-2xl">
               <div className="flex justify-between pb-2 align-middle w-full">
                 <div
-                  className={`${showPercentage? "" : "hidden"} relative h-7 md:h-5 bg-linear-to-r from-kingmun-primary to-kingmun-secondary rounded-r-full md:rounded-full transition-all duration-500`}
-                  style={{ width: `${r.percentage}%` }}
+                  className={`${showPercentage? "" : "hidden"} relative h-7 md:h-5 rounded-r-full md:rounded-full transition-all duration-500`}
+                  style={{ 
+                    width: `${r.percentage}%`,
+                    background: `linear-gradient(to right, var(--color-${conferenceSlug}-primary), var(--color-${conferenceSlug}-secondary))`
+                  }}
                 ><p className={`text-sm right-4 text-white font-bold absolute max-md:mt-1`}>{r.percentage}% match</p></div>
                 
             </div>
             <div className="flex gap-8 lg:mt-3 md:gap-10 max-md:flex-col">
                 <div className="max-md:relative max-md:-top-10.5 max-md:-left-8 max-md:h-0 md:min-h-max w-0 md:flex md:flex-col md:justify-around md:align-middle">
-                    <div className="text-center font-bold flex flex-col justify-around text-white rounded-full bg-kingmun-primary text-2xl w-10 h-10">{i+1}</div>
+                    <div className="text-center font-bold flex flex-col justify-around text-white rounded-full text-2xl w-10 h-10" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>{i+1}</div>
                 </div>
               <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-60 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
                 <img
@@ -177,7 +191,7 @@ useEffect(() => {
               </div>
 
               <div className="w-full">
-                <p className="text-left text-2xl font-bold text-kingmun-primary my-2">
+                <p className="text-left text-2xl font-bold my-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                   {r.name}
                 </p>
                 <p className="md:text-sm lg:text-md  text-start text-gray-600">{committees[r.idx].description}</p>
@@ -193,7 +207,12 @@ useEffect(() => {
     
                 </div>
                 <Link href={`https://kingmun.org/committees/${committees[r.idx].acronym.replace("-", "").toLowerCase()}`} target="_blank">
-                  <button className="w-full relative bottom-2 mt-7 rounded-lg p-3 bg-kingmun-primary hover:bg-kingmun-secondary hover:-translate-y-0.5 transition">
+                  <button 
+                    className="w-full relative bottom-2 mt-7 rounded-lg p-3 hover:-translate-y-0.5 transition"
+                    style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-secondary)`}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-primary)`}
+                  >
                     <p className="text-white font-bold text-sm">Learn more about {committees[r.idx].acronym}</p>
                   </button>
                 </Link>
@@ -203,25 +222,25 @@ useEffect(() => {
             </div>
           ))}
 
-            <div id="disclaimer" className="flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black hover:shadow-kingmun-primary transition transform duration-300 hover:scale-105 hover:shadow-xl">
+            <div id="disclaimer" className="flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black transition transform duration-300 hover:scale-105 hover:shadow-xl" onMouseEnter={(e) => e.currentTarget.style.boxShadow = `0 20px 25px -5px var(--color-${conferenceSlug}-primary)`} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 1)'}>
                 <div className="flex">
-                    <svg className="h-6 w-6 text-[#2E4A20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-6 w-6 mr-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"></path>
                 </svg>
-                <h1 className="text-kingmun-primary font-bold text-xl mb-2">Disclaimer & Contact</h1>
+                <h1 className="font-bold text-xl mb-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>Disclaimer & Contact</h1>
                 </div>
                 
-                <p className="text-sm text-kingmun-primary mb-3">
+                <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                     Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                 </p>
-                <p className="text-sm text-kingmun-primary">For questions, feedback, or further guidance, contact us at <a className="text-kingmun-secondary underline" href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
+                <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
             </div>
         </div>
 
 
-        <footer className="absolute bottom-0 min-h-16 md:min-h-14 flex justify-center w-full bg-kingmun-secondary">
+        <footer className="absolute bottom-0 min-h-16 md:min-h-14 flex justify-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-secondary)` }}>
           <h2 className="text-white text-center my-auto">
-            © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
+            © {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.
           </h2>
         </footer>
 
@@ -243,7 +262,7 @@ useEffect(() => {
         #disclaimer {
             max-width: 700px;
             border-left-width: 12px;
-            border-image: linear-gradient(to bottom, #2E4A20, #5b2950) 1;
+            border-image: linear-gradient(to bottom, var(--color-${conferenceSlug}-primary), var(--color-${conferenceSlug}-secondary)) 1;
         }
         .btn-retry:enabled {
           padding: 14px 32px;

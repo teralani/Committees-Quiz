@@ -4,14 +4,12 @@ import committees from "@/public/committees.json"
 import MultiRangeSlider from "@/components/multiRangeBar";
 import { createBrowserClient } from "@supabase/ssr";
 
-const conferenceName = "KINGMUN";
-
-const persistQuestions = async (questions: any) => {
+const persistQuestions = async (questions: any, conference: string) => {
   try {
     const res = await fetch("/api/saveQuiz", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questions }),
+      body: JSON.stringify({ questions, conference }),
     });
     if (!res.ok) {
       console.error("Save failed:", await res.text());
@@ -40,11 +38,16 @@ type Question = {
 
 const INDEXING = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
+const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+
 export default function DashboardContent() {
     const [selected, setSelected] = useState<number>(0);
     const [saving, setSaving] = useState(false);
     const [savedAt, setSavedAt] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
+    const [conferenceSlug, setConferenceSlug] = useState<string>("kingmun");
+    const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // Fetch from Supabase on mount (and map DB shape -> editor shape).
     useEffect(() => {
@@ -55,103 +58,106 @@ export default function DashboardContent() {
         return;
       }
       const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-      const conferenceName = "KINGMUN";
 
       async function fetchQuestionsFromDb() {
+        setLoading(true);
         try {
-          // Always fetch fresh data from database to ensure sync with quiz page
-          // (localStorage caching disabled to prevent stale data issues)
-          
-          // 1) Resolve conference -> page id (explicit queries for stable results)
-          const { data: confRow, error: confErr } = await supabase
-            .from("conferences")
-            .select("id")
-            .eq("name", conferenceName)
-            .limit(1)
-            .maybeSingle();
-          if (confErr || !confRow) {
+          // Parallel fetch: get conferences list and quiz data simultaneously
+          const [conferencesResult, quizDataResult] = await Promise.all([
+            supabase
+              .from("conferences")
+              .select("id, name, slug")
+              .order("name", { ascending: true }),
+            supabase
+              .from("conferences")
+              .select(`
+                id,
+                pages!inner (
+                  id,
+                  quiz_questions (
+                    id,
+                    text,
+                    slider,
+                    max,
+                    position,
+                    question_options (
+                      id,
+                      text,
+                      range,
+                      position,
+                      option_weights (
+                        weight,
+                        weight_index
+                      )
+                    )
+                  )
+                )
+              `)
+              .eq("slug", conferenceSlug)
+              .eq("pages.name", "Quiz")
+              .maybeSingle()
+          ]);
+
+          // Update available conferences (filtered to allowed slugs only)
+          if (!conferencesResult.error && conferencesResult.data) {
+            const filtered = conferencesResult.data
+              .filter((c: any) => ALLOWED_SLUGS.includes(c.slug))
+              .map((c: any) => ({ name: c.name, slug: c.slug }));
+            setAvailableConferences(filtered);
+          }
+
+          // Process quiz data
+          const { data: confData, error: confErr } = quizDataResult;
+          if (confErr || !confData) {
             console.error("Conference not found", confErr);
-            return;
-          }
-          const confId = confRow.id;
-
-          const { data: pageRow, error: pageErr } = await supabase
-            .from("pages")
-            .select("id")
-            .eq("conference_id", confId)
-            .eq("name", "Quiz")
-            .limit(1)
-            .maybeSingle();
-          if (pageErr || !pageRow) {
-            console.error("Quiz page not found", pageErr);
-            return;
-          }
-          const pageId = pageRow.id;
-
-          // 2) Fetch canonical quiz_questions in stable order and then options/weights per row
-          // (Skip page_sections draft to ensure we show exactly what the quiz page shows)
-          const { data: questionsRows, error: qErr } = await supabase
-            .from("quiz_questions")
-            .select("id, text, slider, max")
-            .eq("page_id", pageId)
-            .order("position", { ascending: true });
-
-          if (qErr) {
-            console.error("fetch quiz_questions error", qErr);
+            setQuestions([]);
             return;
           }
 
-          const dbQuestions: Question[] = [];
-          for (const qq of (questionsRows || [])) {
-            const { data: optsRows, error: optErr } = await supabase
-              .from("question_options")
-              .select("id, text, range")
-              .eq("question_id", qq.id)
-              .order("position", { ascending: true });
+          const page = confData.pages?.[0];
+          if (!page) {
+            console.error("Quiz page not found");
+            setQuestions([]);
+            return;
+          }
 
-            if (optErr) {
-              console.error("Error fetching options for question", qq.id, ":", optErr?.message || optErr);
-              continue; // Skip this question but continue with others
-            }
+          // Transform nested data into Question[] format
+          const dbQuestions: Question[] = (page.quiz_questions || [])
+            .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+            .map((qq: any) => {
+              const options = (qq.question_options || [])
+                .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+                .map((opt: any) => {
+                  const weightsData = (opt.option_weights || [])
+                    .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0));
+                  
+                  const weights = weightsData.map((w: any) => Number(w?.weight ?? 0));
+                  const padded = Array.from({ length: INDEXING.length }, (_, i) => weights[i] ?? 0);
 
-            const options = [];
-            for (const opt of (optsRows || [])) {
-              const { data: weightsRows, error: wErr } = await supabase
-                .from("option_weights")
-                .select("weight")
-                .eq("option_id", opt.id)
-                .order("weight_index", { ascending: true });
+                  return {
+                    text: opt.text ?? "",
+                    range: typeof opt.range === "number" ? opt.range : undefined,
+                    weights: padded,
+                  };
+                });
 
-              if (wErr) {
-                console.error("Error fetching weights for option", opt.id, ":", wErr?.message || wErr);
-                continue; // Skip this option but continue with others
-              }
-
-              const weights = (weightsRows || []).map((w: any) => Number(w?.weight ?? 0));
-              const padded = Array.from({ length: INDEXING.length }, (_, i) => weights[i] ?? 0);
-
-              options.push({
-                text: opt.text ?? "",
-                range: typeof opt.range === "number" ? opt.range : undefined,
-                weights: padded,
-              });
-            }
-
-            dbQuestions.push({
-              text: qq.text ?? "",
-              slider: !!qq.slider,
-              max: typeof qq.max === "number" ? qq.max : undefined,
-              options,
+              return {
+                text: qq.text ?? "",
+                slider: !!qq.slider,
+                max: typeof qq.max === "number" ? qq.max : undefined,
+                options,
+              };
             });
-          }
 
           setQuestions(dbQuestions);
         } catch (err) {
           console.error("unexpected fetchQuestionsFromDb error", err);
+        } finally {
+          setLoading(false);
         }
       }
       fetchQuestionsFromDb();
-    }, []);
+    }, [conferenceSlug]);
 
     // Auto-save edits locally for draft persistence (UX improvement)
     // Note: This is just for in-session editing; the source of truth is always the database
@@ -291,7 +297,7 @@ export default function DashboardContent() {
     // Only persist to server when user presses Save
     const saveToFile = async () => {
       setSaving(true);
-      const ok = await persistQuestions(questions);
+      const ok = await persistQuestions(questions, conferenceSlug);
       setSaving(false);
       if (ok) {
         // Clear local edit buffer so subsequent load comes from DB
@@ -323,7 +329,6 @@ export default function DashboardContent() {
         return;
       }
       const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-      const conferenceName = "KINGMUN";
       const {data, error} = await supabase
         .from('conferences')
         .select(`
@@ -348,19 +353,48 @@ export default function DashboardContent() {
                 )
             )
         `)
-        .eq('name', conferenceName).eq('pages.name', 'Quiz')
+        .eq('slug', conferenceSlug).eq('pages.name', 'Quiz')
 
       console.log(data)
     }
 
-    if (!questions) return <div className="p-8">Loading...</div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-kingmun-primary mb-4"></div>
+                    <p className="text-xl font-semibold text-gray-700">Loading {conferenceSlug.toUpperCase()} quiz data...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="max-w-6xl mx-auto p-6">
                 <div className="mb-6 flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold">{conferenceName} Quiz Editor</h2>
-                    <p className="text-sm text-slate-500">Edit the quiz questions that live in the database (Quiz page).</p>
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold">Quiz Editor</h2>
+                        <p className="text-sm text-slate-500">Edit the quiz questions that live in the database (Quiz page).</p>
+                    </div>
+                    <div>
+                        <label htmlFor="conference-select" className="block text-sm font-medium text-gray-700 mb-1">
+                            Conference
+                        </label>
+                        <select
+                            id="conference-select"
+                            value={conferenceSlug}
+                            onChange={(e) => setConferenceSlug(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
+                        >
+                            {availableConferences.map((conf) => (
+                                <option key={conf.slug} value={conf.slug}>
+                                    {conf.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="flex gap-2 items-center">
@@ -475,26 +509,30 @@ export default function DashboardContent() {
 
                     <div className="mb-4">
                         {questions[selected]?.slider ?
-                        <MultiRangeSlider
-                            outerClassName="w-full my-20"
-                            question={questions[selected]}
-                            onChange={(updatedRanges: number[]) => {
-                                setQuestions((questions) =>
-                                questions.map((question, questionIndex) => 
-                                    questionIndex !== selected ?
-                                    question
-                                    :
-                                    {
-                                        ...question,
-                                        options: question.options.map((option, optionIndex)=> ({
-                                        ...option,
-                                        range: updatedRanges[optionIndex]
-                                        }))
-                                    }
-                                )
-                                )
-                            }}
-                        />
+                        <>
+                          <h1 className="text-xl font-bold mt-10">How to use the slider:</h1>
+                          <p>If the slider input falls within a certain "class", the question answer will correspond to that class. Choose the upper bound for each class.</p>
+                          <MultiRangeSlider
+                              outerClassName="w-full my-20"
+                              question={questions[selected]}
+                              onChange={(updatedRanges: number[]) => {
+                                  setQuestions((questions) =>
+                                  questions.map((question, questionIndex) => 
+                                      questionIndex !== selected ?
+                                      question
+                                      :
+                                      {
+                                          ...question,
+                                          options: question.options.map((option, optionIndex)=> ({
+                                          ...option,
+                                          range: updatedRanges[optionIndex]
+                                          }))
+                                      }
+                                  )
+                                  )
+                              }}
+                          />
+                        </>
                         : 
                         <div className="text-sm text-slate-500">No range controls — this is not a slider question.</div>
                         }

@@ -1,52 +1,47 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
-import pageContent from "@/public/pageText.json"
 import { createBrowserClient } from "@supabase/ssr";
-
-// --- QUIZ DATA ---
-type Question = {
-  text: string;
-  options: { text: string; weights: Array<number>; range?: number }[];
-  slider?: boolean;
-  max?: number;
-  weight?: [number];
-};
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 const indexing = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
+const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+
 export default function CommitteeQuizPage() {
+  const params = useParams();
+  const rawSlug = (params.conference as string || 'kingmun').toLowerCase();
+  const conferenceSlug = ALLOWED_SLUGS.includes(rawSlug) ? rawSlug : 'kingmun';
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-  let conference = 'KINGMUN'
-
-  type Data = {
-      id: string;
-      name: string;
-      pages: {
-          id: string;
-          name: string;
-          quiz_questions: {
-              id: string;
-              text: string;
-              slider: boolean;
-              max: number;
-              question_options: {
-                  id: string;
-                  text: string;
-                  range: number;
-                  option_weights: {
-                      weight: number;
-                  }[];
-              }[];
-          }[];
-      }[];
-  }[]
+  // type Data = {
+  //     id: string;
+  //     name: string;
+  //     pages: {
+  //         id: string;
+  //         name: string;
+  //         quiz_questions: {
+  //             id: string;
+  //             text: string;
+  //             slider: boolean;
+  //             max: number;
+  //             question_options: {
+  //                 id: string;
+  //                 text: string;
+  //                 range: number;
+  //                 option_weights: {
+  //                     weight: number;
+  //                 }[];
+  //             }[];
+  //         }[];
+  //     }[];
+  // }[]
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>([]);
@@ -56,6 +51,7 @@ export default function CommitteeQuizPage() {
   >(null);
   const [questionNumber, setQuestionNumber] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [conferenceName, setConferenceName] = useState<string>('');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -88,7 +84,7 @@ useEffect(() => {
             )
           )
         `)
-        .eq("name", conference)
+        .eq("slug", conferenceSlug)
         .eq("pages.name", "Quiz")
         .limit(1)
         .maybeSingle();
@@ -97,6 +93,7 @@ useEffect(() => {
         console.debug("nested select returned error (continuing to fallback):", nestedErr);
       } else if (nestedData && Array.isArray(nestedData.pages) && nestedData.pages.length > 0) {
         // Build the exact nested shape the quiz UI expects
+        setConferenceName(nestedData.name);
         const page = nestedData.pages.find((p: any) => p.name === "Quiz");
         const nestedQuestions = (page?.quiz_questions || []).map((qq: any) => ({
           id: qq.id,
@@ -123,8 +120,8 @@ useEffect(() => {
       // Resolve conference id
       const { data: confRow, error: confErr } = await supabase
         .from("conferences")
-        .select("id")
-        .eq("name", conference)
+        .select("id, name")
+        .eq("slug", conferenceSlug)
         .limit(1)
         .maybeSingle();
       if (confErr || !confRow) {
@@ -134,6 +131,7 @@ useEffect(() => {
         return;
       }
       const confId = confRow.id;
+      setConferenceName(confRow.name);
 
       // Resolve page id
       const { data: pageRow, error: pageErr } = await supabase
@@ -194,7 +192,7 @@ useEffect(() => {
                   )
                 )
               `)
-              .eq("name", conference)
+              .eq("slug", conferenceSlug)
               .eq("pages.id", pageId)
               .eq("pages.quiz_questions.id", qq.id)
               .limit(1);
@@ -363,7 +361,7 @@ useEffect(() => {
 
     setResults(topThree);
     localStorage.setItem("quizResults", JSON.stringify(topThree));
-    window.location.href = "/kingmun/results";
+    window.location.href = `/${conferenceSlug}/results`;
   };
 
   const progressPercent = questions.length ? (questionNumber / questions.length) * 100 : 0;
@@ -371,7 +369,7 @@ useEffect(() => {
   if (loading) {
     return (
       <div className="relative flex flex-col items-center min-h-screen">
-        <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+        <nav className={`h-16 flex justify-center align-center w-full bg-${conferenceSlug}-primary`} >
           <div className="hidden md:block" id="LOGO"></div>
           <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
         </nav>
@@ -404,9 +402,9 @@ useEffect(() => {
     <div className="relative flex flex-col items-center min-h-screen">
       {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
-      <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+      <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
           <div className="hidden md:block" id="LOGO"></div> 
-          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} Committee Quiz</h1>
       </nav>
       <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
         <div className="mb-6">
@@ -416,21 +414,24 @@ useEffect(() => {
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-kingmun-primary to-kingmun-secondary rounded-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{ 
+                width: `${progressPercent}%`,
+                background: `linear-gradient(to right, var(--color-${conferenceSlug}-primary), var(--color-${conferenceSlug}-secondary))`
+              }}
             ></div>
           </div>
         </div>
 
         <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-          <p className="text-xl md:text-2xl font-bold text-kingmun-primary mb-6">
+          <p className="text-xl md:text-2xl font-bold mb-6" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
             {questions[questionNumber].text}
           </p>
 
           {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
             <div className="flex flex-col items-center mt-10 gap-10 h-full">
-              <p className="md:mt-8 mb-8 text-lg font-bold text-kingmun-secondary">
+              <p className="md:mt-8 mb-8 text-lg font-bold" style={{ color: `var(--color-${conferenceSlug}-secondary)` }}>
                 {sliderValues[questionNumber] < questions[questionNumber]["max"]!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
               </p>
               <input
@@ -441,7 +442,8 @@ useEffect(() => {
                 onChange={(e) =>
                   handleSliderChange(questionNumber, parseInt(e.target.value))
                 }
-                className="w-full accent-kingmun-secondary slider-gradient md:mb-8"
+                className="w-full slider-gradient md:mb-8 h-3 bg-linear-to-r from-green-200 via-yellow-200 to-red-200 rounded-lg appearance-none cursor-pointer"
+                style={{ accentColor: `var(--color-${conferenceSlug}-secondary)` }}
               />
 
               <div className="relative md:mt-8 mb-2 flex justify-between w-full px-10">
@@ -513,9 +515,9 @@ useEffect(() => {
       </div>
 
 
-        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-kingmun-secondary">
+        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-secondary)` }}>
           <h2 className="text-white text-center my-auto">
-            © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
+            © {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.
           </h2>
         </footer>
 
@@ -567,13 +569,13 @@ useEffect(() => {
         }
         .btn-option:hover {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: var(--color-kingmun-primary);
+          border-color: var(--color-${conferenceSlug}-primary);
           border-thickness: 5px;
           transform: translateY(-2px);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .btn-option.selected {
-          border-color: var(--color-kingmun-primary);
+          border-color: var(--color-${conferenceSlug}-primary);
           border-thickness: 5px;
           background: #f3fcf2;
         }
@@ -590,7 +592,7 @@ useEffect(() => {
         }
         .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-kingmun-primary) 50%, transparent);
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-${conferenceSlug}-primary) 50%, transparent);
         }
         .fade-in {
           animation: fadeIn 0.6s ease-out forwards;

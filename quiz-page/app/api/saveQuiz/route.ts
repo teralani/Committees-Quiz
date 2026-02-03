@@ -5,6 +5,8 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const questions = body?.questions;
+    const conferenceSlug = body?.conference || "kingmun"; // Default to kingmun for backwards compatibility
+    
     if (!Array.isArray(questions)) {
       return NextResponse.json({ error: "Invalid payload, expected { questions: [...] }" }, { status: 400 });
     }
@@ -14,8 +16,8 @@ export async function POST(req: Request) {
     // find conference + Quiz page
     const { data: confData, error: confError } = await supabase
       .from("conferences")
-      .select("id, pages(id, name)")
-      .eq("name", "KINGMUN")
+      .select("id, name, pages(id, name)")
+      .eq("slug", conferenceSlug)
       .limit(1)
       .maybeSingle();
 

@@ -6,6 +6,23 @@
   --kingmun-primary: #2E4A20;
   --kingmun-secondary: #745995;
   --munnorthwest-primary: rgb(0, 68, 103);
+  --munnorthwest-secondary: rgb(0, 68, 103);
+  --pacmun-primary: #1792a7;
+  --pacmun-secondary: #1792a7;
+  --edumun-primary: #2B8282;
+  --edumun-secondary: #2B8282;
+  --seattlemun-primary: #C8193E;
+  --seattlemun-secondary: #C8193E;
+  --color-kingmun-primary: #2E4A20;
+  --color-kingmun-secondary: #745995;
+  --color-munnorthwest-primary: rgb(0, 68, 103);
+  --color-munnorthwest-secondary: rgb(0, 68, 103);
+  --color-pacmun-primary: #1792a7;
+  --color-pacmun-secondary: #1792a7;
+  --color-edumun-primary: #2B8282;
+  --color-edumun-secondary: #2B8282;
+  --color-seattlemun-primary: #c02f4e;
+  --color-seattlemun-secondary: #c02f4e;
 }
 
 @theme inline {
@@ -14,6 +31,12 @@
   --color-kingmun-primary: var(--kingmun-primary);
   --color-kingmun-secondary: var(--kingmun-secondary);
   --color-munnorthwest-primary: var(--munnorthwest-primary);
+  --color-pacmun-primary: var(--pacmun-primary);
+  --color-pacmun-secondary: var(--pacmun-secondary);
+  --color-edumun-primary: var(--edumun-primary);
+  --color-edumun-secondary: var(--edumun-secondary);
+  --color-seattlemun-primary: var(--seattlemun-primary);
+  --color-seattlemun-secondary: var(--seattlemun-secondary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -44,9 +67,7 @@ body {
 .hover-border {
   transition: background-color 0.25s;
 }
-figure:hover .hover-border {
-  background-color: var(--color-kingmun-secondary);
-}
+
 #MUNNWLOGO{
   position: relative;
   width: 45px;
