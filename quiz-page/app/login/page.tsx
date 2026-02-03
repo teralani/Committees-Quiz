@@ -53,7 +53,7 @@ export default async function loginPage() {
           </div>
 
           <div className="rounded-b-2xl border-t border-white/10 bg-black/20 px-8 py-4 text-xs text-zinc-500">
-             © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
+             © {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.
           </div>
         </div>
       </div>

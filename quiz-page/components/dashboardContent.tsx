@@ -4,109 +4,26 @@ import committees from "@/public/committees.json"
 import MultiRangeSlider from "@/components/multiRangeBar";
 import { createBrowserClient } from "@supabase/ssr";
 
-const conferenceName = "KINGMUN";
-
-const persistQuestions = async (questions: any) => {
+const persistQuestions = async (questions: any, conference: string) => {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    const res = await fetch("/api/saveQuiz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questions, conference }),
+    });
+    if (!res.ok) {
+      console.error("Save failed:", await res.text());
       return false;
     }
-
-    const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-
-    // find conference + Quiz page
-    const { data: confData, error: confError } = await supabase
-      .from("conferences")
-      .select("id, pages(id, name)")
-      .eq("name", conferenceName)
-      .limit(1)
-      .maybeSingle();
-    console.debug("confData", confData, "confError", confError);
-    if (confError) return false;
-    if (!confData || !Array.isArray(confData.pages)) {
-      console.error("Conference or pages not found", confData);
-      return false;
-    }
-
-    const quizPage = confData.pages.find((p: any) => p.name === "Quiz");
-    if (!quizPage) {
-      console.error("Quiz page not found for conference", confData.pages);
-      return false;
-    }
-    const pageId = quizPage.id;
-    const body = JSON.stringify({ questions });
-
-    // check existing section (get id and current body)
-    const { data: existing, error: selErr } = await supabase
-      .from("page_sections")
-      .select("id, body")
-      .eq("page_id", pageId)
-      .eq("key", "quiz_draft")
-      .limit(1)
-      .maybeSingle();
-    console.debug("existing section", existing, "select error", selErr);
-    if (selErr) return false;
-
-    if (existing && existing.id) {
-      // update and request returned rows to inspect
-      const { data: updateData, error: updateError } = await supabase
-        .from("page_sections")
-        .update({ body, title: "Quiz Draft" })
-        .eq("id", existing.id)
-        .select("id, body")
-        .maybeSingle();
-      console.debug("updateData", updateData, "updateError", updateError);
-      if (updateError) return false;
-      // verify save by refetching the row
-      const { data: verify, error: verifyErr } = await supabase
-        .from("page_sections")
-        .select("id, body")
-        .eq("id", existing.id)
-        .maybeSingle();
-      console.debug("verify after update", verify, verifyErr);
-      if (verifyErr) return false;
-      if (!verify || verify.body !== body) {
-        console.error("Updated body does not match payload", { verifyBody: verify?.body, expected: body });
-        return false;
-      }
-      return true;
-    } else {
-      const { data: insertData, error: insertError } = await supabase
-        .from("page_sections")
-        .insert({
-          page_id: pageId,
-          key: "quiz_draft",
-          title: "Quiz Draft",
-          body,
-          position: 0,
-        })
-        .select("id, body")
-        .maybeSingle();
-      console.debug("insertData", insertData, "insertError", insertError);
-      if (insertError) return false;
-      // verify insert
-      const { data: verifyInsert, error: verifyInsertErr } = await supabase
-        .from("page_sections")
-        .select("id, body")
-        .eq("id", insertData?.id)
-        .maybeSingle();
-      console.debug("verify after insert", verifyInsert, verifyInsertErr);
-      if (verifyInsertErr) return false;
-      if (!verifyInsert || verifyInsert.body !== body) {
-        console.error("Inserted body does not match payload", { verifyBody: verifyInsert?.body, expected: body });
-        return false;
-      }
-      return true;
-    }
+    const parsed = await res.json();
+    if (parsed?.ok) return true;
+    console.error("Save response error:", parsed);
+    return false;
   } catch (err) {
     console.error("persistQuestions unexpected error:", err);
     return false;
   }
 };
-
 type Option = {
   text: string;
   weights?: number[];
@@ -121,11 +38,16 @@ type Question = {
 
 const INDEXING = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
+const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+
 export default function DashboardContent() {
     const [selected, setSelected] = useState<number>(0);
     const [saving, setSaving] = useState(false);
     const [savedAt, setSavedAt] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
+    const [conferenceSlug, setConferenceSlug] = useState<string>("kingmun");
+    const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // Fetch from Supabase on mount (and map DB shape -> editor shape).
     useEffect(() => {
@@ -136,105 +58,113 @@ export default function DashboardContent() {
         return;
       }
       const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-      const conferenceName = "KINGMUN";
 
       async function fetchQuestionsFromDb() {
+        setLoading(true);
         try {
-          const { data, error } = await supabase
-            .from("conferences")
-            .select(`
-              id,
-              name,
-              pages (
+          // Parallel fetch: get conferences list and quiz data simultaneously
+          const [conferencesResult, quizDataResult] = await Promise.all([
+            supabase
+              .from("conferences")
+              .select("id, name, slug")
+              .order("name", { ascending: true }),
+            supabase
+              .from("conferences")
+              .select(`
                 id,
-                name,
-                quiz_questions (
+                pages!inner (
                   id,
-                  text,
-                  slider,
-                  max,
-                  question_options (
+                  quiz_questions (
                     id,
                     text,
-                    range,
-                    option_weights (
-                      weight
+                    slider,
+                    max,
+                    position,
+                    question_options (
+                      id,
+                      text,
+                      range,
+                      position,
+                      option_weights (
+                        weight,
+                        weight_index
+                      )
                     )
                   )
                 )
-              )
-            `)
-            .eq("name", conferenceName)
-            .eq("pages.name", "Quiz")
-            .limit(1)
-            .maybeSingle();
+              `)
+              .eq("slug", conferenceSlug)
+              .eq("pages.name", "Quiz")
+              .maybeSingle()
+          ]);
 
-          if (error) {
-            console.error("fetch error", error);
+          // Update available conferences (filtered to allowed slugs only)
+          if (!conferencesResult.error && conferencesResult.data) {
+            const filtered = conferencesResult.data
+              .filter((c: any) => ALLOWED_SLUGS.includes(c.slug))
+              .map((c: any) => ({ name: c.name, slug: c.slug }));
+            setAvailableConferences(filtered);
+          }
+
+          // Process quiz data
+          const { data: confData, error: confErr } = quizDataResult;
+          if (confErr || !confData) {
+            console.error("Conference not found", confErr);
+            setQuestions([]);
             return;
           }
-          if (!data) return;
 
-          const page = (data.pages || []).find((p: any) => p.name === "Quiz");
-          const dbQuestions = (page?.quiz_questions || []).map((qq: any) => ({
-            text: qq.text ?? "",
-            slider: !!qq.slider,
-            max: typeof qq.max === "number" ? qq.max : undefined,
-            options: (qq.question_options || []).map((opt: any) => ({
-              text: opt.text ?? "",
-              range: typeof opt.range === "number" ? opt.range : undefined,
-              weights: (opt.option_weights || []).map((w: any) => Number(w?.weight ?? 0)),
-            })),
-          }));
-
-          // If user has a local edit buffer, prefer that (per your requirement)
-          const local = localStorage.getItem("editorQuestions");
-          if (local) {
-            try {
-              const parsed = JSON.parse(local);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setQuestions(parsed);
-                return;
-              }
-            } catch {
-              // fall through to use DB version
-            }
+          const page = confData.pages?.[0];
+          if (!page) {
+            console.error("Quiz page not found");
+            setQuestions([]);
+            return;
           }
 
-          // prefer saved draft in page_sections if present
-          const { data: draft, error: draftErr } = await supabase
-            .from("page_sections")
-            .select("body")
-            .eq("page_id", page?.id)
-            .eq("key", "quiz_draft")
-            .limit(1)
-            .maybeSingle();
-          console.debug("draft", draft, "draftErr", draftErr);
+          // Transform nested data into Question[] format
+          const dbQuestions: Question[] = (page.quiz_questions || [])
+            .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+            .map((qq: any) => {
+              const options = (qq.question_options || [])
+                .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+                .map((opt: any) => {
+                  const weightsData = (opt.option_weights || [])
+                    .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0));
+                  
+                  const weights = weightsData.map((w: any) => Number(w?.weight ?? 0));
+                  const padded = Array.from({ length: INDEXING.length }, (_, i) => weights[i] ?? 0);
 
-          if (draft && draft.body) {
-            try {
-              const parsed = JSON.parse(draft.body);
-              if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
-                setQuestions(parsed.questions);
-                return;
-              }
-            } catch (e) {
-              console.warn("Failed to parse draft.body", e);
-            }
-          }
+                  return {
+                    text: opt.text ?? "",
+                    range: typeof opt.range === "number" ? opt.range : undefined,
+                    weights: padded,
+                  };
+                });
+
+              return {
+                text: qq.text ?? "",
+                slider: !!qq.slider,
+                max: typeof qq.max === "number" ? qq.max : undefined,
+                options,
+              };
+            });
 
           setQuestions(dbQuestions);
         } catch (err) {
           console.error("unexpected fetchQuestionsFromDb error", err);
+        } finally {
+          setLoading(false);
         }
       }
-
       fetchQuestionsFromDb();
-    }, []);
+    }, [conferenceSlug]);
 
-    // Keep a local-edit buffer in localStorage for UX only; server updates only on Save.
+    // Auto-save edits locally for draft persistence (UX improvement)
+    // Note: This is just for in-session editing; the source of truth is always the database
     useEffect(() => {
-        localStorage.setItem("editorQuestions", JSON.stringify(questions));
+        if (questions.length > 0) {
+            localStorage.setItem("editorQuestions", JSON.stringify(questions));
+        }
     }, [questions]);
 
     useEffect(() => {
@@ -366,15 +296,19 @@ export default function DashboardContent() {
 
     // Only persist to server when user presses Save
     const saveToFile = async () => {
-        setSaving(true);
-        const ok = await persistQuestions(questions);
-        setSaving(false);
-        if (ok) {
+      setSaving(true);
+      const ok = await persistQuestions(questions, conferenceSlug);
+      setSaving(false);
+      if (ok) {
+        // Clear local edit buffer so subsequent load comes from DB
+        localStorage.removeItem("editorQuestions");
         setSavedAt(new Date().toLocaleString());
-        alert("Saved to Supabase");
-        } else {
+        // Force reload to ensure both dashboard and quiz page show same data
+        alert("Quiz saved successfully! Both dashboard and quiz page will now show the updated data.");
+        window.location.reload();
+      } else {
         alert("Save failed. Check server logs.");
-        }
+      }
     };
 
     // reset will re-fetch from DB (keeps UI label identical)
@@ -386,14 +320,81 @@ export default function DashboardContent() {
       window.location.reload();
     };
 
-    if (!questions) return <div className="p-8">Loading...</div>;
+
+    const printDebug = async () => {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseKey) {
+        console.error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+        return;
+      }
+      const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+      const {data, error} = await supabase
+        .from('conferences')
+        .select(`
+            id, 
+            name, 
+            pages (
+                id, 
+                name,
+                quiz_questions (
+                    id,
+                    text,
+                    slider,
+                    max,
+                    question_options (
+                        id,
+                        text,
+                        range,
+                        option_weights (
+                            weight
+                        )
+                    )
+                )
+            )
+        `)
+        .eq('slug', conferenceSlug).eq('pages.name', 'Quiz')
+
+      console.log(data)
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-kingmun-primary mb-4"></div>
+                    <p className="text-xl font-semibold text-gray-700">Loading {conferenceSlug.toUpperCase()} quiz data...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="max-w-6xl mx-auto p-6">
                 <div className="mb-6 flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold">{conferenceName} Quiz Editor</h2>
-                    <p className="text-sm text-slate-500">Edit the quiz questions that live in the database (Quiz page).</p>
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold">Quiz Editor</h2>
+                        <p className="text-sm text-slate-500">Edit the quiz questions that live in the database (Quiz page).</p>
+                    </div>
+                    <div>
+                        <label htmlFor="conference-select" className="block text-sm font-medium text-gray-700 mb-1">
+                            Conference
+                        </label>
+                        <select
+                            id="conference-select"
+                            value={conferenceSlug}
+                            onChange={(e) => setConferenceSlug(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
+                        >
+                            {availableConferences.map((conf) => (
+                                <option key={conf.slug} value={conf.slug}>
+                                    {conf.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="flex gap-2 items-center">
@@ -410,6 +411,13 @@ export default function DashboardContent() {
                     Import
                     <input className="hidden" type="file" accept="application/json" onChange={(e) => importJson(e.target.files?.[0] || null)} />
                     </label>
+
+                    <button
+                    className="px-4 py-2 bg-orange-500 text-white rounded cursor-pointer"
+                    onClick={printDebug}
+                    >
+                    Print
+                    </button>
 
                     <button className="px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer" onClick={exportJson}>Export</button>
 
@@ -501,26 +509,30 @@ export default function DashboardContent() {
 
                     <div className="mb-4">
                         {questions[selected]?.slider ?
-                        <MultiRangeSlider
-                            outerClassName="w-full my-20"
-                            question={questions[selected]}
-                            onChange={(updatedRanges: number[]) => {
-                                setQuestions((questions) =>
-                                questions.map((question, questionIndex) => 
-                                    questionIndex !== selected ?
-                                    question
-                                    :
-                                    {
-                                        ...question,
-                                        options: question.options.map((option, optionIndex)=> ({
-                                        ...option,
-                                        range: updatedRanges[optionIndex]
-                                        }))
-                                    }
-                                )
-                                )
-                            }}
-                        />
+                        <>
+                          <h1 className="text-xl font-bold mt-10">How to use the slider:</h1>
+                          <p>If the slider input falls within a certain "class", the question answer will correspond to that class. Choose the upper bound for each class.</p>
+                          <MultiRangeSlider
+                              outerClassName="w-full my-20"
+                              question={questions[selected]}
+                              onChange={(updatedRanges: number[]) => {
+                                  setQuestions((questions) =>
+                                  questions.map((question, questionIndex) => 
+                                      questionIndex !== selected ?
+                                      question
+                                      :
+                                      {
+                                          ...question,
+                                          options: question.options.map((option, optionIndex)=> ({
+                                          ...option,
+                                          range: updatedRanges[optionIndex]
+                                          }))
+                                      }
+                                  )
+                                  )
+                              }}
+                          />
+                        </>
                         : 
                         <div className="text-sm text-slate-500">No range controls — this is not a slider question.</div>
                         }

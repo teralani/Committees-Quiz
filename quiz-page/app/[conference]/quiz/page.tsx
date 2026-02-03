@@ -1,52 +1,47 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
-import pageContent from "@/public/pageText.json"
 import { createBrowserClient } from "@supabase/ssr";
-
-// --- QUIZ DATA ---
-type Question = {
-  text: string;
-  options: { text: string; weights: Array<number>; range?: number }[];
-  slider?: boolean;
-  max?: number;
-  weight?: [number];
-};
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 const indexing = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
+const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+
 export default function CommitteeQuizPage() {
+  const params = useParams();
+  const rawSlug = (params.conference as string || 'kingmun').toLowerCase();
+  const conferenceSlug = ALLOWED_SLUGS.includes(rawSlug) ? rawSlug : 'kingmun';
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-  let conference = 'KINGMUN'
-
-  type Data = {
-      id: string;
-      name: string;
-      pages: {
-          id: string;
-          name: string;
-          quiz_questions: {
-              id: string;
-              text: string;
-              slider: boolean;
-              max: number;
-              question_options: {
-                  id: string;
-                  text: string;
-                  range: number;
-                  option_weights: {
-                      weight: number;
-                  }[];
-              }[];
-          }[];
-      }[];
-  }[]
+  // type Data = {
+  //     id: string;
+  //     name: string;
+  //     pages: {
+  //         id: string;
+  //         name: string;
+  //         quiz_questions: {
+  //             id: string;
+  //             text: string;
+  //             slider: boolean;
+  //             max: number;
+  //             question_options: {
+  //                 id: string;
+  //                 text: string;
+  //                 range: number;
+  //                 option_weights: {
+  //                     weight: number;
+  //                 }[];
+  //             }[];
+  //         }[];
+  //     }[];
+  // }[]
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>([]);
@@ -56,57 +51,224 @@ export default function CommitteeQuizPage() {
   >(null);
   const [questionNumber, setQuestionNumber] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [conferenceName, setConferenceName] = useState<string>('');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+useEffect(() => {
+  const supabase = createBrowserClient(supabaseUrl, supabaseKey);
 
-    async function fetchQuestions() {
-      setLoading(true);
-      const {data, error} = await supabase
-          .from('conferences')
-          .select(`
-              id, 
-              name, 
-              pages (
-                  id, 
-                  name,
-                  quiz_questions (
-                      id,
-                      text,
-                      slider,
-                      max,
-                      question_options (
-                          id,
-                          text,
-                          range,
-                          option_weights (
-                              weight
-                          )
-                      )
-                  )
+  async function fetchQuestions() {
+    setLoading(true);
+    try {
+      // 1) Try nested select first (original approach that sometimes works)
+      const { data: nestedData, error: nestedErr } = await supabase
+        .from("conferences")
+        .select(`
+          id,
+          name,
+          pages (
+            id,
+            name,
+            quiz_questions (
+              id,
+              text,
+              slider,
+              max,
+              question_options (
+                id,
+                text,
+                range,
+                option_weights ( weight )
               )
-          `)
-          .eq('name', conference).eq('pages.name', 'Quiz')
+            )
+          )
+        `)
+        .eq("slug", conferenceSlug)
+        .eq("pages.name", "Quiz")
+        .limit(1)
+        .maybeSingle();
 
-      if (!data || data.length === 0) {
+      if (nestedErr) {
+        console.debug("nested select returned error (continuing to fallback):", nestedErr);
+      } else if (nestedData && Array.isArray(nestedData.pages) && nestedData.pages.length > 0) {
+        // Build the exact nested shape the quiz UI expects
+        setConferenceName(nestedData.name);
+        const page = nestedData.pages.find((p: any) => p.name === "Quiz");
+        const nestedQuestions = (page?.quiz_questions || []).map((qq: any) => ({
+          id: qq.id,
+          text: qq.text ?? "",
+          slider: !!qq.slider,
+          max: typeof qq.max === "number" ? qq.max : null,
+          question_options: (qq.question_options || []).map((opt: any) => ({
+            id: opt.id,
+            text: opt.text ?? "",
+            range: typeof opt.range === "number" ? opt.range : null,
+            option_weights: (opt.option_weights || []).map((w: any) => ({ weight: Number(w?.weight ?? 0) })),
+          })),
+        }));
+
+        setQuestions(nestedQuestions);
+        setSelectedOptions(Array(nestedQuestions.length).fill(null));
+        setSliderValues(Array(nestedQuestions.length).fill(0));
+        setQuestionNumber(0);
+        setLoading(false);
+        return;
+      }
+
+      // 2) Fallback to explicit, ordered per-table queries (stable and predictable)
+      // Resolve conference id
+      const { data: confRow, error: confErr } = await supabase
+        .from("conferences")
+        .select("id, name")
+        .eq("slug", conferenceSlug)
+        .limit(1)
+        .maybeSingle();
+      if (confErr || !confRow) {
+        console.error("conference query failed:", confErr);
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+      const confId = confRow.id;
+      setConferenceName(confRow.name);
+
+      // Resolve page id
+      const { data: pageRow, error: pageErr } = await supabase
+        .from("pages")
+        .select("id")
+        .eq("conference_id", confId)
+        .eq("name", "Quiz")
+        .limit(1)
+        .maybeSingle();
+      if (pageErr || !pageRow) {
+        console.error("page query failed:", pageErr);
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+      const pageId = pageRow.id;
+
+      // Fetch questions in stable order
+      const { data: questionsRows, error: qErr } = await supabase
+        .from("quiz_questions")
+        .select("id, text, slider, max")
+        .eq("page_id", pageId)
+        .order("position", { ascending: true });
+
+      if (qErr) {
+        console.error("fetch quiz_questions error:", qErr);
         setQuestions([]);
         setLoading(false);
         return;
       }
 
-      const kingmunInfo: Data = data as Data;
-      const q = kingmunInfo[0]["pages"][0]["quiz_questions"] || [];
-      setQuestions(q);
-      setSelectedOptions(Array(q.length).fill(null));
-      setSliderValues(Array(q.length).fill(0));
+      const assembled: any[] = [];
+      for (const qq of questionsRows || []) {
+        // Fetch options for this question in stable order
+        let { data: optsRows, error: optErr } = await supabase
+          .from("question_options")
+          .select("id, text, range")
+          .eq("question_id", qq.id)
+          .order("position", { ascending: true });
+
+        if (optErr) {
+          console.error("fetch question_options error (per-row):", optErr);
+          // Attempt a nested fallback for this question specifically
+          try {
+            const { data: nested2, error: nested2Err } = await supabase
+              .from("conferences")
+              .select(`
+                pages (
+                  id,
+                  quiz_questions (
+                    id,
+                    question_options (
+                      id,
+                      text,
+                      range,
+                      option_weights ( weight )
+                    )
+                  )
+                )
+              `)
+              .eq("slug", conferenceSlug)
+              .eq("pages.id", pageId)
+              .eq("pages.quiz_questions.id", qq.id)
+              .limit(1);
+
+            if (nested2Err) {
+              console.error("nested fallback for options failed:", nested2Err);
+              optsRows = [];
+            } else {
+              optsRows = nested2?.[0]?.pages?.[0]?.quiz_questions?.[0]?.question_options || [];
+            }
+          } catch (e) {
+            console.error("exception in nested fallback for options:", e);
+            optsRows = [];
+          }
+        }
+
+        const qOptions: any[] = [];
+        for (const opt of optsRows || []) {
+          // Fetch weights for this option in stable order
+          const { data: weightsRows, error: wErr } = await supabase
+            .from("option_weights")
+            .select("weight")
+            .eq("option_id", opt.id)
+            .order("weight_index", { ascending: true });
+
+          if (wErr) {
+            console.error("fetch option_weights error for option", opt.id, ":", wErr?.message || wErr);
+            // Still add the option with empty weights rather than stopping
+            qOptions.push({
+              id: opt.id,
+              text: opt.text ?? "",
+              range: typeof opt.range === "number" ? opt.range : null,
+              option_weights: [],
+            });
+            continue;
+          }
+
+          const optionWeights = (weightsRows || []).map((w: any) => ({ weight: Number(w?.weight ?? 0) }));
+
+          qOptions.push({
+            id: opt.id,
+            text: opt.text ?? "",
+            range: typeof opt.range === "number" ? opt.range : null,
+            option_weights: optionWeights,
+          });
+        }
+
+        assembled.push({
+          id: qq.id,
+          text: qq.text ?? "",
+          slider: !!qq.slider,
+          max: typeof qq.max === "number" ? qq.max : null,
+          question_options: qOptions,
+        });
+        
+        console.log(`Loaded question ${assembled.length}: "${qq.text}" with ${qOptions.length} options`);
+      }
+
+      setQuestions(assembled);
+      setSelectedOptions(Array(assembled.length).fill(null));
+      setSliderValues(Array(assembled.length).fill(0));
       setQuestionNumber(0);
       setLoading(false);
+      
+      // Debug: log loaded questions
+      console.log("Loaded questions count:", assembled.length);
+      console.log("Questions:", assembled.map(q => ({ text: q.text, optionsCount: q.question_options?.length })));
+    } catch (err) {
+      console.error("fetchQuestions unexpected error", err);
+      setQuestions([]);
+      setLoading(false);
     }
+  }
 
-    fetchQuestions();
-  }, [supabaseUrl, supabaseKey]);
+  fetchQuestions();
+}, [supabaseUrl, supabaseKey]);
 
   // initialize selection arrays when questions load
   useEffect(() => {
@@ -115,81 +277,6 @@ export default function CommitteeQuizPage() {
     setQuestionNumber(0);
   }, [questions.length]);
 
-  // confetti effect when results appear
-  useEffect(() => {
-    if (!results) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    type Particle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      color: string;
-      size: number;
-      opacity: number;
-      emoji?: string;
-    };
-
-    const colors = ["#F59E0B", "#EF4444", "#10B981", "#3B82F6", "#A855F7"];
-    const particles: Particle[] = [];
-
-    function random(min: number, max: number) {
-      return Math.random() * (max - min) + min;
-    }
-
-    for (let i = 0; i < 200; i++) {
-      const isEmoji = Math.random() < 0.3;
-      particles.push({
-        x: random(0, canvas.width),
-        y: random(-canvas.height, 0),
-        vx: random(-1.5, 1.5),
-        vy: random(2, 5),
-        color: colors[Math.floor(Math.random() * colors.length)],
-        size: random(3, 6),
-        opacity: 1-Math.random()*0.05,
-        emoji: isEmoji ? (Math.random() < 0.5 ? "👑" : "🎉") : undefined,
-      });
-    }
-
-    let animationFrameId: number;
-    function draw() {
-      if (!canvas || !ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
-        ctx.globalAlpha = p.opacity;
-        if (p.emoji) {
-          ctx.font = `${p.size * 5}px Arial`;
-          ctx.fillText(p.emoji, p.x, p.y);
-        } else {
-          ctx.fillStyle = p.color;
-          ctx.fillRect(p.x, p.y, p.size, p.size * 2);
-        }
-        p.x += p.vx;
-        p.y += p.vy;
-        p.opacity -= 0.0005;
-        if (p.y > canvas.height || p.opacity <= 0) {
-          p.x = random(0, canvas.width);
-          p.y = random(-canvas.height, -20);
-          p.opacity = 1;
-        }
-      });
-      animationFrameId = requestAnimationFrame(draw);
-    }
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) draw();
-
-    return () => cancelAnimationFrame(animationFrameId);
-
-
-
-    console.log(results)
-  }, [results]);
 
   // — HANDLERS —
   const handleOptionSelect = (qIdx: number, optIdx: number) => {
@@ -252,7 +339,7 @@ export default function CommitteeQuizPage() {
       }
     });
 
-    const temperature = 2.5;
+    const temperature = 1;
 
     const highestRaw = Math.max(...tally);
 
@@ -274,7 +361,7 @@ export default function CommitteeQuizPage() {
 
     setResults(topThree);
     localStorage.setItem("quizResults", JSON.stringify(topThree));
-    window.location.href = "/kingmun/results";
+    window.location.href = `/${conferenceSlug}/results`;
   };
 
   const progressPercent = questions.length ? (questionNumber / questions.length) * 100 : 0;
@@ -282,7 +369,7 @@ export default function CommitteeQuizPage() {
   if (loading) {
     return (
       <div className="relative flex flex-col items-center min-h-screen">
-        <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+        <nav className={`h-16 flex justify-center align-center w-full bg-${conferenceSlug}-primary`} >
           <div className="hidden md:block" id="LOGO"></div>
           <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
         </nav>
@@ -315,33 +402,36 @@ export default function CommitteeQuizPage() {
     <div className="relative flex flex-col items-center min-h-screen">
       {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
-      <nav className="h-16 flex justify-center align-center w-full bg-kingmun-primary" >
+      <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
           <div className="hidden md:block" id="LOGO"></div> 
-          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} Committee Quiz</h1>
       </nav>
       <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold text-white">Question {questionNumber + 1}</span>
+            <span className="text-sm font-semibold text-white">Question {questionNumber + 1} of {questions.length}</span>
             <span className="text-sm font-semibold text-white">{Math.round(progressPercent)}%</span>
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-kingmun-primary to-kingmun-secondary rounded-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{ 
+                width: `${progressPercent}%`,
+                background: `linear-gradient(to right, var(--color-${conferenceSlug}-primary), var(--color-${conferenceSlug}-secondary))`
+              }}
             ></div>
           </div>
         </div>
 
         <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-          <p className="text-xl md:text-2xl font-bold text-kingmun-primary mb-6">
+          <p className="text-xl md:text-2xl font-bold mb-6" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
             {questions[questionNumber].text}
           </p>
 
           {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
             <div className="flex flex-col items-center mt-10 gap-10 h-full">
-              <p className="md:mt-8 mb-8 text-lg font-bold text-kingmun-secondary">
+              <p className="md:mt-8 mb-8 text-lg font-bold" style={{ color: `var(--color-${conferenceSlug}-secondary)` }}>
                 {sliderValues[questionNumber] < questions[questionNumber]["max"]!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
               </p>
               <input
@@ -352,7 +442,8 @@ export default function CommitteeQuizPage() {
                 onChange={(e) =>
                   handleSliderChange(questionNumber, parseInt(e.target.value))
                 }
-                className="w-full accent-kingmun-secondary slider-gradient md:mb-8"
+                className="w-full slider-gradient md:mb-8 h-3 bg-linear-to-r from-green-200 via-yellow-200 to-red-200 rounded-lg appearance-none cursor-pointer"
+                style={{ accentColor: `var(--color-${conferenceSlug}-secondary)` }}
               />
 
               <div className="relative md:mt-8 mb-2 flex justify-between w-full px-10">
@@ -424,9 +515,9 @@ export default function CommitteeQuizPage() {
       </div>
 
 
-        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-kingmun-secondary">
+        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-secondary)` }}>
           <h2 className="text-white text-center my-auto">
-            © {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.
+            © {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.
           </h2>
         </footer>
 
@@ -478,13 +569,13 @@ export default function CommitteeQuizPage() {
         }
         .btn-option:hover {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: var(--color-kingmun-primary);
+          border-color: var(--color-${conferenceSlug}-primary);
           border-thickness: 5px;
           transform: translateY(-2px);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .btn-option.selected {
-          border-color: var(--color-kingmun-primary);
+          border-color: var(--color-${conferenceSlug}-primary);
           border-thickness: 5px;
           background: #f3fcf2;
         }
@@ -501,7 +592,7 @@ export default function CommitteeQuizPage() {
         }
         .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-kingmun-primary) 50%, transparent);
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-${conferenceSlug}-primary) 50%, transparent);
         }
         .fade-in {
           animation: fadeIn 0.6s ease-out forwards;
