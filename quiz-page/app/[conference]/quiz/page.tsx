@@ -371,7 +371,7 @@ useEffect(() => {
       <div className="relative flex flex-col items-center min-h-screen">
         <nav className={`h-16 flex justify-center align-center w-full bg-${conferenceSlug}-primary`} >
           <div className="hidden md:block" id="LOGO"></div>
-          <h1 className="text-white text-2xl my-auto text-center mx-2">KINGMUN 2026 Committee Quiz</h1>
+          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
         </nav>
         <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
           <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
@@ -387,11 +387,11 @@ useEffect(() => {
       <div className="relative flex flex-col items-center min-h-screen">
         <nav className={`h-16 flex justify-center align-center w-full bg-${conferenceSlug}-primary`}>
           <div className="hidden md:block" id="LOGO"></div>
-          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} 2026 Committee Quiz</h1>
+          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
         </nav>
         <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
           <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-            <p>No quiz  available.</p>
+            <p>No quiz available.</p>
           </div>
         </div>
       </div>

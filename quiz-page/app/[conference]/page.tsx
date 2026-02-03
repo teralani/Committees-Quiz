@@ -84,7 +84,7 @@ export default function Home() {
         
             <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
                 <div className="hidden md:block" id="LOGO"></div> 
-                <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} 2026 Committee Quiz</h1>
+                <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
             </nav>
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>

@@ -138,7 +138,7 @@ useEffect(() => {
 
         <nav className="h-20 md:h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
             <div className="hidden md:block" id="LOGO"></div> 
-            <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} 2026 Committee Quiz</h1>
+            <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
         </nav>
 
         <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">
