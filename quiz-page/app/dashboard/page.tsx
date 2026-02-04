@@ -21,7 +21,7 @@ export default async function DashboardPage() {
         <div id="LOGO" className="hidden md:block mr-4" />
         <h1 className="text-2xl font-bold">Committee Quiz Editor</h1>
         <div className=" absolute right-8 top-0 flex gap-6">
-          <img className="rounded-full w-12 h-12 mt-2 bg-white cursor-pointer p-1" title={`${user?.email? user.email.split("@")[1].slice(0, -4).toUpperCase() : "Kingmun"}`} src={`${user?.email? user.email.split("@")[1].slice(0, -4) : "kingmun"}.png`}></img>
+          <img className="rounded-full w-12 h-12 mt-2 bg-white cursor-pointer p-1" title={`${user?.email}`} src={`${user?.email? user.email.split("@")[1].slice(0, -4) : "kingmun"}.png`}></img>
           <form action={logout}>
             <button
               className={`cursor-pointer px-4 py-2 mt-3 bg-white text-munnorthwest-primary rounded`}
