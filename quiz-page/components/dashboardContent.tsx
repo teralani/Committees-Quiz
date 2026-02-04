@@ -38,10 +38,10 @@ type Question = {
 
 const INDEXING = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
-const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+const ALLOWED_SLUGS = [ 'edumun', 'pacmun', 'seattlemun', 'kingmun'];
 
 export default function DashboardContent() {
-    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug") ?? "kingmun") : "kingmun";
+    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_quiz") ?? "kingmun") : "kingmun";
 
     const [selected, setSelected] = useState<number>(0);
     const [saving, setSaving] = useState(false);
@@ -308,11 +308,23 @@ export default function DashboardContent() {
         // Force reload to ensure both dashboard and quiz page show same data
         alert("Quiz saved successfully! Both dashboard and quiz page will now show the updated data.");
         localStorage.setItem("slug", conferenceSlug)
-        window.location.reload();
       } else {
         alert("Save failed. Check server logs.");
       }
     };
+
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                saveToFile();
+            }
+        };
+        document.addEventListener("keydown", handler, false);
+        return () => {
+            document.removeEventListener("keydown", handler, false);
+        };
+    }, [saveToFile])
 
     // reset will re-fetch from DB (keeps UI label identical)
     const resetFromDb = async () => {
@@ -379,7 +391,7 @@ export default function DashboardContent() {
                 <div className="flex items-center gap-4">
                     <div>
                         <h2 className="text-2xl font-bold">Quiz Editor</h2>
-                        <p className="text-sm text-slate-500">Edit the quiz questions that live in the database (Quiz page).</p>
+                        <p className="text-sm text-slate-500">Edit the quiz questions in the database (Quiz page).</p>
                     </div>
                     <div>
                         <label htmlFor="conference-select" className="block text-sm font-medium text-gray-700 mb-1">
@@ -485,7 +497,7 @@ export default function DashboardContent() {
                     <div>
                     <h3 className="font-semibold mb-2">Options</h3>
                     {(questions[selected]?.options ?? []).map((opt, oi) => (
-                        <div key={oi} className="border rounded p-3 mb-3 bg-slate-50">
+                        <div key={oi} className="border rounded p-3 mb-3 bg-gray-100">
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
                             <input value={opt.text} onChange={(e) => updateOption(selected, oi, { text: e.target.value })} className="w-full border rounded p-2" />
