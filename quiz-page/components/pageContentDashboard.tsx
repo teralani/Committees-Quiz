@@ -187,7 +187,12 @@ export default function PageDashboard () {
                 >
                 Print
                 </button>
-
+                <button
+                className="px-4 py-2 bg-indigo-500 text-white rounded cursor-pointer"
+                onClick={(e) => window.open(`https://committees-quiz.vercel.app/${conferenceSlug}`)}
+                >
+                Go to Site
+                </button>
                 <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer" onClick={saveProgress} disabled={saving}>
                 {saving ? "Saving…" : "Save progress"}
                 </button>

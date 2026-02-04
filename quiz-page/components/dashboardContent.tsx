@@ -102,9 +102,14 @@ export default function DashboardContent() {
 
           // Update available conferences (filtered to allowed slugs only)
           if (!conferencesResult.error && conferencesResult.data) {
-            const filtered = conferencesResult.data
-              .filter((c: any) => ALLOWED_SLUGS.includes(c.slug))
-              .map((c: any) => ({ name: c.name, slug: c.slug }));
+            const mapped = conferencesResult.data.map((c: any) => ({ name: c.name, slug: c.slug }));
+            const allowed = mapped
+                .filter((c) => ALLOWED_SLUGS.includes(c.slug))
+                .sort((a, b) => ALLOWED_SLUGS.indexOf(a.slug) - ALLOWED_SLUGS.indexOf(b.slug));
+            const others = mapped
+                .filter((c) => !ALLOWED_SLUGS.includes(c.slug))
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+            const filtered = [...allowed, ...others];
             setAvailableConferences(filtered);
           }
 
@@ -421,21 +426,18 @@ export default function DashboardContent() {
                     >
                     Reset from file
                     </button>
-
-                    <label className="px-4 py-2 bg-yellow-400 text-black rounded cursor-pointer">
-                    Import
-                    <input className="hidden" type="file" accept="application/json" onChange={(e) => importJson(e.target.files?.[0] || null)} />
-                    </label>
-
+                    <button
+                    className="px-4 py-2 bg-indigo-500 text-white rounded cursor-pointer"
+                    onClick={(e) => window.open(`https://committees-quiz.vercel.app/${conferenceSlug}/quiz`)}
+                    >
+                    Go to Site
+                    </button>
                     <button
                     className="px-4 py-2 bg-orange-500 text-white rounded cursor-pointer"
                     onClick={printDebug}
                     >
                     Print
                     </button>
-
-                    <button className="px-4 py-2 bg-indigo-600 text-white rounded cursor-pointer" onClick={exportJson}>Export</button>
-
                     <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer" onClick={saveToFile} disabled={saving}>
                     {saving ? "Saving…" : "Save progress"}
                     </button>
