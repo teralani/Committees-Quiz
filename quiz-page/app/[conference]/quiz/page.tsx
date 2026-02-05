@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import committees from "@/public/committees.json";
 import { createBrowserClient } from "@supabase/ssr";
+import Link from "next/link";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
@@ -403,8 +404,13 @@ useEffect(() => {
       {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
       <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
-          <div className="hidden md:block" id="LOGO"></div> 
-          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} Committee Quiz</h1>
+          <Link
+            href={"./"}
+            className="flex justify-center align-center"
+          >
+            <div className="hidden md:block" id="LOGO"></div> 
+            <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} Committee Quiz</h1>
+          </Link>
       </nav>
       <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
         <div className="mb-6">

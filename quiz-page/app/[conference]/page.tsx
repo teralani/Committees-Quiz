@@ -16,6 +16,7 @@ const content = Pages[0]
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 
 export default function Home() {
+    const [loading, setLoading] = useState(false)
     const params = useParams();
     const rawSlug = (params.conference as string || 'kingmun').toLowerCase();
     const conferenceSlug = ALLOWED_SLUGS.includes(rawSlug) ? rawSlug : 'kingmun';
@@ -114,9 +115,8 @@ export default function Home() {
                                 displayOverlayContent={true}
                                 overlayContent={
                                     <div className="w-full h-full flex justify-center align-center">
-                                        <img className="card-img pointer-events-none w-27 h-27 mt-8 rounded-md text-transparent" src={team?.img ?? undefined} 
-                                            aria-placeholder=""
-                                        />
+                                        {loading? <img onLoad={()=>setLoading(true)} className="card-img pointer-events-none w-27 h-27 mt-8 rounded-md text-transparent" src={team?.img ?? undefined} 
+                                            aria-placeholder=""/> : <div className="card-img pointer-events-none w-27 h-27 mt-8 rounded-md text-transparent"></div>}
                                     </div>
                                 }
                             />)

@@ -12,14 +12,13 @@ export default async function DashboardPage() {
   // const supabase = await createClient();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const userEmail = user?.email ?? "";
   // const CONFERENCES = ["edumun", "pacmun", "seattlemun", "kingmun"]
   
   return (
     <div className={`${montserrat.variable} font-sans min-h-screen bg-slate-50`}>
-      <nav className={`h-20 md:h-16 flex justify-center items-center w-full bg-munnorthwest-primary text-white`}>
+      <nav className={`h-16 md:h-16 flex md:justify-center items-center w-full bg-munnorthwest-primary text-white`}>
         <div id="LOGO" className="hidden md:block mr-4" />
-        <h1 className="text-2xl font-bold">Committee Quiz Editor</h1>
+        <h1 className="md:text-2xl font-bold text-left max-md:ml-3 text-xl">Committee Quiz Editor</h1>
         <div className=" absolute right-8 top-0 flex gap-6">
           <img className="rounded-full w-12 h-12 mt-2 bg-white cursor-pointer p-1" title={`${user?.email}`} src={`${user?.email? user.email.split("@")[1].slice(0, -4) : "kingmun"}.png`}></img>
           <form action={logout}>

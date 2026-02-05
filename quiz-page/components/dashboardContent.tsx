@@ -265,8 +265,10 @@ export default function DashboardContent() {
         )
         );
 
-    const removeOption = (qIdx: number, optIdx: number) =>
-        setQuestions((s) => s.map((q, i) => (i !== qIdx ? q : { ...q, options: q.options.filter((_, j) => j !== optIdx) })));
+    const removeOption = (qIdx: number, optIdx: number) =>{
+        if (confirm("Remove option?")) {setQuestions((s) => s.map((q, i) => (i !== qIdx ? q : { ...q, options: q.options.filter((_, j) => j !== optIdx) })))}
+    }
+        
 
     const importJson = (file: File | null) => {
         if (!file) return;
@@ -392,9 +394,9 @@ export default function DashboardContent() {
     return (
         <>
             <div className="max-w-6xl mx-auto p-6">
-                <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div>
+                <div className="mb-6 flex items-center justify-between w-full max-md:justify-center">
+                <div className="flex items-center gap-4 flex-wrap">
+                    <div className="min-w-20">
                         <h2 className="text-2xl font-bold">Quiz Editor</h2>
                         <p className="text-sm text-slate-500">Edit the quiz questions in the database (Quiz page).</p>
                     </div>
@@ -417,7 +419,7 @@ export default function DashboardContent() {
                     </div>
                 </div>
 
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-wrap mx-10 gap-2 items-center">
                     <button
                     className="px-4 py-2 bg-rose-500 text-white rounded cursor-pointer"
                     onClick={() => {
@@ -444,7 +446,7 @@ export default function DashboardContent() {
                 </div>
                 </div>
 
-                <main className="flex gap-6">
+                <main className="flex gap-6 flex-wrap">
                 <aside className="w-72 bg-white border rounded p-3 overflow-auto max-h-[70vh]">
                     <h3 className="font-semibold mb-2">Questions</h3>
                     <ul>
@@ -470,7 +472,7 @@ export default function DashboardContent() {
                     </div>
                 </aside>
 
-                <section className="flex-1 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
+                <section className="flex-1 min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
                     <div className="mb-4 flex items-center justify-between">
                     <div className="flex gap-2 items-center">
                         <h2 className="text-lg font-semibold">Editing Question #{selected + 1}</h2>
@@ -506,7 +508,7 @@ export default function DashboardContent() {
                             </div>
 
                             <div className="ml-3 flex flex-col gap-2">
-                            <button className="text-xs text-red-600" onClick={() => { if (confirm("Remove option?")) removeOption(selected, oi); }}>Remove</button>
+                            <button className="text-xs text-red-600 cursor-pointer" onClick={() => { if (confirm("Remove option?")) removeOption(selected, oi); }}>Remove</button>
                             </div>
                         </div>
 
