@@ -19,6 +19,9 @@ export default function PageDashboard () {
     const [savedAt, setSavedAt] = useState<string | null>(null);
     const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
     const [content, setContent] = useState<contentData[]>([])
+    const [published, setPublished] = useState<boolean>(false);
+    const [toast, setToast] = useState<string | null>(null);
+    const [toastVisible, setToastVisible] = useState<boolean>(false);
 
     useEffect(() => {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,7 +38,7 @@ export default function PageDashboard () {
                 const [conferencesResult, pageContentResult] = await Promise.all([
                     supabase
                         .from("conferences")
-                        .select("id, name, slug")
+                        .select("id, name, slug, published")
                         .order("name", { ascending: true }),
                     supabase
                         .from('page_sections')
@@ -65,6 +68,8 @@ export default function PageDashboard () {
                     .filter((c: any) => ALLOWED_SLUGS.includes(c.slug))
                     .map((c: any) => ({ name: c.name, slug: c.slug }));
                     setAvailableConferences(filtered);
+                    const match = conferencesResult.data.find((c: any) => c.slug === conferenceSlug);
+                    setPublished(match?.published ?? false)
                 }
 
                 // Process quiz data
@@ -188,11 +193,48 @@ export default function PageDashboard () {
                 Print
                 </button>
                 <button
+                className="px-4 py-2 bg-violet-500 text-white rounded cursor-pointer"
+                onClick={async () => {
+                    try {
+                        const resp = await fetch('/api/togglePublish', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ conferenceSlug }),
+                        });
+                        const j = await resp.json();
+                        if (!resp.ok) {
+                            console.error('Toggle publish failed', j);
+                            alert(`Publish toggle failed: ${j.error || 'Unknown error'}`);
+                            return;
+                        }
+                        setPublished(Boolean(j.published));
+                        const msg = j.published ? 'Site published' : 'Site unpublished';
+                        setToast(msg);
+                        // Mount hidden then make visible on next tick to trigger slide-in
+                        setToastVisible(false);
+                        setTimeout(() => setToastVisible(true), 10);
+                        // Hide after 2.6s then clear after animation finishes
+                        setTimeout(() => setToastVisible(false), 2600);
+                        setTimeout(() => setToast(null), 3000);
+                    } catch (err) {
+                        console.error('Toggle publish error', err);
+                        alert('Failed to toggle publish. See console for details.');
+                    }
+                }}
+                >
+                {published? "Unpublish Website" : "Publish Website"}
+                </button>
+                <button
                 className="px-4 py-2 bg-indigo-500 text-white rounded cursor-pointer"
                 onClick={(e) => window.open(`https://committees-quiz.vercel.app/${conferenceSlug}`)}
                 >
                 Go to Site
                 </button>
+                {toast && (
+                    <div className={`fixed top-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg toast ${toastVisible ? 'visible' : ''}`}>
+                        {toast}
+                    </div>
+                )}
                 <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer" onClick={saveProgress} disabled={saving}>
                 {saving ? "Saving…" : "Save progress"}
                 </button>
@@ -213,8 +255,8 @@ export default function PageDashboard () {
                             <input className="border rounded-sm p-2 text-lg font-bold" onChange={(e) => updateCard(cardi, {title: e.target.value})} value={card?.title || ""} />
                         </div>
                         <div className="w-full my-4">
-                            <label className="block text-sm font-medium mb-1">Text Body</label>
-                            <textarea className="w-full field-sizing-content min-h-10 max-h-40 resize-none border rounded-sm p-2" onChange={(e) => updateCard(cardi, {body: e.target.value})} value={card?.body || ""} />
+                            <label className="block text-sm font-medium mb-1">Text Body (max. 350 characters)</label>
+                            <textarea maxLength={350} className="w-full field-sizing-content min-h-10 max-h-40 resize-none border rounded-sm p-2" onChange={(e) => updateCard(cardi, {body: e.target.value})} value={card?.body || ""} />
                         </div>
                         <div className="w-full my-4">
                             <label className="block text-sm font-medium mb-1">Image File Name</label>
@@ -229,6 +271,17 @@ export default function PageDashboard () {
     <style jsx>{`
         input:focus-within,textarea:focus-within {
             background-color: #fff
+        }
+        .toast {
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 320ms ease;
+            z-index: 60;
+        }
+        .toast.visible {
+            transform: translateX(0%);
+            transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 320ms ease;
+            opacity: 1;
         }
     `}</style>
     </>

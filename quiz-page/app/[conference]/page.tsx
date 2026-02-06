@@ -11,7 +11,7 @@ import { createBrowserClient } from "@supabase/ssr";
 
 
 const montserrat = Montserrat({ subsets: ['latin'],  variable: '--font-montserrat' });
-const content = Pages[0]
+
 
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 
@@ -52,7 +52,7 @@ export default function Home() {
                 pages!inner (
                     name,
                     conferences!inner (
-                    slug
+                        slug
                     )
                 )
                 `)
@@ -90,7 +90,7 @@ export default function Home() {
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>
                 <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
-                <div className="flex justify-center pb-10 md:flex-col items-center flex-col">
+                <div className="flex justify-center pb-10 md:flex-col items-center flex-col-reverse">
                         <div className="flex flex-wrap w-full justify-center gap-2 my-10">
                             {!teams && <div className="h-100"></div>}
                             {teams && teams.map((team, idx) => {
@@ -98,10 +98,10 @@ export default function Home() {
                                 key={idx}
                                 imageSrc={undefined}
                                 altText=""
-                                containerHeight={"400px"}
-                                containerWidth={"400px"}
-                                cardHeight={"375px"}
-                                cardWidth={"300px"}
+                                containerHeight={"450px"}
+                                containerWidth={"420px"}
+                                cardHeight={"425px"}
+                                cardWidth={"340px"}
                                 scaleOnHover={1.03}
                                 rotateAmplitude={14}
                                 displayCardContent={true}

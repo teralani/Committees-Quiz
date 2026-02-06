@@ -2,13 +2,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Montserrat } from "next/font/google";
-import committees from "@/public/committees.json";
 import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
-
-const indexing = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
 
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 
@@ -53,6 +50,8 @@ export default function CommitteeQuizPage() {
   const [questionNumber, setQuestionNumber] = useState(0);
   const [loading, setLoading] = useState(true);
   const [conferenceName, setConferenceName] = useState<string>('');
+  const [committees, setCommittees] = useState<any[]>([]);
+  const [indexing, setIndexing] = useState<string[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -62,6 +61,29 @@ useEffect(() => {
   async function fetchQuestions() {
     setLoading(true);
     try {
+      // Fetch committees first
+      const { data: committeesData, error: committeesErr } = await supabase
+        .from("conferences")
+        .select(`
+          committees (
+            id,
+            name,
+            acronym,
+            description,
+            difficulty,
+            topics,
+            img_url
+          )
+        `)
+        .eq("slug", conferenceSlug)
+        .maybeSingle();
+
+      if (!committeesErr && committeesData) {
+        const comms = committeesData.committees || [];
+        setCommittees(comms);
+        setIndexing(comms.map((c: any) => c.acronym));
+      }
+
       // 1) Try nested select first (original approach that sometimes works)
       const { data: nestedData, error: nestedErr } = await supabase
         .from("conferences")
@@ -249,7 +271,7 @@ useEffect(() => {
           question_options: qOptions,
         });
         
-        console.log(`Loaded question ${assembled.length}: "${qq.text}" with ${qOptions.length} options`);
+        // console.log(`Loaded question ${assembled.length}: "${qq.text}" with ${qOptions.length} options`);
       }
 
       setQuestions(assembled);
@@ -259,8 +281,8 @@ useEffect(() => {
       setLoading(false);
       
       // Debug: log loaded questions
-      console.log("Loaded questions count:", assembled.length);
-      console.log("Questions:", assembled.map(q => ({ text: q.text, optionsCount: q.question_options?.length })));
+      // console.log("Loaded questions count:", assembled.length);
+      // console.log("Questions:", assembled.map(q => ({ text: q.text, optionsCount: q.question_options?.length })));
     } catch (err) {
       console.error("fetchQuestions unexpected error", err);
       setQuestions([]);
@@ -285,7 +307,7 @@ useEffect(() => {
     newSelections[qIdx] = optIdx;
     setSelectedOptions(newSelections);
 
-    console.log(selectedOptions)
+    // console.log(selectedOptions)
   };
 
   const handleSliderChange = (qIdx: number, value: number) => {
@@ -412,7 +434,7 @@ useEffect(() => {
             <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} Committee Quiz</h1>
           </Link>
       </nav>
-      <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
+      <div className="relative max-md:mx-4 w-full px-4 md:w-150 my-20 max-w-5xl">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-semibold text-white">Question {questionNumber + 1} of {questions.length}</span>

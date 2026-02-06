@@ -1,6 +1,5 @@
 "use client"
 import { useEffect, useState } from "react";
-import committees from "@/public/committees.json"
 import MultiRangeSlider from "@/components/multiRangeBar";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -36,8 +35,6 @@ type Question = {
   max?: number;
 };
 
-const INDEXING = (committees as Array<{name:string, acronym:string, description:string, difficulty:string, topics:Array<string>}>).map((committee => committee.acronym))
-
 const ALLOWED_SLUGS = [ 'edumun', 'pacmun', 'seattlemun', 'kingmun'];
 
 export default function DashboardContent() {
@@ -50,6 +47,7 @@ export default function DashboardContent() {
     const [conferenceSlug, setConferenceSlug] = useState<string>(stored);
     const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
     const [loading, setLoading] = useState(true);
+    const [indexing, setIndexing] = useState<string[]>([]);
 
     // Fetch from Supabase on mount (and map DB shape -> editor shape).
     useEffect(() => {
@@ -64,8 +62,8 @@ export default function DashboardContent() {
       async function fetchQuestionsFromDb() {
         setLoading(true);
         try {
-          // Parallel fetch: get conferences list and quiz data simultaneously
-          const [conferencesResult, quizDataResult] = await Promise.all([
+          // Parallel fetch: get conferences list, quiz data, and committees simultaneously
+          const [conferencesResult, quizDataResult, committeesResult] = await Promise.all([
             supabase
               .from("conferences")
               .select("id, name, slug")
@@ -97,6 +95,16 @@ export default function DashboardContent() {
               `)
               .eq("slug", conferenceSlug)
               .eq("pages.name", "Quiz")
+              .maybeSingle(),
+            supabase
+              .from("conferences")
+              .select(`
+                id,
+                committees (
+                  acronym
+                )
+              `)
+              .eq("slug", conferenceSlug)
               .maybeSingle()
           ]);
 
@@ -111,6 +119,16 @@ export default function DashboardContent() {
                 .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
             const filtered = [...allowed, ...others];
             setAvailableConferences(filtered);
+          }
+
+          // Update committees indexing FIRST
+          if (!committeesResult.error && committeesResult.data) {
+            const acronyms = (committeesResult.data.committees || []).map((c: any) => c.acronym);
+            console.log("Loaded committees:", acronyms);
+            setIndexing(acronyms);
+          } else {
+            console.error("Failed to load committees:", committeesResult.error);
+            setIndexing([]);
           }
 
           // Process quiz data
@@ -139,7 +157,9 @@ export default function DashboardContent() {
                     .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0));
                   
                   const weights = weightsData.map((w: any) => Number(w?.weight ?? 0));
-                  const padded = Array.from({ length: INDEXING.length }, (_, i) => weights[i] ?? 0);
+                  // Note: Use committees count directly since indexing state updates async
+                  const committeeCount = committeesResult.data?.committees?.length || weights.length || 1;
+                  const padded = Array.from({ length: committeeCount }, (_, i) => weights[i] ?? 0);
 
                   return {
                     text: opt.text ?? "",
@@ -165,6 +185,28 @@ export default function DashboardContent() {
       }
       fetchQuestionsFromDb();
     }, [conferenceSlug]);
+
+    // Auto-save edits locally for draft persistence (UX improvement)
+    // Note: This is just for in-session editing; the source of truth is always the database
+    // Sync weights arrays when indexing changes
+    useEffect(() => {
+        if (indexing.length > 0 && questions.length > 0) {
+            setQuestions((prevQuestions) =>
+                prevQuestions.map((q) => ({
+                    ...q,
+                    options: q.options.map((opt) => {
+                        const currentWeights = opt.weights || [];
+                        if (currentWeights.length !== indexing.length) {
+                            // Resize weights array to match indexing length
+                            const resized = Array.from({ length: indexing.length }, (_, i) => currentWeights[i] ?? 0);
+                            return { ...opt, weights: resized };
+                        }
+                        return opt;
+                    })
+                }))
+            );
+        }
+    }, [indexing.length]);
 
     // Auto-save edits locally for draft persistence (UX improvement)
     // Note: This is just for in-session editing; the source of truth is always the database
@@ -215,7 +257,7 @@ export default function DashboardContent() {
                     : {
                         ...o,
                         weights: (() => {
-                            const w = (o.weights || Array(INDEXING.length).fill(0)).slice();
+                            const w = (o.weights || Array(indexing.length).fill(0)).slice();
                             w[weightIdx] = Number(value) || 0;
                             return w;
                         })(),
@@ -247,7 +289,7 @@ export default function DashboardContent() {
     const addQuestion = () =>
         setQuestions((s) => [
         ...s,
-        { text: "New question", options: [{ text: "Option 1", weights: Array(INDEXING.length).fill(0) }] },
+        { text: "New question", options: [{ text: "Option 1", weights: Array(indexing.length).fill(0) }] },
         ]);
 
     const removeQuestion = (idx: number) =>
@@ -261,7 +303,7 @@ export default function DashboardContent() {
     const addOption = (qIdx: number) =>
         setQuestions((s) =>
         s.map((q, i) =>
-            i !== qIdx ? q : { ...q, options: [...q.options, { text: `Option ${q.options.length + 1}`, weights: Array(INDEXING.length).fill(0) }] }
+            i !== qIdx ? q : { ...q, options: [...q.options, { text: `Option ${q.options.length + 1}`, weights: Array(indexing.length).fill(0) }] }
         )
         );
 
@@ -419,7 +461,7 @@ export default function DashboardContent() {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap mx-10 gap-2 items-center">
+                <div className="flex flex-wrap ml-10 gap-2 items-center">
                     <button
                     className="px-4 py-2 bg-rose-500 text-white rounded cursor-pointer"
                     onClick={() => {
@@ -434,12 +476,12 @@ export default function DashboardContent() {
                     >
                     Go to Site
                     </button>
-                    <button
+                    {/* <button
                     className="px-4 py-2 bg-orange-500 text-white rounded cursor-pointer"
                     onClick={printDebug}
                     >
                     Print
-                    </button>
+                    </button> */}
                     <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer" onClick={saveToFile} disabled={saving}>
                     {saving ? "Saving…" : "Save progress"}
                     </button>
@@ -478,7 +520,7 @@ export default function DashboardContent() {
                         <h2 className="text-lg font-semibold">Editing Question #{selected + 1}</h2>
                         <span className="text-sm text-slate-500">{questions[selected]?.options?.length || 0} options</span>
                     </div>
-                    <div className="text-sm text-slate-500">Indexing: {INDEXING.join(", ")}</div>
+                    <div className="text-sm text-slate-500">Indexing: {indexing.join(", ")}</div>
                     </div>
 
                     <div className="mb-4">
@@ -514,14 +556,18 @@ export default function DashboardContent() {
 
                         <div>
                             <div className="text-sm font-medium mb-1">Weights</div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {INDEXING.map((key, kidx) => (
-                                <label key={key} className="text-xs flex items-center gap-2">
-                                <span className="w-24 truncate">{key}</span>
-                                <input type="number" value={(opt.weights?.[kidx] ?? 0) as number} onChange={(e) => updateWeight(selected, oi, kidx, Number(e.target.value))} className="w-24 border rounded p-1 text-right" />
-                                </label>
-                            ))}
-                            </div>
+                            {indexing.length === 0 ? (
+                              <p className="text-xs text-gray-500 italic">No committees loaded. Please ensure committees are added to this conference in the Committees tab.</p>
+                            ) : (
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                {indexing.map((key, kidx) => (
+                                  <label key={key} className="text-xs flex items-center gap-2">
+                                    <span className="w-24 truncate">{key}</span>
+                                    <input type="number" value={(opt.weights?.[kidx] ?? 0) as number} onChange={(e) => updateWeight(selected, oi, kidx, Number(e.target.value))} className="w-24 border rounded p-1 text-right" />
+                                  </label>
+                                ))}
+                              </div>
+                            )}
                         </div>
                         </div>
                     ))}
@@ -561,7 +607,7 @@ export default function DashboardContent() {
                         <button className="px-3 py-1 bg-indigo-600 text-white rounded" onClick={() => addOption(selected)}>+ Option</button>
                         <button className="px-3 py-1 bg-rose-500 text-white rounded" onClick={() => {
                         if (!confirm("Zero all weights for this question?")) return;
-                        setQuestions((s) => s.map((q, i) => i !== selected ? q : { ...q, options: q.options.map((o) => ({ ...o, weights: Array(INDEXING.length).fill(0) })) }));
+                        setQuestions((s) => s.map((q, i) => i !== selected ? q : { ...q, options: q.options.map((o) => ({ ...o, weights: Array(indexing.length).fill(0) })) }));
                         }}>Zero weights</button>
                     </div>
                     </div>

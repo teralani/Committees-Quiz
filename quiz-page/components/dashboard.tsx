@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import DashboardContent from './dashboardContent'
 import PageDashboard from './pageContentDashboard'
+import CommitteesDashboard from './committeesDashboard'
 
 const TABS = ['Quiz', 'Page Content', 'Committees']
 
@@ -19,9 +20,7 @@ export default function Dashboard() {
             </div>
             { tab === 0? <DashboardContent></DashboardContent> :
               tab === 1? <PageDashboard></PageDashboard> : 
-              <div className='text-center my-20 font-bold text-4xl'>
-                Coming Soon...
-              </div>
+              <CommitteesDashboard></CommitteesDashboard>
             }
         </div>
     )
