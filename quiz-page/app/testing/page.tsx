@@ -34,7 +34,7 @@ export default function Testing() {
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         if (!supabaseUrl || !supabaseKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-        // const user = redirectIfNotAuthenticated()
+        const user = redirectIfNotAuthenticated()
         const supabase = createBrowserClient(
         supabaseUrl,
         supabaseKey

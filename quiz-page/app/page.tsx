@@ -29,9 +29,9 @@ export default async function Page() {
                 </p>
             </Link>
         </nav>
-        
+        <main>
         <h1 className="font-bold text-4xl md:text-5xl text-center w-full md:mt-20 mb-5 mt-20 px-5 text-white">Available Committee Quizzes</h1>
-        <h4 className="text-white w-full text-center mb-10">Click on a quiz to get started!</h4>
+        <h2 className="text-white w-full text-center mb-10">Click on a quiz to get started!</h2>
         <div className="mx-auto max-w-280 pb-20">
             <div className={`${conferences.length > 1? "grid lg:grid-cols-2 lg:grid-rows-2": "flex justify-center"} place-items-center-safe gap-6 w-full h-full`}>
                 {conferences.map((conf: any, idx: number) => (
@@ -60,6 +60,7 @@ export default async function Page() {
                 ))}
             </div>
         </div>
+        </main>
         <footer className="bottom-0 absolute min-h-14 max-h-min flex justify-center align-center w-full bg-munnorthwest-primary">
                 <h2 className="text-white text-center my-auto">© {new Date().getFullYear()} King County Model United Nations. All Rights Reserved.</h2>
         </footer>
