@@ -7,8 +7,12 @@ import SubmitButton from '@/components/submitButton';
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
-export default async function SignupPage() {
-  await redirectIfAuthenticated()
+
+// Accept searchParams as a prop (Next.js app directory convention)
+export default async function SignupPage({ searchParams }: { searchParams?: { error?: string } }) {
+  await redirectIfAuthenticated();
+  // console.log(searchParams)
+  // const error = searchParams?.error || '';
 
   return (
     <div className={`${montserrat.className} relative min-h-screen bg-[radial-gradient(60%_80%_at_50%_0%,#0b1220_0%,#0a0a0b_60%,#060607_100%)] text-zinc-100`}>
@@ -18,6 +22,11 @@ export default async function SignupPage() {
           <div className="border-b border-white/10 px-8 py-6">
             <h1 className="text-xl font-semibold tracking-tight">Create your account</h1>
             <p className="text-sm text-zinc-400">Start using the Committee Quiz Editor!</p>
+            {/* {error && (
+              <div className="mt-4 rounded bg-red-900/60 text-red-200 px-4 py-2 text-sm border border-red-700">
+                {decodeURIComponent(error)}
+              </div>
+            )} */}
           </div>
 
           <div className="px-8 py-6">
