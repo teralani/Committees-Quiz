@@ -90,7 +90,23 @@ export default function Home() {
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>
                 <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
-                <div className="flex justify-center pb-10 md:flex-col items-center flex-col-reverse ">
+                <div className="flex justify-center pb-10 flex-col items-center flex-col ">
+                        <Magnet
+                            padding={30}
+                            wrapperClassName="mt-20 mb-10"
+                        >
+                            <Link href={`/${conferenceSlug}/quiz`}>
+                                <button 
+                                    className="backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl"
+                                    style={{ 
+                                        backgroundColor: `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`,
+                                        boxShadow: `0 0 15px var(--color-${conferenceSlug}-secondary)` 
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-secondary)`}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`}
+                                >Take the Quiz Now!</button>
+                            </Link>
+                        </Magnet>
                         <div className="flex flex-wrap w-full justify-center gap-2 my-10">
                             {!teams && <div className="h-100"></div>}
                             {teams && teams.map((team, idx) => {
@@ -136,22 +152,6 @@ export default function Home() {
                             </p>
                             <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
                         </div>
-                        <Magnet
-                            padding={30}
-                            wrapperClassName="mt-20 mb-10"
-                        >
-                            <Link href={`/${conferenceSlug}/quiz`}>
-                                <button 
-                                    className="backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl"
-                                    style={{ 
-                                        backgroundColor: `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`,
-                                        boxShadow: `0 0 15px var(--color-${conferenceSlug}-secondary)` 
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-secondary)`}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`}
-                                >Take the Quiz Now!</button>
-                            </Link>
-                        </Magnet>
                 </div>
             </div>
             <CommitteesSection display={false} />
