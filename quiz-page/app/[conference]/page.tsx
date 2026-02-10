@@ -90,7 +90,7 @@ export default function Home() {
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>
                 <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
-                <div className="flex justify-center pb-10 md:flex-col items-center flex-col-reverse">
+                <div className="flex justify-center pb-10 md:flex-col items-center flex-col-reverse ">
                         <div className="flex flex-wrap w-full justify-center gap-2 my-10">
                             {!teams && <div className="h-100"></div>}
                             {teams && teams.map((team, idx) => {
