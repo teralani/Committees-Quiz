@@ -1,0 +1,10 @@
+# Netlify configuration for Next.js SSR/ISR
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[dev]
+  command = "npm run dev"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

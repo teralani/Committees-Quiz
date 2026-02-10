@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# netlify plugin
+@netlify/plugin-nextjs
+
 # testing
 /coverage
 
@@ -40,3 +43,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+@netlify
