@@ -1,5 +1,5 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import CommitteesSection from "@/components/committeesSection";
 import Link from "next/dist/client/link";
@@ -18,8 +18,12 @@ const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 export default function Home() {
     const [loading, setLoading] = useState(false)
     const params = useParams();
-    const rawSlug = (params.conference as string || 'kingmun').toLowerCase();
-    const conferenceSlug = ALLOWED_SLUGS.includes(rawSlug) ? rawSlug : 'kingmun';
+    const rawSlug = (params.conference as string || '').toLowerCase();
+    if (!ALLOWED_SLUGS.includes(rawSlug)) {
+        notFound();
+        return null;
+    }
+    const conferenceSlug = rawSlug;
     const conferenceName = conferenceSlug.toUpperCase();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
