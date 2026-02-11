@@ -11,6 +11,7 @@ type Committee = {
   difficulty: string;
   topics: string[];
   img_url: string;
+  position: number;
   created_at?: string;
   updated_at?: string;
 };
@@ -18,6 +19,7 @@ type Committee = {
 const ALLOWED_SLUGS = ['edumun', 'pacmun', 'seattlemun', 'kingmun'];
 
 export default function CommitteesDashboard() {
+
   const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_committees") ?? "kingmun") : "kingmun";
   
   const [committees, setCommittees] = useState<Committee[]>([]);
@@ -27,6 +29,7 @@ export default function CommitteesDashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -59,6 +62,7 @@ export default function CommitteesDashboard() {
                 difficulty,
                 topics,
                 img_url,
+                position,
                 created_at,
                 updated_at
               )
@@ -91,7 +95,7 @@ export default function CommitteesDashboard() {
           return;
         }
 
-        const committeesData = confData.committees || [];
+        const committeesData = (confData.committees || []).slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0));
         setCommittees(committeesData);
       } catch (err) {
         console.error("Unexpected fetchCommittees error", err);
@@ -123,10 +127,12 @@ export default function CommitteesDashboard() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) return;
-    
     const supabase = createBrowserClient(supabaseUrl, supabaseKey);
     const conference = availableConferences.find(c => c.slug === conferenceSlug);
     if (!conference) return;
+
+    // Find the next available position (max + 1)
+    const nextPosition = committees.length > 0 ? Math.max(...committees.map(c => c.position ?? 0)) + 1 : 0;
 
     const newCommittee: Partial<Committee> = {
       conference_id: conference.id,
@@ -136,6 +142,7 @@ export default function CommitteesDashboard() {
       difficulty: "Introductory",
       topics: ["Topic 1"],
       img_url: "",
+      position: nextPosition,
     };
 
     const { data, error } = await supabase
@@ -151,17 +158,16 @@ export default function CommitteesDashboard() {
     }
 
     if (data) {
-      setCommittees((s) => [...s, data]);
+      // Insert and sort by position
+      setCommittees((s) => [...s, data].slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)));
     }
   };
 
   const removeCommittee = async (idx: number) => {
     if (!confirm("Remove this committee?")) return;
-    
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) return;
-    
     const supabase = createBrowserClient(supabaseUrl, supabaseKey);
     const committee = committees[idx];
 
@@ -176,12 +182,22 @@ export default function CommitteesDashboard() {
       return;
     }
 
-    setCommittees((s) => {
-      const copy = s.slice();
-      copy.splice(idx, 1);
-      setSelectedCommittee((prev) => Math.max(0, Math.min(copy.length - 1, prev)));
-      return copy;
-    });
+    // Remove from local state and reindex positions
+    let updated = committees.slice();
+    updated.splice(idx, 1);
+    // Reassign positions to be continuous (0, 1, 2, ...)
+    updated = updated.map((c, i) => ({ ...c, position: i }));
+    setCommittees(updated);
+
+    // Update all positions in DB
+    for (const c of updated) {
+      await supabase
+        .from("committees")
+        .update({ position: c.position })
+        .eq("id", c.id);
+    }
+
+    setSelectedCommittee((prev) => Math.max(0, Math.min(updated.length - 1, prev)));
   };
 
   const addTopic = (committeeIdx: number) => {
@@ -322,7 +338,7 @@ export default function CommitteesDashboard() {
         <aside className="w-72 bg-white border rounded p-3 overflow-auto max-h-[70vh]">
           <h3 className="font-semibold mb-2">Committees ({committees.length})</h3>
           <ul>
-            {committees.map((committee, i) => (
+            {committees.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((committee, i) => (
               <li
                 key={committee.id}
                 onClick={() => setSelectedCommittee(i)}
@@ -426,7 +442,9 @@ export default function CommitteesDashboard() {
                       placeholder="https://..."
                     />
                   </div>
-
+                  <div>
+                    <img src={committees[selectedCommittee]?.img_url || ""} alt="Preview" style={{maxWidth: '100%', display: committees[selectedCommittee]?.img_url ? 'block' : 'none'}} />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Topics</label>
                     {committees[selectedCommittee]?.topics.map((topic, ti) => (

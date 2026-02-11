@@ -462,17 +462,25 @@ useEffect(() => {
               <p className="md:mt-8 mb-8 text-lg font-bold" style={{ color: `var(--color-${conferenceSlug}-secondary)` }}>
                 {sliderValues[questionNumber] < questions[questionNumber]["max"]!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
               </p>
-              <input
-                type="range"
-                min={0}
-                max={questions[questionNumber]["max"]!.toString()}
-                value={sliderValues[questionNumber]}
-                onChange={(e) =>
-                  handleSliderChange(questionNumber, parseInt(e.target.value))
-                }
-                className="w-full slider-gradient md:mb-8 h-3 bg-linear-to-r from-green-200 via-yellow-200 to-red-200 rounded-lg appearance-none cursor-pointer"
-                style={{ accentColor: `var(--color-${conferenceSlug}-secondary)` }}
-              />
+              <div className="w-full md:mb-8 relative">
+                <div className="flex bg-linear-to-r from-green-200 via-yellow-200 to-red-200 h-3 rounded-full w-full justify-between px-1.5">{Array.from({ length: questions[questionNumber]["max"] + 1 }, (_, i) => (
+                  <div key={i} className="h-1 w-1 my-auto rounded-full bg-gray-400"></div>
+                ))}</div>
+                <input
+                  type="range"
+                  min={0}
+                  max={questions[questionNumber]["max"]!.toString()}
+                  value={sliderValues[questionNumber]}
+                  onChange={(e) =>
+                    handleSliderChange(questionNumber, parseInt(e.target.value))
+                  }
+                  className="-mt-3 absolute w-full slider-gradient h-3 rounded-lg appearance-none cursor-pointer"
+                  style={{ accentColor: `var(--color-${conferenceSlug}-secondary)` }}
+                />
+                
+              </div>
+              
+              
 
               <div className="relative md:mt-8 mb-2 flex justify-between w-full px-10">
                 <button

@@ -101,7 +101,8 @@ export default function DashboardContent() {
               .select(`
                 id,
                 committees (
-                  acronym
+                  acronym,
+                  position
                 )
               `)
               .eq("slug", conferenceSlug)
@@ -123,11 +124,25 @@ export default function DashboardContent() {
 
           // Update committees indexing FIRST
           if (!committeesResult.error && committeesResult.data) {
-            const acronyms = (committeesResult.data.committees || []).map((c: any) => c.acronym);
-            console.log("Loaded committees:", acronyms);
+            // Debug: log committees before sorting
+            const rawCommittees = (committeesResult.data.committees || []);
+            console.log("Committees from Supabase (raw):", rawCommittees);
+            // Sort committees by position (ascending, left to right)
+            const committees = rawCommittees
+              .slice() // defensive copy
+              .sort((a: any, b: any) => {
+                // If position is missing, treat as very large (put at end)
+                const posA = (typeof a.position === 'number') ? a.position : 9999;
+                const posB = (typeof b.position === 'number') ? b.position : 9999;
+                return posA - posB;
+              });
+            // Debug: log committees after sorting
+            // console.log("Committees after sorting by position:", committees);
+            const acronyms = committees.map((c: any) => c.acronym);
+            // console.log("Loaded committees (sorted by position, left to right):", acronyms);
             setIndexing(acronyms);
           } else {
-            console.error("Failed to load committees:", committeesResult.error);
+            // console.error("Failed to load committees:", committeesResult.error);
             setIndexing([]);
           }
 
