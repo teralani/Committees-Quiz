@@ -130,12 +130,12 @@ export default function DashboardContent() {
             // Sort committees by position (ascending, left to right)
             const committees = rawCommittees
               .slice() // defensive copy
-              .sort((a: any, b: any) => {
-                // If position is missing, treat as very large (put at end)
-                const posA = (typeof a.position === 'number') ? a.position : 9999;
-                const posB = (typeof b.position === 'number') ? b.position : 9999;
-                return posA - posB;
-              });
+            //   .sort((a: any, b: any) => {
+            //     // If position is missing, treat as very large (put at end)
+            //     const posA = (typeof a.position === 'number') ? a.position : 9999;
+            //     const posB = (typeof b.position === 'number') ? b.position : 9999;
+            //     return posA - posB;
+            //   });
             // Debug: log committees after sorting
             // console.log("Committees after sorting by position:", committees);
             const acronyms = committees.map((c: any) => c.acronym);

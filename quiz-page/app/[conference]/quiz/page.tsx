@@ -72,14 +72,17 @@ useEffect(() => {
             description,
             difficulty,
             topics,
-            img_url
+            img_url,
+            position
           )
         `)
         .eq("slug", conferenceSlug)
         .maybeSingle();
 
       if (!committeesErr && committeesData) {
-        const comms = committeesData.committees || [];
+        const comms = (committeesData.committees || []).sort((a: any, b: any) => 
+          (a.position ?? 0) - (b.position ?? 0)
+        );
         setCommittees(comms);
         setIndexing(comms.map((c: any) => c.acronym));
       }
