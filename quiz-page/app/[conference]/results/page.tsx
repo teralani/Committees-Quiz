@@ -274,7 +274,7 @@ export default function CommitteeQuizPage() {
               <p className="md:text-sm lg:text-md  text-start text-gray-600">{committee?.description || ''}</p>
               <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committee?.difficulty == "Advanced"? 'text-red-600 bg-red-100' : committee?.difficulty == "Intermediate"? "text-amber-600 bg-amber-100" : "text-green-700 bg-green-100"}`}>{committee?.difficulty || ''} </p>
               <p className="text-start font-bold mt-5">Topic{(committee?.topics?.length || 0)>1? "s" : ""}: </p>
-              <div className="my-2 flex gap-3 w-full">
+              <div className="my-2 flex gap-3 w-full flex-wrap">
                 {(committee?.topics || []).map((topic, idx) => {
                   return (
                     <p key={idx} className="rounded-full py-1 px-3 bg-gray-200">

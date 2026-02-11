@@ -30,8 +30,8 @@ export default async function Page() {
             </Link>
         </nav>
         <main>
-        <h1 className="font-bold text-4xl md:text-5xl text-center w-full md:mt-20 mb-5 mt-20 px-5 text-white">Available Committee Quizzes</h1>
-        <h2 className="text-white w-full text-center mb-10">Click on a quiz to get started!</h2>
+        <h1 className="font-bold text-3xl md:text-5xl text-center w-full md:mt-20 mb-5 mt-20 px-5 text-white">Available Committee Quizzes</h1>
+        <h2 className="text-white max-md:text-sm w-full text-center mb-10">Click on a quiz to get started!</h2>
         <div className="mx-auto max-w-280 pb-20">
             <div className={`${conferences.length > 1? "grid lg:grid-cols-2 lg:grid-rows-2": "flex justify-center"} place-items-center-safe gap-6 w-full h-full`}>
                 {conferences.map((conf: any, idx: number) => (
