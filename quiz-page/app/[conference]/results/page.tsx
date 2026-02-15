@@ -284,7 +284,7 @@ export default function CommitteeQuizPage() {
                 })}
   
               </div>
-              <Link href={`https://kingmun.org/committees/${(committee?.acronym || '').replace("-", "").toLowerCase()}`} target="_blank">
+              <Link href={`https://kingmun.org/committees/${(committee?.acronym || '').toLowerCase()}`} target="_blank">
                 <button 
                   className="w-full relative bottom-2 mt-7 rounded-lg p-3 hover:-translate-y-0.5  transition"
                   style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}
