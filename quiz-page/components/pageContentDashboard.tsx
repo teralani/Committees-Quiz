@@ -12,7 +12,7 @@ type contentData = {
 }
 
 export default function PageDashboard () {
-    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_page") ?? "kingmun") : "kingmun";
+    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
     const [conferenceSlug, setConferenceSlug] = useState<string>(stored);
     const [loading, setLoading] = useState(true);  
     const [saving, setSaving] = useState(false);
@@ -173,7 +173,10 @@ export default function PageDashboard () {
                     <select
                         id="conference-select"
                         value={conferenceSlug}
-                        onChange={(e) => setConferenceSlug(e.target.value)}
+                        onChange={(e) => {
+                            setConferenceSlug(e.target.value);
+                            localStorage.setItem("slug_dashboard", e.target.value)
+                        }}
                         className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
                     >
                         {availableConferences.map((conf) => (

@@ -38,7 +38,7 @@ type Question = {
 const ALLOWED_SLUGS = [ 'edumun', 'pacmun', 'seattlemun', 'kingmun'];
 
 export default function DashboardContent() {
-    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_quiz") ?? "kingmun") : "kingmun";
+    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
 
     const [selected, setSelected] = useState<number>(0);
     const [saving, setSaving] = useState(false);
@@ -464,7 +464,10 @@ export default function DashboardContent() {
                         <select
                             id="conference-select"
                             value={conferenceSlug}
-                            onChange={(e) => setConferenceSlug(e.target.value)}
+                            onChange={(e) => {
+                                setConferenceSlug(e.target.value);
+                                localStorage.setItem("slug_dashboard", e.target.value)
+                            }}
                             className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
                         >
                             {availableConferences.map((conf) => (
