@@ -5,15 +5,20 @@ import CommitteesSection from "@/components/committeesSection";
 import Link from "next/dist/client/link";
 import Card from "@/components/card";
 import Magnet from "@/components/magneticButton";
-import Pages from "@/public/pageText.json"
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-
 
 const montserrat = Montserrat({ subsets: ['latin'],  variable: '--font-montserrat' });
 
 
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+const SLUG_METADATA: Record<string, { title: string }> = {
+    kingmun: { title: 'KINGMUN' },
+    edumun: { title: 'EDUMUN' },
+    pacmun: { title: 'PACMUN' },
+    seattlemun: { title: 'SEATTLEMUN' }
+};
+
 
 export default function Home() {
     const [loading, setLoading] = useState(false)
@@ -24,7 +29,7 @@ export default function Home() {
         return null;
     }
     const conferenceSlug = rawSlug;
-    const conferenceName = conferenceSlug.toUpperCase();
+    const conferenceName = SLUG_METADATA[conferenceSlug].title;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
@@ -76,16 +81,10 @@ export default function Home() {
     }, [supabaseUrl, supabaseKey, conferenceSlug]);
 
     return (
+        <>
+        <title>{`${conferenceName} ${new Date().getFullYear()} Committee Quiz`}</title>
+        <meta name="description" content={`Discover your perfect committee match with an interactive quiz!`}></meta>
         <div className="min-h-screen relative">
-            {/* <Image
-                alt="background image" 
-                sizes="100vw" 
-                decoding="async"
-                fill={true}
-                src="https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/aded82f1ddfea876b3f348e95933b96fd2088183041b995520724d6cf199e23c/king_home_media_2026%20(1).jpg&w=3840&q=75"
-                className="-z-1 inset-0 p-0 m-auto block w-0 h-0 min-w-full max-w-full min-h-full max-h-full object-cover blur-md" 
-                // style="position: absolute; inset: 0px; box-sizing: border-box; padding: 0px; border: none; margin: auto; display: block; width: 0px; height: 0px; min-width: 100%; max-width: 100%; min-height: 100%; max-height: 100%; object-fit: cover;">
-            /> */}
         
             <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
                 <div className="hidden md:block" id="LOGO"></div> 
@@ -94,7 +93,7 @@ export default function Home() {
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>
                 <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
-                <div className="flex justify-center pb-10 flex-col items-center flex-col ">
+                <div className="flex justify-center pb-10 flex-col items-center ">
                         <Magnet
                             padding={30}
                             wrapperClassName="mt-20 mb-10"
@@ -191,5 +190,6 @@ export default function Home() {
                 }
             `}</style>
         </div>
+    </>
     )
 }

@@ -16,8 +16,8 @@ const monsterrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "KINGMUN 2026 Committee Quiz",
-  description: "Find out which KINGMUN committee suits you best!",
+  title: "MUNNorthwest Committee Quiz",
+  description: "Find out which committee suits you best!",
 };
 
 export default function RootLayout({
