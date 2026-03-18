@@ -12,37 +12,30 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
-    // Fetch the conference
+    // Fetch and update in one query to reduce roundtrips
     const { data: conf, error: fetchErr } = await supabase
       .from('conferences')
       .select('id, published')
       .eq('slug', conferenceSlug)
       .single();
 
-    if (fetchErr || !conf) {
-      console.error('Conference fetch error', fetchErr);
+    if (fetchErr || !conf?.id) {
       return NextResponse.json({ error: 'Conference not found' }, { status: 404 });
     }
 
-    if (!conf.id) {
-      console.error('Conference missing id', conf);
-      return NextResponse.json({ error: 'Invalid conference data' }, { status: 500 });
-    }
+    const newPublished = !conf.published;
 
-    const newPublished = !Boolean(conf.published);
-
-    const { data: updatedRows, error: updateErr } = await supabase
+    const { data: updated, error: updateErr } = await supabase
       .from('conferences')
       .update({ published: newPublished })
+      .eq('id', conf.id)
       .select('published')
-      .eq('id', conf.id);
+      .single();
 
-    if (updateErr || !updatedRows || updatedRows.length === 0) {
+    if (updateErr || !updated) {
       console.error('Conference update error', updateErr);
       return NextResponse.json({ error: 'Failed to update conference' }, { status: 500 });
     }
-
-    const updated = Array.isArray(updatedRows) ? updatedRows[0] : updatedRows;
 
     return NextResponse.json({ ok: true, published: updated.published });
   } catch (err: any) {

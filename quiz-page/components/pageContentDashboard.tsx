@@ -255,11 +255,11 @@ export default function PageDashboard () {
                     <div key={cardi} className="border rounded p-2 mb-3 bg-gray-100">
                         <div className="">
                             <label className="block text-sm font-medium mb-1">Card Title</label>
-                            <input className="border rounded-sm p-2 text-lg font-bold" onChange={(e) => updateCard(cardi, {title: e.target.value})} value={card?.title || ""} />
+                            <input spellCheck="true" className="border rounded-sm p-2 text-lg font-bold" onChange={(e) => updateCard(cardi, {title: e.target.value})} value={card?.title || ""} />
                         </div>
                         <div className="w-full my-4">
                             <label className="block text-sm font-medium mb-1">Text Body (max. 350 characters)</label>
-                            <textarea maxLength={350} className="w-full field-sizing-content min-h-10 max-h-40 resize-none border rounded-sm p-2" onChange={(e) => updateCard(cardi, {body: e.target.value})} value={card?.body || ""} />
+                            <textarea spellCheck="true" maxLength={350} className="w-full field-sizing-content min-h-10 max-h-40 resize-none border rounded-sm p-2" onChange={(e) => updateCard(cardi, {body: e.target.value})} value={card?.body || ""} />
                         </div>
                         <div className="w-full my-4">
                             <label className="block text-sm font-medium mb-1">Image File Name</label>

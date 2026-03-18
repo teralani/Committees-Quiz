@@ -564,7 +564,7 @@ export default function DashboardContent() {
                         <div key={oi} className="border rounded p-3 mb-3 bg-gray-100">
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                            <input value={opt.text} onChange={(e) => updateOption(selected, oi, { text: e.target.value })} className="w-full border rounded p-2" />
+                            <input spellCheck="true" value={opt.text} onChange={(e) => updateOption(selected, oi, { text: e.target.value })} className="w-full border rounded p-2" />
                             </div>
 
                             <div className="ml-3 flex flex-col gap-2">

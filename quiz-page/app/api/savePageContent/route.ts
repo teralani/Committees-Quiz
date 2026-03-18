@@ -15,11 +15,12 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
-    // First, get the page_id for the Home page of this conference
+    // Combine queries: get page and sections in one request
     const { data: pageData, error: pageError } = await supabase
       .from('pages')
       .select(`
         id,
+        page_sections(id, key),
         conferences!inner (
           slug
         )
@@ -37,24 +38,11 @@ export async function POST(req: Request) {
     }
 
     const pageId = pageData.id;
-
-    // Get existing sections to match keys with IDs
-    const { data: existingSections, error: fetchError } = await supabase
-      .from('page_sections')
-      .select('id, key')
-      .eq('page_id', pageId);
-
-    if (fetchError) {
-      console.error("Error fetching existing sections:", fetchError);
-      return NextResponse.json(
-        { error: "Failed to fetch existing sections" },
-        { status: 500 }
-      );
-    }
+    const existingSections = pageData.page_sections || [];
 
     // Create a map of key -> id
     const sectionMap = new Map(
-      (existingSections || []).map((s: any) => [s.key, s.id])
+      existingSections.map((s: any) => [s.key, s.id])
     );
 
     // Update each section
@@ -75,7 +63,7 @@ export async function POST(req: Request) {
         .eq('id', sectionId);
     });
 
-    // Filter out null updates and execute all
+    // Filter out null updates and execute all in parallel
     const validUpdates = updates.filter(Boolean);
     const results = await Promise.all(validUpdates);
 

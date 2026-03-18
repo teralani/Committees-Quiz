@@ -17,27 +17,31 @@ export async function POST(req: Request) {
     ];
 
     let filePath: string | null = null;
-    let raw: string | null = null;
+    let json: any = null;
 
     for (const p of candidates) {
       try {
-        raw = await fs.readFile(p, "utf8");
+        const raw = await fs.readFile(p, "utf8");
+        json = JSON.parse(raw);
         filePath = p;
         break;
       } catch {}
     }
 
-    if (!filePath || raw === null) {
+    if (!filePath || !json) {
       return NextResponse.json({ error: "pageText.json not found in expected locations" }, { status: 500 });
     }
 
-    const json = JSON.parse(raw);
-    const quizIndex = Array.isArray(json) ? json.findIndex((p: any) => p?.name === "Quiz") : -1;
-    if (quizIndex >= 0) {
-      json[quizIndex].questions = questions;
-    } else {
-      json[1] = json[1] || {};
-      json[1].questions = questions;
+    // Update quiz questions efficiently
+    if (Array.isArray(json)) {
+      const quizIndex = json.findIndex((p: any) => p?.name === "Quiz");
+      if (quizIndex >= 0) {
+        json[quizIndex].questions = questions;
+      } else if (!json[1]) {
+        json[1] = { questions };
+      } else {
+        json[1].questions = questions;
+      }
     }
 
     await fs.writeFile(filePath, JSON.stringify(json, null, 2), "utf8");

@@ -3,6 +3,14 @@
 import { createActionClient } from '@/utils/supabase/actions';
 import { redirect } from 'next/navigation';
 
+// Use Set for O(1) domain lookup instead of array includes
+const ALLOWED_DOMAINS = new Set([
+  'kingmun.org',
+  'seattlemun.org',
+  'pacificmun.com',
+  'edumun.com',
+  'munnorthwest.org',
+]);
 
 export async function login(formData) {
   const supabase = await createActionClient();
@@ -15,31 +23,23 @@ export async function login(formData) {
 }
 
 export async function signup(formData) {
-  const supabase = await createActionClient(); 
+  const supabase = await createActionClient();
   const email = String(formData.get('email') || '');
   const password = String(formData.get('password') || '');
 
-  // Allowed domains
-  const allowedDomains = [
-    'kingmun.org',
-    'seattlemun.org',
-    'pacificmun.com',
-    'edumun.com',
-    'munnorthwest.org',
-  ];
   const emailDomain = email.split('@')[1]?.toLowerCase();
-  if (!allowedDomains.includes(emailDomain)) {
+  if (!ALLOWED_DOMAINS.has(emailDomain)) {
     redirect(`/signup?error=${encodeURIComponent('Sign-ups are only allowed for specific organization emails.')}`);
   }
 
   const { error } = await supabase.auth.signUp({ email, password });
-  if (error) {redirect(`/signup?error=${encodeURIComponent(error.message)}`)};
+  if (error) redirect(`/signup?error=${encodeURIComponent(error.message)}`);
 
   redirect('/dashboard');
 }
 
 export async function logout() {
-  const supabase = await createActionClient(); 
+  const supabase = await createActionClient();
   await supabase.auth.signOut();
   redirect('/login');
 }
