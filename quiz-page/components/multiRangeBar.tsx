@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type Question = {
   text: string;
-  options: { text: string; weights: number[]; range?: number }[];
+  options: { text: string; weights?: number[]; range?: number; clientId?: string }[];
   slider?: boolean;
   max?: number;
 };
@@ -36,29 +36,35 @@ function normalizeRanges(options: Question['options'], max: number) {
 export default function CustomMultiSlider({ question, onChange, outerClassName }: Props) {
   const max = question.max ?? 100;
 
-  const normalized = normalizeRanges(question.options, max);
-  const [values, setValues] = useState<number[]>(normalized);
+  const rangeSignature = question.options
+    .map((option) => (typeof option.range === 'number' ? Math.round(option.range) : 'x'))
+    .join('|');
+  const normalized = useMemo(() => normalizeRanges(question.options, max), [rangeSignature, max]);
+  const onChangeRef = useRef(onChange);
+  const [values, setValues] = useState<number[]>(() => normalized);
   const [selected, setSelected] = useState<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  // Sync when question/options change. If any option lacked a range, populate parent with defaults.
   useEffect(() => {
-    setValues(normalized);
-    const missing = question.options.some((o) => typeof o.range !== 'number');
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Sync only when the actual range structure changes so unrelated parent rerenders do not
+  // reset the local slider state while the user is dragging.
+  useEffect(() => {
+    setValues((current) => (arraysEqual(current, normalized) ? current : normalized));
+    const missing = question.options.some((option) => typeof option.range !== 'number');
     if (missing) {
-      onChange(normalized);
+      onChangeRef.current(normalized);
     }
-    // We stringify `normalized` to avoid array identity causing extra runs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(normalized), onChange]);
+  }, [rangeSignature, max, normalized]);
 
   // Notify parent when the user changes knobs (values differ from normalized).
   useEffect(() => {
     if (!arraysEqual(values, normalized)) {
-      onChange(values);
+      onChangeRef.current(values);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values]);
+  }, [values, normalized]);
 
   const updateValue = useCallback(
     (index: number, newVal: number) => {
@@ -98,7 +104,7 @@ export default function CustomMultiSlider({ question, onChange, outerClassName }
           const rightPct = i < values.length - 1 ? (values[i + 1] / max) * 100 : 100;
           return (
             <div
-              key={i}
+              key={question.options[i]?.clientId ?? i}
               style={{
                 position: 'absolute',
                 left: `${leftPct}%`,
@@ -112,7 +118,7 @@ export default function CustomMultiSlider({ question, onChange, outerClassName }
 
         {values.map((value, i) => (
           <div
-            key={i}
+            key={question.options[i]?.clientId ?? i}
             className={`${i === selected ? 'z-50' : 'z-0'} slider-thumb absolute top-1/2 w-4 h-4 rounded-full bg-black cursor-grab`}
             style={{
               left: `${(value / max) * 100}%`,

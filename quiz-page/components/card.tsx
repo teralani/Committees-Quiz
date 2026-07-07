@@ -2,6 +2,7 @@
 import type { SpringOptions } from 'motion/react';
 import { useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
+import { div } from 'motion/react-client';
 
 interface TiltedCardProps {
   imageSrc: React.ComponentProps<'img'>['src'];
@@ -44,6 +45,8 @@ export default function TiltedCard({
   displayOverlayContent = false,
   displayCardContent = false,
 }: TiltedCardProps) {
+  if (cardContent == null && overlayContent == null) {return (<div></div>)}
+
   const ref = useRef<HTMLElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);

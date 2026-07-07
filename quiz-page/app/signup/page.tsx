@@ -4,6 +4,7 @@ import { Montserrat } from "next/font/google";
 
 import { redirectIfAuthenticated } from '@/utils/redirectIfAuthenticated';
 import SubmitButton from '@/components/submitButton';
+import SignupErrorPopup from './signup-error-popup';
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
@@ -11,22 +12,17 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 // Accept searchParams as a prop (Next.js app directory convention)
 export default async function SignupPage({ searchParams }: { searchParams?: { error?: string } }) {
   await redirectIfAuthenticated();
-  // console.log(searchParams)
-  // const error = searchParams?.error || '';
+  const error = searchParams?.error || '';
 
   return (
     <div className={`${montserrat.className} relative min-h-screen bg-[radial-gradient(60%_80%_at_50%_0%,#0b1220_0%,#0a0a0b_60%,#060607_100%)] text-zinc-100`}>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.04),transparent_20%),linear-gradient(to_right,rgba(255,255,255,0.03),transparent_20%)] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]" />
+      <SignupErrorPopup error={error} />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.04),transparent_20%),linear-gradient(to_right,rgba(255,255,255,0.03),transparent_20%)] mask-[radial-gradient(ellipse_at_center,black_60%,transparent_100%)]" />
       <div className="relative mx-auto flex min-h-screen max-w-7xl items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.45)]">
           <div className="border-b border-white/10 px-8 py-6">
             <h1 className="text-xl font-semibold tracking-tight">Create your account</h1>
             <p className="text-sm text-zinc-400">Start using the Committee Quiz Editor!</p>
-            {/* {error && (
-              <div className="mt-4 rounded bg-red-900/60 text-red-200 px-4 py-2 text-sm border border-red-700">
-                {decodeURIComponent(error)}
-              </div>
-            )} */}
           </div>
 
           <div className="px-8 py-6">

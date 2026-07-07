@@ -27,15 +27,80 @@ type Option = {
   text: string;
   weights?: number[];
   range?: number;
+  clientId?: string;
 };
 type Question = {
   text: string;
-  options: { text: string; weights: number[]; range?: number }[];
+  options: Option[];
   slider?: boolean;
   max?: number;
 };
 
 const ALLOWED_SLUGS = [ 'edumun', 'pacmun', 'seattlemun', 'kingmun'];
+
+const createOptionId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `opt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+const withOptionId = (option: Option): Option => ({
+  ...option,
+  clientId: option.clientId ?? createOptionId(),
+});
+
+const normalizeSliderOptions = (options: Option[], max: number) => {
+  const nextOptions = options.map(withOptionId);
+  const hasAnyRange = nextOptions.some((option) => typeof option.range === "number");
+
+  if (!hasAnyRange) {
+    return nextOptions.map((option, index) => ({
+      ...option,
+      range: Math.round(((index + 1) / (nextOptions.length || 1)) * max),
+    }));
+  }
+
+  let lastKnownRange: number | null = null;
+
+  return nextOptions.map((option, index) => {
+    if (typeof option.range === "number") {
+      lastKnownRange = option.range;
+      return option;
+    }
+
+    const nextKnownRange = nextOptions
+      .slice(index + 1)
+      .find((candidate) => typeof candidate.range === "number")?.range;
+
+    let range: number;
+    if (typeof lastKnownRange === "number" && typeof nextKnownRange === "number" && nextKnownRange > lastKnownRange) {
+      range = Math.round((lastKnownRange + nextKnownRange) / 2);
+    } else if (typeof lastKnownRange === "number") {
+      range = Math.min(max, lastKnownRange + 1);
+    } else if (typeof nextKnownRange === "number") {
+      range = Math.max(0, nextKnownRange - 1);
+    } else {
+      range = Math.round(((index + 1) / (nextOptions.length + 1)) * max);
+    }
+
+    lastKnownRange = range;
+    return { ...option, range };
+  });
+};
+
+const appendSliderOption = (options: Option[], max: number, indexingLength: number) => {
+  const nextOptions = options.map(withOptionId);
+  const lastRange = [...nextOptions].reverse().find((option) => typeof option.range === "number")?.range;
+  const range = typeof lastRange === "number" ? Math.min(max, lastRange + 1) : Math.round((nextOptions.length + 1) / 2);
+
+  return [
+    ...nextOptions,
+    withOptionId({
+      text: `Option ${nextOptions.length + 1}`,
+      weights: Array(indexingLength).fill(0),
+      range,
+    }),
+  ];
+};
 
 export default function DashboardContent() {
     const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
@@ -180,6 +245,7 @@ export default function DashboardContent() {
                     text: opt.text ?? "",
                     range: typeof opt.range === "number" ? opt.range : undefined,
                     weights: padded,
+                    clientId: createOptionId(),
                   };
                 });
 
@@ -231,23 +297,6 @@ export default function DashboardContent() {
         }
     }, [questions]);
 
-    useEffect(() => {
-    const q = questions[selected];
-    if (!q) return;
-
-    if (q.slider) {
-        const hasAllRanges = q.options.every((o) => typeof o.range === "number");
-        if (!hasAllRanges) {
-        const defaultMax = q.max ?? 5;
-        const newOpts = q.options.map((o, idx) => ({
-            ...o,
-            range: typeof o.range === "number" ? o.range! : Math.round(((idx + 1) / q.options.length) * defaultMax),
-        }));
-        updateQuestion(selected, { options: newOpts });
-        }
-    }
-    }, [selected, questions]);
-
     // Helpers
     const updateQuestion = (idx: number, patch: Partial<Question>) =>
         setQuestions((s) => s.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
@@ -291,11 +340,7 @@ export default function DashboardContent() {
             return { ...q, slider: false, max: undefined, options: q.options.map((o) => ({ ...o, range: undefined })) };
             }
             const max = q.max ?? 5;
-            const hasRanges = q.options.some((o) => typeof o.range === "number");
-            const options = q.options.map((o, idx) => ({
-            ...o,
-            range: hasRanges ? o.range ?? 0 : Math.round(((idx + 1) / q.options.length) * max),
-            }));
+            const options = normalizeSliderOptions(q.options, max);
             return { ...q, slider: true, max, options };
         })
         );
@@ -304,7 +349,7 @@ export default function DashboardContent() {
     const addQuestion = () =>
         setQuestions((s) => [
         ...s,
-        { text: "New question", options: [{ text: "Option 1", weights: Array(indexing.length).fill(0) }] },
+      { text: "New question", options: [withOptionId({ text: "Option 1", weights: Array(indexing.length).fill(0) })] },
         ]);
 
     const removeQuestion = (idx: number) =>
@@ -318,7 +363,14 @@ export default function DashboardContent() {
     const addOption = (qIdx: number) =>
         setQuestions((s) =>
         s.map((q, i) =>
-            i !== qIdx ? q : { ...q, options: [...q.options, { text: `Option ${q.options.length + 1}`, weights: Array(indexing.length).fill(0) }] }
+            i !== qIdx
+              ? q
+              : {
+                  ...q,
+                  options: q.slider
+                    ? appendSliderOption(q.options, q.max ?? 5, indexing.length)
+                    : [...q.options, withOptionId({ text: `Option ${q.options.length + 1}`, weights: Array(indexing.length).fill(0) })],
+                }
         )
         );
 
@@ -335,7 +387,14 @@ export default function DashboardContent() {
             const parsed = JSON.parse(String(reader.result));
             const maybe = parsed?.questions || parsed;
             if (!Array.isArray(maybe)) throw new Error("No questions array found");
-            setQuestions(maybe);
+            setQuestions(
+              maybe.map((question: Question) => ({
+                ...question,
+                options: question.slider
+                  ? normalizeSliderOptions((question.options || []) as Option[], question.max ?? 5)
+                  : (question.options || []).map(withOptionId),
+              }))
+            );
             setSelected(0);
         } catch {
             alert("Invalid JSON");
@@ -561,7 +620,7 @@ export default function DashboardContent() {
                     <div>
                     <h3 className="font-semibold mb-2">Options</h3>
                     {(questions[selected]?.options ?? []).map((opt, oi) => (
-                        <div key={oi} className="border rounded p-3 mb-3 bg-gray-100">
+                      <div key={opt.clientId ?? oi} className="border rounded p-3 mb-3 bg-gray-100">
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
                             <input spellCheck="true" value={opt.text} onChange={(e) => updateOption(selected, oi, { text: e.target.value })} className="w-full border rounded p-2" />

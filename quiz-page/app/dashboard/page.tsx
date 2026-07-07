@@ -23,7 +23,7 @@ export default async function DashboardPage() {
           <img className="rounded-full w-12 h-12 mt-2 bg-white cursor-pointer p-1" title={`${user?.email}`} src={`${user?.email? user.email.split("@")[1].slice(0, -4) : "kingmun"}.png`}></img>
           <form action={logout}>
             <button
-              className={`cursor-pointer px-4 py-2 mt-3 bg-white text-munnorthwest-primary rounded`}
+              className={`cursor-pointer px-4 py-2 mt-3 bg-white text-munnorthwest-primary rounded hover:bg-gray-100`}
             >
               Log out
             </button>

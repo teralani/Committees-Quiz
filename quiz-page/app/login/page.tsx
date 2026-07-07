@@ -20,7 +20,7 @@ export default async function loginPage() {
                 <svg className="absolute w-6 right-3 top-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="32" d="M368 368L144 144M368 144L144 368"/></svg>
             </Link>
             <h1 className="text-xl font-semibold tracking-tight text-zinc-200">Welcome back</h1>
-            <p className="text-sm text-zinc-400">Sign in to continue to your Dashboard</p>
+            <p className="text-sm text-zinc-400">Sign in to continue to your dashboard</p>
           </div>
 
           <div className="px-8 py-6">

@@ -29,7 +29,7 @@ export async function signup(formData) {
 
   const emailDomain = email.split('@')[1]?.toLowerCase();
   if (!ALLOWED_DOMAINS.has(emailDomain)) {
-    redirect(`/signup?error=${encodeURIComponent('Sign-ups are only allowed for specific organization emails.')}`);
+    redirect(`/signup?error=${encodeURIComponent("This email isn't approved for sign-up. Use an organization email from an approved conference domain.")}`);
   }
 
   const { error } = await supabase.auth.signUp({ email, password });

@@ -51,6 +51,8 @@ function DashboardDocs() {
             <ul className="list-disc ml-6 mb-4">
                 <li>Changes are made by clicking <span className='font-bold'>CTRL+S </span>or via a save button.</li>
                 <li>View your changes by visiting the main quiz site after editing.</li>
+                <li>If you are unable to edit a question, check to see that a question is selected.</li>
+                <li>The weights for each option are abstract, so any committee's value for a given option is dependent on the other committees' values.</li>
                 <li>If you encounter issues, try refreshing the page or logging out and back in.</li>
             </ul>
             <h3 className="text-xl font-semibold mt-6 mb-2">Need Help?</h3>
