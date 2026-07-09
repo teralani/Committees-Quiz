@@ -16,11 +16,14 @@ type Committee = {
   updated_at?: string;
 };
 
+const formatUpdatedAt = () => new Date().toLocaleString();
+
 const ALLOWED_SLUGS = ['edumun', 'pacmun', 'seattlemun', 'kingmun'];
+const STORAGE_KEY = 'slug_committees';
 
 export default function CommitteesDashboard() {
 
-  const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
+  const stored = typeof window !== "undefined" ? (localStorage.getItem(STORAGE_KEY) ?? "kingmun") : "kingmun";
   
   const [committees, setCommittees] = useState<Committee[]>([]);
   const [selectedCommittee, setSelectedCommittee] = useState<number>(0);
@@ -84,7 +87,16 @@ export default function CommitteesDashboard() {
           const others = mapped
             .filter((c) => !ALLOWED_SLUGS.includes(c.slug))
             .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-          setAvailableConferences([...allowed, ...others]);
+          const filtered = [...allowed, ...others];
+          setAvailableConferences(filtered);
+
+          const conferenceExists = filtered.some((c) => c.slug === conferenceSlug);
+          if (!conferenceExists && filtered.length > 0) {
+            const fallbackSlug = filtered[0].slug;
+            setConferenceSlug(fallbackSlug);
+            localStorage.setItem(STORAGE_KEY, fallbackSlug);
+            return;
+          }
         }
 
         // Process committees data
@@ -123,13 +135,41 @@ export default function CommitteesDashboard() {
     );
   };
 
+  const createPlaceholderAcronym = () => {
+    const existingAcronyms = new Set(committees.map((committee) => (committee.acronym || "").toUpperCase()));
+    let suffix = committees.length + 1;
+    let candidate = `NEW-${suffix}`;
+
+    while (existingAcronyms.has(candidate.toUpperCase())) {
+      suffix += 1;
+      candidate = `NEW-${suffix}`;
+    }
+
+    return candidate;
+  };
+
   const addCommittee = async () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) return;
     const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-    const conference = availableConferences.find(c => c.slug === conferenceSlug);
-    if (!conference) return;
+
+    let conference = availableConferences.find((c) => c.slug === conferenceSlug);
+    if (!conference) {
+      const { data, error } = await supabase
+        .from("conferences")
+        .select("id, name, slug")
+        .eq("slug", conferenceSlug)
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error("Error resolving conference for committee insert:", error);
+        alert(`Couldn't find the ${conferenceSlug.toUpperCase()} conference.`);
+        return;
+      }
+
+      conference = data;
+    }
 
     // Find the next available position (max + 1)
     const nextPosition = committees.length > 0 ? Math.max(...committees.map(c => c.position ?? 0)) + 1 : 0;
@@ -137,7 +177,7 @@ export default function CommitteesDashboard() {
     const newCommittee: Partial<Committee> = {
       conference_id: conference.id,
       name: "New Committee",
-      acronym: "NEW",
+      acronym: createPlaceholderAcronym(),
       description: "Description",
       difficulty: "Introductory",
       topics: ["Topic 1"],
@@ -153,7 +193,7 @@ export default function CommitteesDashboard() {
 
     if (error) {
       console.error("Error adding committee:", error);
-      alert("Failed to add committee");
+      alert(error.message || "Failed to add committee");
       return;
     }
 
@@ -256,9 +296,10 @@ export default function CommitteesDashboard() {
         }
       }
 
-      setSavedAt(new Date().toLocaleString());
-      localStorage.setItem("slug_committees", conferenceSlug);
-      alert("Committees saved successfully!");
+      const updatedAt = formatUpdatedAt();
+      setSavedAt(updatedAt);
+      localStorage.setItem(STORAGE_KEY, conferenceSlug);
+      alert(`Website updated on ${updatedAt}. Committees saved successfully!`);
     } catch (err) {
       console.error("Save error:", err);
       alert("Failed to save committees");
@@ -308,7 +349,7 @@ export default function CommitteesDashboard() {
               value={conferenceSlug}
               onChange={(e) => {
                 setConferenceSlug(e.target.value);
-                localStorage.setItem("slug_dashboard", e.target.value)
+                localStorage.setItem(STORAGE_KEY, e.target.value)
               }}
               className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
             >
@@ -327,11 +368,11 @@ export default function CommitteesDashboard() {
             onClick={saveCommittees}
             disabled={saving}
           >
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? "Saving…" : "Save changes"}
           </button>
           {savedAt && (
             <span className="text-sm text-gray-600">
-              Last saved at {savedAt}
+              Last updated on {savedAt}
             </span>
           )}
         </div>
@@ -446,7 +487,13 @@ export default function CommitteesDashboard() {
                     />
                   </div>
                   <div>
-                    <img src={committees[selectedCommittee]?.img_url || ""} alt="Preview" style={{maxWidth: '100%', display: committees[selectedCommittee]?.img_url ? 'block' : 'none'}} />
+                    {committees[selectedCommittee]?.img_url ? (
+                      <img
+                        src={committees[selectedCommittee].img_url}
+                        alt="Preview"
+                        style={{ maxWidth: '100%' }}
+                      />
+                    ) : null}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Topics</label>
@@ -476,7 +523,7 @@ export default function CommitteesDashboard() {
               </div>
 
               <div className="mt-6 text-sm text-slate-500">
-                {savedAt ? `Last saved: ${savedAt}` : "Not yet saved"}
+                {savedAt ? `Last updated on ${savedAt}` : "Not yet saved"}
               </div>
             </>
           )}

@@ -23,6 +23,10 @@
   --color-edumun-secondary: #2B8282;
   --color-seattlemun-primary: #c02f4e;
   --color-seattlemun-secondary: #c02f4e;
+  --kingmun-logo: url("https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75");
+  --pacmun-logo: url("https://pacificmun.com/_next/image?url=https://files.munnorthwest.org/image/pacmun/6f3d73067fa8fb20c7c428c7ccf81712cb96586c854673fd86a18fae12a669b9/pacmun_white_NoYear.png&w=3840&q=75");
+  --edumun-logo: url("https://edumun.com/_next/image?url=https://files.munnorthwest.org/image/edumun/c7de31d6662517d2a8f2d1395aedc5b51ed506e82c38241a5e362750c4637d65/edumunWhite%20logo.png&w=3840&q=75");
+  --seattlemun-logo: url("https://seattlemun.org/_next/image?url=https://files.munnorthwest.org/image/seattlemun/78a9714891c226b100663a8e34204f325514ff8d85fc2574958f5829695befe7/SeattleMUN%20logo%20-%20white.png&w=3840&q=75");
 }
 
 @theme inline {
@@ -77,7 +81,7 @@ body {
   position: relative;
   width: 45px;
   height: auto;
-  background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center;
+  background: var(--quiz-logo) no-repeat center;
   background-size: contain;
 }
 
@@ -96,7 +100,7 @@ body {
 }
 
 .quiz-page-card-image {
-  background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center, var(--quiz-primary);
+  background: var(--quiz-logo) no-repeat center, var(--quiz-primary);
   background-size: contain;
   object-fit: cover;
 }

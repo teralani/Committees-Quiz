@@ -36,6 +36,10 @@ type Question = {
   max?: number;
 };
 
+const formatUpdatedAt = () => new Date().toLocaleString();
+
+const STORAGE_KEY = "slug_quiz";
+
 const ALLOWED_SLUGS = [ 'edumun', 'pacmun', 'seattlemun', 'kingmun'];
 
 const createOptionId = () =>
@@ -103,20 +107,31 @@ const appendSliderOption = (options: Option[], max: number, indexingLength: numb
 };
 
 export default function DashboardContent() {
-    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
-
     const [selected, setSelected] = useState<number>(-1);
     const [saving, setSaving] = useState(false);
     const [savedAt, setSavedAt] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [conferenceSlug, setConferenceSlug] = useState<string>(stored);
+    const [conferenceSlug, setConferenceSlug] = useState<string>("kingmun");
     const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
     const [loading, setLoading] = useState(true);
     const [indexing, setIndexing] = useState<string[]>([]);
+    const [slugHydrated, setSlugHydrated] = useState(false);
     const selectedRef = useRef<number>(0);
+
+    useEffect(() => {
+      const storedSlug = localStorage.getItem(STORAGE_KEY);
+      if (storedSlug) {
+        setConferenceSlug(storedSlug);
+      }
+      setSlugHydrated(true);
+    }, []);
 
     // Fetch from Supabase on mount (and map DB shape -> editor shape).
     useEffect(() => {
+      if (!slugHydrated) {
+        return;
+      }
+
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (!supabaseUrl || !supabaseKey) {
@@ -124,6 +139,7 @@ export default function DashboardContent() {
         return;
       }
       const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+      let cancelled = false;
 
       async function fetchQuestionsFromDb() {
         setLoading(true);
@@ -192,7 +208,7 @@ export default function DashboardContent() {
             if (!conferenceExists && filtered.length > 0) {
               const fallbackSlug = filtered[0].slug;
               setConferenceSlug(fallbackSlug);
-              localStorage.setItem("slug_dashboard", fallbackSlug);
+                localStorage.setItem(STORAGE_KEY, fallbackSlug);
               return;
             }
           }
@@ -273,15 +289,22 @@ export default function DashboardContent() {
               };
             });
 
-          setQuestions(dbQuestions);
+          if (!cancelled) {
+            setQuestions(dbQuestions);
+          }
         } catch (err) {
           console.error("unexpected fetchQuestionsFromDb error", err);
         } finally {
-          setLoading(false);
+          if (!cancelled) {
+            setLoading(false);
+          }
         }
       }
       fetchQuestionsFromDb();
-    }, [conferenceSlug]);
+      return () => {
+        cancelled = true;
+      };
+    }, [conferenceSlug, slugHydrated]);
 
     // Auto-save edits locally for draft persistence (UX improvement)
     // Note: This is just for in-session editing; the source of truth is always the database
@@ -450,10 +473,11 @@ export default function DashboardContent() {
       if (ok) {
         // Clear local edit buffer so subsequent load comes from DB
         localStorage.removeItem("editorQuestions");
-        setSavedAt(new Date().toLocaleString());
+        const updatedAt = formatUpdatedAt();
+        setSavedAt(updatedAt);
         // Force reload to ensure both dashboard and quiz page show same data
-        alert("Quiz saved successfully! The quiz page now will display the updated quiz data.");
-        localStorage.setItem("slug", conferenceSlug)
+        alert(`Website updated on ${updatedAt}. The quiz page now will display the updated quiz data.`);
+        localStorage.setItem(STORAGE_KEY, conferenceSlug)
       } else {
         alert("Save failed. Check server logs.");
       }
@@ -583,7 +607,7 @@ export default function DashboardContent() {
                             value={conferenceSlug}
                             onChange={(e) => {
                                 setConferenceSlug(e.target.value);
-                                localStorage.setItem("slug_dashboard", e.target.value)
+                              localStorage.setItem(STORAGE_KEY, e.target.value)
                             }}
                             className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
                         >
@@ -618,7 +642,7 @@ export default function DashboardContent() {
                     Print
                     </button> */}
                     <button className="px-4 py-2 bg-kingmun-primary/90 hover:bg-kingmun-primary text-white rounded cursor-pointer" onClick={saveToFile} disabled={saving}>
-                    {saving ? "Saving…" : "Save progress"}
+                    {saving ? "Saving…" : "Save changes"}
                     </button>
                 </div>
                 </div>
@@ -648,9 +672,13 @@ export default function DashboardContent() {
                     <button className="w-full px-3 py-2 bg-green-600 text-white rounded" onClick={addQuestion}>+ Question</button>
                     </div>
                 </aside>
-                {selected < 0 && <section className="flex-1 flex-col flex justify-center min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
+                {selected < 0 && questions.length > 0 && <section className="flex-1 flex-col flex justify-center min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
                   <h1 className="text-3xl text-black font-bold text-center">Select a question to edit</h1>
                   <p className="text-center mt-2">Click a question from the list in the left panel to start editing.</p>  
+                </section>}
+                {selected < 0 && questions.length <= 0 && <section className="flex-1 flex-col flex justify-center min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
+                  <h1 className="text-3xl text-black font-bold text-center">Create a question to edit</h1>
+                  <p className="text-center mt-4">Click the <span className="bg-green-600 text-white py-1 px-2 rounded-md mx-1 text-sm">+ Question</span> button in the left panel to start editing.</p>  
                 </section>}
                 {selected>=0 && <section className="flex-1 min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
                     <div className="mb-4 flex items-center justify-between">
@@ -737,7 +765,7 @@ export default function DashboardContent() {
                     </div>
                     </div>
 
-                    <div className="mt-6 text-sm text-slate-500">{savedAt ? `Last saved: ${savedAt}` : "Not yet saved to the database"}</div>
+                    <div className="mt-6 text-sm text-slate-500">{savedAt ? `Last updated on ${savedAt}` : "Not yet saved to the database"}</div>
                 </section>}
                 </main>
 

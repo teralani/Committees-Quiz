@@ -3,6 +3,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { useEffect, useState, useCallback } from "react"
 
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+const STORAGE_KEY = 'slug_page_content';
 
 type contentData = {
     key: string,
@@ -11,8 +12,10 @@ type contentData = {
     body: string,
 }
 
+const formatUpdatedAt = () => new Date().toLocaleString();
+
 export default function PageDashboard () {
-    const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
+    const stored = typeof window !== "undefined" ? (localStorage.getItem(STORAGE_KEY) ?? "kingmun") : "kingmun";
     const [conferenceSlug, setConferenceSlug] = useState<string>(stored);
     const [loading, setLoading] = useState(true);  
     const [saving, setSaving] = useState(false);
@@ -122,9 +125,10 @@ export default function PageDashboard () {
                 return;
             }
 
-            const now = new Date().toLocaleTimeString();
-            setSavedAt(now);
-            console.log(`Saved ${result.updated} sections at ${now}`);
+            const updatedAt = formatUpdatedAt();
+            setSavedAt(updatedAt);
+            console.log(`Saved ${result.updated} sections at ${updatedAt}`);
+            alert(`Website updated on ${updatedAt}. Page content saved successfully!`);
         } catch (err) {
             console.error('Save error:', err);
             alert('Failed to save changes. Check console for details.');
@@ -175,7 +179,7 @@ export default function PageDashboard () {
                         value={conferenceSlug}
                         onChange={(e) => {
                             setConferenceSlug(e.target.value);
-                            localStorage.setItem("slug_dashboard", e.target.value)
+                            localStorage.setItem(STORAGE_KEY, e.target.value)
                         }}
                         className="px-3 py-2 border border-gray-300 rounded cursor-pointer bg-white"
                     >
@@ -193,7 +197,7 @@ export default function PageDashboard () {
                 className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded cursor-pointer"
                 onClick={(e) => console.log(content)}
                 >
-                Print
+                Print to Console
                 </button>
                 <button
                 className="px-4 py-2 bg-violet-500 hover:bg-violet-700 text-white rounded cursor-pointer"
@@ -239,12 +243,12 @@ export default function PageDashboard () {
                     </div>
                 )}
                 <button className="px-4 py-2 bg-kingmun-primary/90 hover:bg-kingmun-primary text-white rounded cursor-pointer" onClick={saveProgress} disabled={saving}>
-                {saving ? "Saving…" : "Save progress"}
+                {saving ? "Saving…" : "Save changes"}
                 </button>
 
                 {savedAt && (
                     <span className="text-sm text-gray-600">
-                        Last saved at {savedAt}
+                        Last updated on {savedAt}
                     </span>
                 )}
             </div>

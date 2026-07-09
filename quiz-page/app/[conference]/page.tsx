@@ -67,7 +67,8 @@ export default async function Home({ params }: { params: { conference: string } 
             style={{
                 fontFamily: montserrat.style.fontFamily,
                 ["--quiz-primary" as string]: `var(--color-${conferenceSlug}-primary)`,
-                ["--quiz-secondary" as string]: `var(--color-${conferenceSlug}-secondary)`
+                ["--quiz-secondary" as string]: `var(--color-${conferenceSlug}-secondary)`,
+                ["--quiz-logo" as string]: `var(--${conferenceSlug}-logo)`
             } as CSSProperties}
         >
         
@@ -120,6 +121,7 @@ export default async function Home({ params }: { params: { conference: string } 
                                         {team?.img ? (
                                             <img
                                                 className="card-img quiz-page-card-image pointer-events-none w-27 h-27 mt-8 rounded-md text-transparent"
+                                                id = {conferenceSlug}
                                                 src={team.img}
                                                 alt=""
                                                 loading="eager"
@@ -145,7 +147,7 @@ export default async function Home({ params }: { params: { conference: string } 
                             <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                                 Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                             </p>
-                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href="mailto:da@kingmun.org">da@kingmun.org</a>.</p>
+                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={`mailto:da@${conferenceSlug}.org`}>da@{conferenceSlug}.org</a>.</p>
                         </div>
                 </div>
             </div>

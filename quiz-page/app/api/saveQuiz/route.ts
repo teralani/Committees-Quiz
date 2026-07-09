@@ -5,10 +5,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const questions = body?.questions;
-    const conferenceSlug = body?.conference || "kingmun";
+    const conferenceSlug = typeof body?.conference === "string" ? body.conference.toLowerCase() : "";
     
-    if (!Array.isArray(questions)) {
-      return NextResponse.json({ error: "Invalid payload, expected { questions: [...] }" }, { status: 400 });
+    if (!Array.isArray(questions) || !conferenceSlug) {
+      return NextResponse.json({ error: "Invalid payload, expected { questions: [...], conference: string }" }, { status: 400 });
     }
 
     const supabase = await createActionClient();
