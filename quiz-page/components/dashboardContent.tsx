@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import MultiRangeSlider from "@/components/multiRangeBar";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -105,7 +105,7 @@ const appendSliderOption = (options: Option[], max: number, indexingLength: numb
 export default function DashboardContent() {
     const stored = typeof window !== "undefined" ? (localStorage.getItem("slug_dashboard") ?? "kingmun") : "kingmun";
 
-    const [selected, setSelected] = useState<number>(0);
+    const [selected, setSelected] = useState<number>(-1);
     const [saving, setSaving] = useState(false);
     const [savedAt, setSavedAt] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -113,6 +113,7 @@ export default function DashboardContent() {
     const [availableConferences, setAvailableConferences] = useState<{name: string, slug: string}[]>([]);
     const [loading, setLoading] = useState(true);
     const [indexing, setIndexing] = useState<string[]>([]);
+    const selectedRef = useRef<number>(0);
 
     // Fetch from Supabase on mount (and map DB shape -> editor shape).
     useEffect(() => {
@@ -137,8 +138,9 @@ export default function DashboardContent() {
               .from("conferences")
               .select(`
                 id,
-                pages!inner (
+                pages (
                   id,
+                  name,
                   quiz_questions (
                     id,
                     text,
@@ -159,7 +161,6 @@ export default function DashboardContent() {
                 )
               `)
               .eq("slug", conferenceSlug)
-              .eq("pages.name", "Quiz")
               .maybeSingle(),
             supabase
               .from("conferences")
@@ -185,6 +186,15 @@ export default function DashboardContent() {
                 .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
             const filtered = [...allowed, ...others];
             setAvailableConferences(filtered);
+
+            // Recover from stale localStorage slugs by switching to the first available conference.
+            const conferenceExists = filtered.some((c) => c.slug === conferenceSlug);
+            if (!conferenceExists && filtered.length > 0) {
+              const fallbackSlug = filtered[0].slug;
+              setConferenceSlug(fallbackSlug);
+              localStorage.setItem("slug_dashboard", fallbackSlug);
+              return;
+            }
           }
 
           // Update committees indexing FIRST
@@ -213,15 +223,21 @@ export default function DashboardContent() {
 
           // Process quiz data
           const { data: confData, error: confErr } = quizDataResult;
-          if (confErr || !confData) {
-            console.error("Conference not found", confErr);
+          if (confErr) {
+            console.error("Failed to load conference quiz data", confErr);
             setQuestions([]);
             return;
           }
 
-          const page = confData.pages?.[0];
+          if (!confData) {
+            console.warn(`Conference slug \"${conferenceSlug}\" was not found.`);
+            setQuestions([]);
+            return;
+          }
+
+          const page = confData.pages?.find((p: any) => p.name === "Quiz");
           if (!page) {
-            console.error("Quiz page not found");
+            console.info(`No Quiz page found for conference \"${conferenceSlug}\".`);
             setQuestions([]);
             return;
           }
@@ -272,20 +288,27 @@ export default function DashboardContent() {
     // Sync weights arrays when indexing changes
     useEffect(() => {
         if (indexing.length > 0 && questions.length > 0) {
-            setQuestions((prevQuestions) =>
-                prevQuestions.map((q) => ({
-                    ...q,
-                    options: q.options.map((opt) => {
-                        const currentWeights = opt.weights || [];
-                        if (currentWeights.length !== indexing.length) {
-                            // Resize weights array to match indexing length
-                            const resized = Array.from({ length: indexing.length }, (_, i) => currentWeights[i] ?? 0);
-                            return { ...opt, weights: resized };
-                        }
-                        return opt;
-                    })
-                }))
-            );
+        setQuestions((prevQuestions) => {
+          let hasChanges = false;
+          const nextQuestions = prevQuestions.map((q) => {
+            let questionChanged = false;
+            const nextOptions = q.options.map((opt) => {
+              const currentWeights = opt.weights || [];
+              if (currentWeights.length !== indexing.length) {
+                questionChanged = true;
+                hasChanges = true;
+                // Resize weights array to match indexing length
+                const resized = Array.from({ length: indexing.length }, (_, i) => currentWeights[i] ?? 0);
+                return { ...opt, weights: resized };
+              }
+              return opt;
+            });
+
+            return questionChanged ? { ...q, options: nextOptions } : q;
+          });
+
+          return hasChanges ? nextQuestions : prevQuestions;
+        });
         }
     }, [indexing.length]);
 
@@ -420,7 +443,7 @@ export default function DashboardContent() {
     };
 
     // Only persist to server when user presses Save
-    const saveToFile = async () => {
+    const saveToFile = useCallback(async () => {
       setSaving(true);
       const ok = await persistQuestions(questions, conferenceSlug);
       setSaving(false);
@@ -429,25 +452,60 @@ export default function DashboardContent() {
         localStorage.removeItem("editorQuestions");
         setSavedAt(new Date().toLocaleString());
         // Force reload to ensure both dashboard and quiz page show same data
-        alert("Quiz saved successfully! Both dashboard and quiz page will now show the updated data.");
+        alert("Quiz saved successfully! The quiz page now will display the updated quiz data.");
         localStorage.setItem("slug", conferenceSlug)
       } else {
         alert("Save failed. Check server logs.");
       }
-    };
+    }, [conferenceSlug, questions]);
+
+    const saveToFileRef = useRef(saveToFile);
+    useEffect(() => {
+      saveToFileRef.current = saveToFile;
+    }, [saveToFile]);
+
+    useEffect(() => {
+      selectedRef.current = selected;
+    }, [selected]);
+
+    const handleSliderChange = useCallback((updatedRanges: number[]) => {
+      const selectedIndex = selectedRef.current;
+      setQuestions((prevQuestions) => {
+        let hasChanges = false;
+        const nextQuestions = prevQuestions.map((question, questionIndex) => {
+          if (questionIndex !== selectedIndex) return question;
+
+          let questionChanged = false;
+          const nextOptions = question.options.map((option, optionIndex) => {
+            const nextRange = updatedRanges[optionIndex];
+            if (option.range === nextRange) return option;
+            questionChanged = true;
+            hasChanges = true;
+            return {
+              ...option,
+              range: nextRange,
+            };
+          });
+
+          return questionChanged ? { ...question, options: nextOptions } : question;
+        });
+
+        return hasChanges ? nextQuestions : prevQuestions;
+      });
+  }, []);
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
-                saveToFile();
+        saveToFileRef.current();
             }
         };
         document.addEventListener("keydown", handler, false);
         return () => {
             document.removeEventListener("keydown", handler, false);
         };
-    }, [saveToFile])
+  }, [])
 
     // reset will re-fetch from DB (keeps UI label identical)
     const resetFromDb = async () => {
@@ -514,7 +572,7 @@ export default function DashboardContent() {
                 <div className="flex items-center gap-4 flex-wrap">
                     <div className="min-w-20">
                         <h2 className="text-2xl font-bold">Quiz Editor</h2>
-                        <p className="text-sm text-slate-500">Edit the quiz questions in the database (Quiz page).</p>
+                        <p className="text-sm text-slate-500 mr-19">Edit the quiz questions and options.</p>
                     </div>
                     <div>
                         <label htmlFor="conference-select" className="block text-sm font-medium text-gray-700 mb-1">
@@ -540,7 +598,7 @@ export default function DashboardContent() {
 
                 <div className="flex flex-wrap ml-10 gap-2 items-center">
                     <button
-                    className="px-4 py-2 bg-rose-500 text-white rounded cursor-pointer"
+                    className="px-4 py-2 bg-rose-500 hover:bg-rose-700 text-white rounded cursor-pointer"
                     onClick={() => {
                         resetFromDb();
                     }}
@@ -548,7 +606,7 @@ export default function DashboardContent() {
                     Reset from file
                     </button>
                     <button
-                    className="px-4 py-2 bg-indigo-500 text-white rounded cursor-pointer"
+                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 text-white rounded cursor-pointer"
                     onClick={(e) => window.open(`https://committees-quiz.vercel.app/${conferenceSlug}/quiz`)}
                     >
                     Go to Site
@@ -559,7 +617,7 @@ export default function DashboardContent() {
                     >
                     Print
                     </button> */}
-                    <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer" onClick={saveToFile} disabled={saving}>
+                    <button className="px-4 py-2 bg-kingmun-primary/90 hover:bg-kingmun-primary text-white rounded cursor-pointer" onClick={saveToFile} disabled={saving}>
                     {saving ? "Saving…" : "Save progress"}
                     </button>
                 </div>
@@ -569,7 +627,7 @@ export default function DashboardContent() {
                 <aside className="w-72 bg-white border rounded p-3 overflow-auto max-h-[70vh]">
                     <h3 className="font-semibold mb-2">Questions</h3>
                     <ul>
-                    {questions.map((q, i) => (
+                    { questions.map((q, i) => (
                         <li key={i} onClick={() => setSelected(i)} className={`p-2 rounded cursor-pointer mb-1 ${selected === i ? "bg-sky-100" : "hover:bg-slate-50"}`}>
                         <div className="flex justify-between items-start">
                             <div>
@@ -590,15 +648,20 @@ export default function DashboardContent() {
                     <button className="w-full px-3 py-2 bg-green-600 text-white rounded" onClick={addQuestion}>+ Question</button>
                     </div>
                 </aside>
-
-                <section className="flex-1 min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
+                {selected < 0 && <section className="flex-1 flex-col flex justify-center min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
+                  <h1 className="text-3xl text-black font-bold text-center">Select a question to edit</h1>
+                  <p className="text-center mt-2">Click a question from the list in the left panel to start editing.</p>  
+                </section>}
+                {selected>=0 && <section className="flex-1 min-w-96 bg-white border rounded p-4 overflow-auto max-h-[80vh] editor-card">
                     <div className="mb-4 flex items-center justify-between">
-                    <div className="flex gap-2 items-center">
-                        <h2 className="text-lg font-semibold">Editing Question #{selected + 1}</h2>
-                        <span className="text-sm text-slate-500">{questions[selected]?.options?.length || 0} options</span>
+                    <div className="flex flex-col gap-2">
+                        <h2 className="text-lg font-semibold text-left">Editing Question #{selected + 1}</h2>
+                        <div className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500">{questions[selected]?.options?.length || 0} options</p>
+                          <p>Indexing: {indexing.join(", ")}</p></div>
+                        </div>
                     </div>
-                    <div className="text-sm text-slate-500">Indexing: {indexing.join(", ")}</div>
-                    </div>
+                    
 
                     <div className="mb-4">
                     <label className="block text-sm font-medium mb-1">Question text</label>
@@ -610,7 +673,7 @@ export default function DashboardContent() {
                         </label>
                         {questions[selected]?.slider && (
                         <label className="text-sm flex items-center gap-2">
-                            Max:
+                            Slider max:
                             <input type="number" min={1} value={questions[selected]?.max ?? 5} onChange={(e) => updateQuestion(selected, { max: Number(e.target.value) })} className="w-20 border rounded p-1" />
                         </label>
                         )}
@@ -620,7 +683,7 @@ export default function DashboardContent() {
                     <div>
                     <h3 className="font-semibold mb-2">Options</h3>
                     {(questions[selected]?.options ?? []).map((opt, oi) => (
-                      <div key={opt.clientId ?? oi} className="border rounded p-3 mb-3 bg-gray-100">
+                      <div key={opt.clientId ?? oi} className="rounded p-3 mb-3 shadow-md hover:bg-neutral-50">
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
                             <input spellCheck="true" value={opt.text} onChange={(e) => updateOption(selected, oi, { text: e.target.value })} className="w-full border rounded p-2" />
@@ -632,7 +695,7 @@ export default function DashboardContent() {
                         </div>
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Weights</div>
+                            <div>Weights</div>
                             {indexing.length === 0 ? (
                               <p className="text-xs text-gray-500 italic">No committees loaded. Please ensure committees are added to this conference in the Committees tab.</p>
                             ) : (
@@ -657,22 +720,7 @@ export default function DashboardContent() {
                           <MultiRangeSlider
                               outerClassName="w-full my-20"
                               question={questions[selected]}
-                              onChange={(updatedRanges: number[]) => {
-                                  setQuestions((questions) =>
-                                  questions.map((question, questionIndex) => 
-                                      questionIndex !== selected ?
-                                      question
-                                      :
-                                      {
-                                          ...question,
-                                          options: question.options.map((option, optionIndex)=> ({
-                                          ...option,
-                                          range: updatedRanges[optionIndex]
-                                          }))
-                                      }
-                                  )
-                                  )
-                              }}
+                              onChange={handleSliderChange}
                           />
                         </>
                         : 
@@ -690,10 +738,9 @@ export default function DashboardContent() {
                     </div>
 
                     <div className="mt-6 text-sm text-slate-500">{savedAt ? `Last saved: ${savedAt}` : "Not yet saved to the database"}</div>
-                </section>
+                </section>}
                 </main>
 
-                <footer className="mt-6 text-sm text-slate-500">Edits are stored to localStorage. Click "Save to pageText.json" to persist to disk (dev server only).</footer>
             </div>
             <style jsx>
                 {`

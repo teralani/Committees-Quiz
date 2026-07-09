@@ -11,6 +11,10 @@ export default function Dashboard() {
 
     return (
         <div>
+            <div className='md:hidden flex flex-col justify-center fixed h-lvh w-lvw bg-neutral-800'>
+                <h3 className='text-white text-center text-3xl max-w-lg mx-auto'>The dashboard is currently not supported for smaller devices </h3>
+                <p className='text-neutral-300 text-center max-w-lg mx-auto mt-2'>Please try again on a device with a larger screen.</p>
+            </div>
             <div className='flex justify-center gap-4 bg-white h-15'>
                 {TABS.map((t, i) => 
                     <button onClick={() => setTab(i)} className={`min-w-20 cursor-pointer text-center items-center h-10 mt-auto px-2 rounded-t-2xl ${tab === i? "bg-munnorthwest-primary/20" : "bg-gray-200 "}`} style={{lineHeight: "2.5rem"}} key={i}>
@@ -18,11 +22,11 @@ export default function Dashboard() {
                     </button>
                 )}
             </div>
-            { tab === 0 ? <DashboardContent /> :
+            <div className='max-md:hidden'>{ tab === 0 ? <DashboardContent /> :
               tab === 1 ? <PageDashboard /> :
               tab === 2 ? <CommitteesDashboard /> :
               <DashboardDocs />
-            }
+            }</div>
         </div>
     )
 }
@@ -47,6 +51,17 @@ function DashboardDocs() {
                 <li className="mb-2"><b>Committees Tab:</b> Add, edit, or remove committees. Set committee details, images, and descriptions that users will see after taking the quiz. The URLs for the images should prefereably be taken from the committee page of the conference.</li>
                 <li className="mb-2"><b>Docs Tab:</b> (You are here!) View documentation and instructions for using the dashboard.</li>
             </ol>
+            <h3 className="text-xl font-semibold mt-6 mb-2">Images</h3>
+            <p className='my-2'>To add images to any part of the website, please follow the steps below:</p>
+            <ol className="list-decimal ml-6 mb-4">
+                <li>Sign into <b><em>Fabula</em></b> and navigate to the <b><em>Files</em></b> tab using the nav bar on the left.</li>
+                <li>Under the search bar, select the <b><em>Upload</em></b> tab, and add your file. Make sure to rename the file to a distinct name that you can easily type again.</li>
+                <li>Select the <b><em>View Files</em></b> tab and search for your file name using the search bar above</li>
+                <li>Once you have found your file, click the eye icon <svg className="w-4 h-4 inline-block" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="VisibilityIcon"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg> and click <b><em>Copy URL</em></b>.</li>
+                <li>Paste the URL you have copied as the source for whichever image you wish to add or change.</li>
+            </ol>
+            <h3 className="text-xl font-semibold mt-6 mb-2">Publishing</h3>
+            <p className='my-2'>All changes are instantly synced to the website once progress has been saved. To make the quiz available for a conference, navigate to the <b><em>Page Content</em></b> tab and click the purple <b><em>Publish Website</em></b> button</p>
             <h3 className="text-xl font-semibold mt-6 mb-2">General Tips</h3>
             <ul className="list-disc ml-6 mb-4">
                 <li>Changes are made by clicking <span className='font-bold'>CTRL+S </span>or via a save button.</li>
@@ -56,7 +71,7 @@ function DashboardDocs() {
                 <li>If you encounter issues, try refreshing the page or logging out and back in.</li>
             </ul>
             <h3 className="text-xl font-semibold mt-6 mb-2">Need Help?</h3>
-            <p>Contact the site administrator, Aniketh at <a  className="underline text-blue-500" href='mailto:aniketh.terala@gmail.com'>aniketh.terala@gmail.com</a></p>
+            <p>Contact the site administrator, Aniketh at <a  className="underline text-blue-500" href='mailto:aniketh.terala@gmail.com'>aniketh.terala@gmail.com</a> or via Slack.</p>
         </div>
     );
 }

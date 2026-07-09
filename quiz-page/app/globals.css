@@ -64,6 +64,50 @@ body {
   
   font-family: var(--font), Arial, Helvetica, sans-serif;
 }
+
+.quiz-page-root {
+  box-sizing: border-box;
+}
+
+.quiz-page-root h1 {
+  font-weight: 700;
+}
+
+.quiz-page-logo {
+  position: relative;
+  width: 45px;
+  height: auto;
+  background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center;
+  background-size: contain;
+}
+
+.quiz-page-button {
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quiz-page-button:hover {
+  background-color: var(--quiz-secondary);
+}
+
+.quiz-page-disclaimer {
+  max-width: 700px;
+  border-left-width: 12px;
+  border-image: linear-gradient(to bottom, var(--quiz-primary), var(--quiz-secondary)) 1;
+}
+
+.quiz-page-card-image {
+  background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center, var(--quiz-primary);
+  background-size: contain;
+  object-fit: cover;
+}
+
+.quiz-page-hover-border {
+  transition: background-color 0.25s;
+}
+
+figure:hover .quiz-page-hover-border {
+  background-color: var(--quiz-secondary);
+}
 .hover-border {
   transition: background-color 0.25s;
 }
@@ -75,3 +119,4 @@ body {
   background: url(https://lh3.googleusercontent.com/GwzOH8iDRpE2Fi2fYBEUj1GSUpnpt1V5B5MZLSEBro1YyCi9wYq2D3rGUy-Cyx7sfZnJ43rWGccnN1qlq04=s120) no-repeat center;
   background-size: contain;
 }
+

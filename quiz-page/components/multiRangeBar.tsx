@@ -44,6 +44,7 @@ export default function CustomMultiSlider({ question, onChange, outerClassName }
   const [values, setValues] = useState<number[]>(() => normalized);
   const [selected, setSelected] = useState<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const skipNotifyRef = useRef(false);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -52,15 +53,20 @@ export default function CustomMultiSlider({ question, onChange, outerClassName }
   // Sync only when the actual range structure changes so unrelated parent rerenders do not
   // reset the local slider state while the user is dragging.
   useEffect(() => {
-    setValues((current) => (arraysEqual(current, normalized) ? current : normalized));
-    const missing = question.options.some((option) => typeof option.range !== 'number');
-    if (missing) {
-      onChangeRef.current(normalized);
-    }
+    setValues((current) => {
+      if (arraysEqual(current, normalized)) return current;
+      // This state change originates from parent data sync; do not echo it back.
+      skipNotifyRef.current = true;
+      return normalized;
+    });
   }, [rangeSignature, max, normalized]);
 
-  // Notify parent when the user changes knobs (values differ from normalized).
+  // Notify parent only when user interaction changed values.
   useEffect(() => {
+    if (skipNotifyRef.current) {
+      skipNotifyRef.current = false;
+      return;
+    }
     if (!arraysEqual(values, normalized)) {
       onChangeRef.current(values);
     }

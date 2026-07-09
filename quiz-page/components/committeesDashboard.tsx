@@ -323,7 +323,7 @@ export default function CommitteesDashboard() {
 
         <div className="flex flex-wrap ml-10 gap-2 items-center">
           <button
-            className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer"
+            className="px-4 py-2 bg-kingmun-primary/90 hover:bg-kingmun-primary text-white rounded cursor-pointer"
             onClick={saveCommittees}
             disabled={saving}
           >

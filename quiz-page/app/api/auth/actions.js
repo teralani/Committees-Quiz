@@ -9,7 +9,7 @@ const ALLOWED_DOMAINS = new Set([
   'seattlemun.org',
   'pacificmun.com',
   'edumun.com',
-  'munnorthwest.org',
+  'munnorthwest.org'
 ]);
 
 export async function login(formData) {

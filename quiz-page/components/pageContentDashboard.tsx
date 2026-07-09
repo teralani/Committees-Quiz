@@ -190,13 +190,13 @@ export default function PageDashboard () {
 
             <div className="flex gap-2 items-center">
                 <button
-                className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer"
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded cursor-pointer"
                 onClick={(e) => console.log(content)}
                 >
                 Print
                 </button>
                 <button
-                className="px-4 py-2 bg-violet-500 text-white rounded cursor-pointer"
+                className="px-4 py-2 bg-violet-500 hover:bg-violet-700 text-white rounded cursor-pointer"
                 onClick={async () => {
                     try {
                         const resp = await fetch('/api/togglePublish', {
@@ -228,7 +228,7 @@ export default function PageDashboard () {
                 {published? "Unpublish Website" : "Publish Website"}
                 </button>
                 <button
-                className="px-4 py-2 bg-indigo-500 text-white rounded cursor-pointer"
+                className="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 text-white rounded cursor-pointer"
                 onClick={(e) => window.open(`https://committees-quiz.vercel.app/${conferenceSlug}`)}
                 >
                 Go to Site
@@ -238,7 +238,7 @@ export default function PageDashboard () {
                         {toast}
                     </div>
                 )}
-                <button className="px-4 py-2 bg-kingmun-primary/90 text-white rounded cursor-pointer" onClick={saveProgress} disabled={saving}>
+                <button className="px-4 py-2 bg-kingmun-primary/90 hover:bg-kingmun-primary text-white rounded cursor-pointer" onClick={saveProgress} disabled={saving}>
                 {saving ? "Saving…" : "Save progress"}
                 </button>
 
