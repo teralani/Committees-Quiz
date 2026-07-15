@@ -191,6 +191,8 @@ export default function DashboardContent() {
               .maybeSingle()
           ]);
 
+          console.log(quizDataResult)
+
           // Update available conferences (filtered to allowed slugs only)
           if (!conferencesResult.error && conferencesResult.data) {
             const mapped = conferencesResult.data.map((c: any) => ({ name: c.name, slug: c.slug }));
@@ -627,7 +629,7 @@ export default function DashboardContent() {
                         resetFromDb();
                     }}
                     >
-                    Reset from file
+                    Reset All Changes
                     </button>
                     <button
                     className="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 text-white rounded cursor-pointer"

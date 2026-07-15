@@ -4,7 +4,7 @@ import DashboardContent from './dashboardContent'
 import PageDashboard from './pageContentDashboard'
 import CommitteesDashboard from './committeesDashboard'
 
-const TABS = ['Quiz', 'Page Content', 'Committees', 'Docs']
+const TABS = ['Docs', 'Page Content', 'Committees', 'Quiz']
 
 export default function Dashboard() {
     const [tab, setTab] = useState<number>(0)
@@ -22,10 +22,10 @@ export default function Dashboard() {
                     </button>
                 )}
             </div>
-            <div className='max-md:hidden'>{ tab === 0 ? <DashboardContent /> :
+            <div className='max-md:hidden'>{ tab === 0 ?  <DashboardDocs /> :
               tab === 1 ? <PageDashboard /> :
               tab === 2 ? <CommitteesDashboard /> :
-              <DashboardDocs />
+              <DashboardContent />
             }</div>
         </div>
     )
@@ -37,6 +37,9 @@ function DashboardDocs() {
             <h2 className="text-2xl font-bold mb-4">Dashboard Documentation</h2>
             <p className="mb-4">Welcome to the Committee Quiz Editor Dashboard! This guide will help you understand how to use each section of the dashboard:</p>
             <ol className="list-decimal ml-6 mb-4">
+                <li className="mb-2"><b>Docs Tab:</b> (You are here!) View documentation and instructions for using the dashboard. Please read this guide in its entirety before editing any part of the quiz page!</li>
+                <li className="mb-2"><b>Page Content Tab:</b> Manage the text and content that appears on the main quiz pages. Update descriptions, instructions, and other static content here.</li>
+                <li className="mb-2"><b>Committees Tab:</b> Add, edit, or remove committees. Set committee details, images, and descriptions that users will see after taking the quiz. The URLs for the images should prefereably be taken from the committee page of the conference.</li>
                 <li className="mb-2"><b>Quiz Tab:</b> Edit quiz questions, options, and logic. Use this to update or add new questions for the committee quiz.</li>
                 <ul className='pl-10 mt-5'><span className='font-bold'>How the quiz works:</span><br></br>
                     <p className='mb-5'>Each question has options that function as "classes" where the class is chosen if the answer option is clicked. Each class is assigned weights for each committee that serve as points. 
@@ -47,9 +50,6 @@ function DashboardDocs() {
                         Each answer option is assigned a range on the slider. For example, "Beginner" could mean any delegate who attended 2 or fewer conferences. Use the slider at the bottom to adjust the ranges for each option.
                         </p>
                 </ul>
-                <li className="mb-2"><b>Page Content Tab:</b> Manage the text and content that appears on the main quiz pages. Update descriptions, instructions, and other static content here.</li>
-                <li className="mb-2"><b>Committees Tab:</b> Add, edit, or remove committees. Set committee details, images, and descriptions that users will see after taking the quiz. The URLs for the images should prefereably be taken from the committee page of the conference.</li>
-                <li className="mb-2"><b>Docs Tab:</b> (You are here!) View documentation and instructions for using the dashboard.</li>
             </ol>
             <h3 className="text-xl font-semibold mt-6 mb-2">Images</h3>
             <p className='my-2'>To add images to any part of the website, please follow the steps below:</p>
