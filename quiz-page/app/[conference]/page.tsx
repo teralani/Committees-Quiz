@@ -147,7 +147,7 @@ export default async function Home({ params }: { params: { conference: string } 
                             <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                                 Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                             </p>
-                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={`mailto:da@${conferenceSlug}.org`}>da@{conferenceSlug}.org</a>.</p>
+                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${conferenceSlug}.org` : `mailto:da@${conferenceSlug}.org`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{conferenceSlug}.org</a>.</p>
                         </div>
                 </div>
             </div>

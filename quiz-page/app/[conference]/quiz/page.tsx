@@ -386,7 +386,7 @@ useEffect(() => {
     const topThree = sorted.slice(0, 3);
 
     setResults(topThree);
-    localStorage.setItem("quizResults", JSON.stringify(topThree));
+    localStorage.setItem(`quizResults-${conferenceSlug}`, JSON.stringify(topThree));
     window.location.href = `/${conferenceSlug}/results`;
   };
 

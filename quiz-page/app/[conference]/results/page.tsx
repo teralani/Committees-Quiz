@@ -9,6 +9,12 @@ import { createBrowserClient } from "@supabase/ssr";
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
+const LINKS: {[key: string]: string} = {
+  "kingmun" : "kingmun.org",
+  "edumun" : "edumun.com",
+  "pacmun" : "pacificmun.com",
+  "seattlemun" : "seattlemun.org",
+}
 
 type Committee = 
   {
@@ -84,7 +90,7 @@ export default function CommitteeQuizPage() {
 
   useEffect(() => {
   
-    const stored = localStorage.getItem("quizResults");
+    const stored = localStorage.getItem(`quizResults-${conferenceSlug}`);
     if (stored) {
       setResults(JSON.parse(stored));
     }
@@ -284,7 +290,7 @@ export default function CommitteeQuizPage() {
                 })}
   
               </div>
-              <Link href={`https://kingmun.org/committees/${(committee?.acronym || '').toLowerCase()}`} target="_blank">
+              <Link href={`https://${LINKS[rawSlug]}/committees/${(committee?.acronym || '').toLowerCase()}`} target="_blank">
                 <button 
                   className="w-full relative bottom-2 mt-7 rounded-lg p-3 hover:-translate-y-0.5  transition"
                   style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}
