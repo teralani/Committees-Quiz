@@ -85,15 +85,15 @@ useEffect(() => {
         const comms = (committeesData.committees || []).sort((a: any, b: any) => 
           (a.position ?? 0) - (b.position ?? 0)
         );
-        const committeeSummary = comms.map((c: any, idx: number) => ({
-          idx,
-          name: c.name,
-          acronym: c.acronym,
-          difficulty: c.difficulty ?? null,
-          position: c.position ?? null,
-        }));
-        console.log("[quiz] committees raw:", JSON.stringify(committeesData.committees || [], null, 2));
-        console.log("[quiz] committees sorted:", JSON.stringify(committeeSummary, null, 2));
+        // const committeeSummary = comms.map((c: any, idx: number) => ({
+        //   idx,
+        //   name: c.name,
+        //   acronym: c.acronym,
+        //   difficulty: c.difficulty ?? null,
+        //   position: c.position ?? null,
+        // }));
+        // console.log("[quiz] committees raw:", JSON.stringify(committeesData.committees || [], null, 2));
+        // console.log("[quiz] committees sorted:", JSON.stringify(committeeSummary, null, 2));
         setCommittees(comms);
         setIndexing(comms.map((c: any) => c.acronym));
       } else {
@@ -107,7 +107,7 @@ useEffect(() => {
         .eq("slug", conferenceSlug)
         .limit(1)
         .maybeSingle();
-      console.log("[quiz] conference row:", confRow);
+      // console.log("[quiz] conference row:", confRow);
       if (confErr || !confRow) {
         console.error("conference query failed:", confErr);
         setQuestions([]);
@@ -125,7 +125,7 @@ useEffect(() => {
         .eq("name", "Quiz")
         .limit(1)
         .maybeSingle();
-      console.log("[quiz] quiz page row:", pageRow);
+      // console.log("[quiz] quiz page row:", pageRow);
       if (pageErr || !pageRow) {
         console.error("page query failed:", pageErr);
         setQuestions([]);
@@ -141,13 +141,13 @@ useEffect(() => {
         .eq("page_id", pageId)
         .order("position", { ascending: true });
 
-      console.log("[quiz] quiz questions rows:", JSON.stringify((questionsRows || []).map((q: any) => ({
-        id: q.id,
-        text: q.text,
-        slider: q.slider,
-        max: q.max ?? null,
-        position: q.position ?? null,
-      })), null, 2));
+      // console.log("[quiz] quiz questions rows:", JSON.stringify((questionsRows || []).map((q: any) => ({
+      //   id: q.id,
+      //   text: q.text,
+      //   slider: q.slider,
+      //   max: q.max ?? null,
+      //   position: q.position ?? null,
+      // })), null, 2));
 
       if (qErr) {
         console.error("fetch quiz_questions error:", qErr);
@@ -165,12 +165,12 @@ useEffect(() => {
           .eq("question_id", qq.id)
           .order("position", { ascending: true });
 
-        console.log(`[quiz] options for question ${qq.id}:`, JSON.stringify((optsRows || []).map((opt: any) => ({
-          id: opt.id,
-          text: opt.text,
-          range: opt.range ?? null,
-          position: opt.position ?? null,
-        })), null, 2));
+        // console.log(`[quiz] options for question ${qq.id}:`, JSON.stringify((optsRows || []).map((opt: any) => ({
+        //   id: opt.id,
+        //   text: opt.text,
+        //   range: opt.range ?? null,
+        //   position: opt.position ?? null,
+        // })), null, 2));
 
         if (optErr) {
           console.error("fetch question_options error for question", qq.id, ":", optErr);
@@ -205,10 +205,10 @@ useEffect(() => {
             .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0))
             .map((w: any) => ({ weight: Number(w?.weight ?? 0) }));
 
-          console.log(`[quiz] normalized weight vector for option ${opt.id}:`, JSON.stringify(optionWeights.map((w: any, idx: number) => ({
-            committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
-            weight: w.weight,
-          })), null, 2));
+          // console.log(`[quiz] normalized weight vector for option ${opt.id}:`, JSON.stringify(optionWeights.map((w: any, idx: number) => ({
+          //   committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
+          //   weight: w.weight,
+          // })), null, 2));
 
           qOptions.push({
             id: opt.id,
@@ -226,24 +226,24 @@ useEffect(() => {
           question_options: qOptions,
         });
 
-        console.log("[quiz] assembled question:", assembled[assembled.length - 1]);
+        // console.log("[quiz] assembled question:", assembled[assembled.length - 1]);
       }
 
-      console.log("[quiz] final assembled questions:", JSON.stringify(assembled.map((q: any) => ({
-        id: q.id,
-        text: q.text,
-        slider: q.slider,
-        max: q.max,
-        options: (q.question_options || []).map((opt: any) => ({
-          id: opt.id,
-          text: opt.text,
-          range: opt.range,
-          weights: (opt.option_weights || []).map((w: any, idx: number) => ({
-            committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
-            weight: w.weight,
-          })),
-        })),
-      })), null, 2));
+      // console.log("[quiz] final assembled questions:", JSON.stringify(assembled.map((q: any) => ({
+      //   id: q.id,
+      //   text: q.text,
+      //   slider: q.slider,
+      //   max: q.max,
+      //   options: (q.question_options || []).map((opt: any) => ({
+      //     id: opt.id,
+      //     text: opt.text,
+      //     range: opt.range,
+      //     weights: (opt.option_weights || []).map((w: any, idx: number) => ({
+      //       committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
+      //       weight: w.weight,
+      //     })),
+      //   })),
+      // })), null, 2));
 
       setQuestions(assembled);
       setSelectedOptions(Array(assembled.length).fill(null));
