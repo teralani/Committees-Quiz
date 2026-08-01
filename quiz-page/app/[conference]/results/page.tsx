@@ -199,7 +199,14 @@ export default function CommitteeQuizPage() {
   };
 
   return (
-    <div className="relative flex flex-col items-center min-h-screen overflow-x-clip">
+    <div
+      className="relative flex flex-col items-center min-h-screen overflow-x-clip"
+      style={{
+        ["--quiz-primary" as string]: `var(--color-${conferenceSlug}-primary)`,
+        ["--quiz-secondary" as string]: `var(--color-${conferenceSlug}-secondary)`,
+        ["--quiz-logo" as string]: `var(--${conferenceSlug}-logo)`,
+      } as any}
+    >
         {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
 
         <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
@@ -322,7 +329,7 @@ export default function CommitteeQuizPage() {
                 <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                     Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                 </p>
-                <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={`mailto:da@${rawSlug == "kingmun" || rawSlug == "seattlemun"? `${rawSlug}.org` : `${rawSlug}.com`}`}>da@{rawSlug == "kingmun" || rawSlug == "seattlemun"? `${rawSlug}.org` : `${rawSlug}.com`}</a>.</p>
+                <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
             </div>
         </div>
 
