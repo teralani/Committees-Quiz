@@ -202,9 +202,11 @@ export default function CommitteeQuizPage() {
     <div className="relative flex flex-col items-center min-h-screen overflow-x-clip">
         {<canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen w-screen h-screen" />}
 
-        <nav className="h-20 md:h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
-            <div className="hidden md:block" id="LOGO"></div> 
-            <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+        <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
+                <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
+                    <div className="hidden md:block quiz-page-logo"></div> 
+                    <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+                </a>
         </nav>
 
         <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">

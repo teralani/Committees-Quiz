@@ -61,6 +61,8 @@ useEffect(() => {
   async function fetchQuestions() {
     setLoading(true);
     try {
+      console.groupCollapsed(`[quiz] load questions for ${conferenceSlug}`);
+
       // Fetch committees first
       const { data: committeesData, error: committeesErr } = await supabase
         .from("conferences")
@@ -83,66 +85,21 @@ useEffect(() => {
         const comms = (committeesData.committees || []).sort((a: any, b: any) => 
           (a.position ?? 0) - (b.position ?? 0)
         );
+        const committeeSummary = comms.map((c: any, idx: number) => ({
+          idx,
+          name: c.name,
+          acronym: c.acronym,
+          difficulty: c.difficulty ?? null,
+          position: c.position ?? null,
+        }));
+        console.log("[quiz] committees raw:", JSON.stringify(committeesData.committees || [], null, 2));
+        console.log("[quiz] committees sorted:", JSON.stringify(committeeSummary, null, 2));
         setCommittees(comms);
         setIndexing(comms.map((c: any) => c.acronym));
+      } else {
+        console.warn("[quiz] committees query failed:", committeesErr);
       }
 
-      // 1) Try nested select first (original approach that sometimes works)
-      const { data: nestedData, error: nestedErr } = await supabase
-        .from("conferences")
-        .select(`
-          id,
-          name,
-          pages (
-            id,
-            name,
-            quiz_questions (
-              id,
-              text,
-              slider,
-              max,
-              question_options (
-                id,
-                text,
-                range,
-                option_weights ( weight )
-              )
-            )
-          )
-        `)
-        .eq("slug", conferenceSlug)
-        .eq("pages.name", "Quiz")
-        .limit(1)
-        .maybeSingle();
-
-      if (nestedErr) {
-        console.debug("nested select returned error (continuing to fallback):", nestedErr);
-      } else if (nestedData && Array.isArray(nestedData.pages) && nestedData.pages.length > 0) {
-        // Build the exact nested shape the quiz UI expects
-        setConferenceName(nestedData.name);
-        const page = nestedData.pages.find((p: any) => p.name === "Quiz");
-        const nestedQuestions = (page?.quiz_questions || []).map((qq: any) => ({
-          id: qq.id,
-          text: qq.text ?? "",
-          slider: !!qq.slider,
-          max: typeof qq.max === "number" ? qq.max : null,
-          question_options: (qq.question_options || []).map((opt: any) => ({
-            id: opt.id,
-            text: opt.text ?? "",
-            range: typeof opt.range === "number" ? opt.range : null,
-            option_weights: (opt.option_weights || []).map((w: any) => ({ weight: Number(w?.weight ?? 0) })),
-          })),
-        }));
-
-        setQuestions(nestedQuestions);
-        setSelectedOptions(Array(nestedQuestions.length).fill(null));
-        setSliderValues(Array(nestedQuestions.length).fill(0));
-        setQuestionNumber(0);
-        setLoading(false);
-        return;
-      }
-
-      // 2) Fallback to explicit, ordered per-table queries (stable and predictable)
       // Resolve conference id
       const { data: confRow, error: confErr } = await supabase
         .from("conferences")
@@ -150,6 +107,7 @@ useEffect(() => {
         .eq("slug", conferenceSlug)
         .limit(1)
         .maybeSingle();
+      console.log("[quiz] conference row:", confRow);
       if (confErr || !confRow) {
         console.error("conference query failed:", confErr);
         setQuestions([]);
@@ -167,6 +125,7 @@ useEffect(() => {
         .eq("name", "Quiz")
         .limit(1)
         .maybeSingle();
+      console.log("[quiz] quiz page row:", pageRow);
       if (pageErr || !pageRow) {
         console.error("page query failed:", pageErr);
         setQuestions([]);
@@ -178,9 +137,17 @@ useEffect(() => {
       // Fetch questions in stable order
       const { data: questionsRows, error: qErr } = await supabase
         .from("quiz_questions")
-        .select("id, text, slider, max")
+        .select("id, text, slider, max, position")
         .eq("page_id", pageId)
         .order("position", { ascending: true });
+
+      console.log("[quiz] quiz questions rows:", JSON.stringify((questionsRows || []).map((q: any) => ({
+        id: q.id,
+        text: q.text,
+        slider: q.slider,
+        max: q.max ?? null,
+        position: q.position ?? null,
+      })), null, 2));
 
       if (qErr) {
         console.error("fetch quiz_questions error:", qErr);
@@ -194,45 +161,20 @@ useEffect(() => {
         // Fetch options for this question in stable order
         let { data: optsRows, error: optErr } = await supabase
           .from("question_options")
-          .select("id, text, range")
+          .select("id, text, range, position")
           .eq("question_id", qq.id)
           .order("position", { ascending: true });
 
-        if (optErr) {
-          console.error("fetch question_options error (per-row):", optErr);
-          // Attempt a nested fallback for this question specifically
-          try {
-            const { data: nested2, error: nested2Err } = await supabase
-              .from("conferences")
-              .select(`
-                pages (
-                  id,
-                  quiz_questions (
-                    id,
-                    question_options (
-                      id,
-                      text,
-                      range,
-                      option_weights ( weight )
-                    )
-                  )
-                )
-              `)
-              .eq("slug", conferenceSlug)
-              .eq("pages.id", pageId)
-              .eq("pages.quiz_questions.id", qq.id)
-              .limit(1);
+        console.log(`[quiz] options for question ${qq.id}:`, JSON.stringify((optsRows || []).map((opt: any) => ({
+          id: opt.id,
+          text: opt.text,
+          range: opt.range ?? null,
+          position: opt.position ?? null,
+        })), null, 2));
 
-            if (nested2Err) {
-              console.error("nested fallback for options failed:", nested2Err);
-              optsRows = [];
-            } else {
-              optsRows = nested2?.[0]?.pages?.[0]?.quiz_questions?.[0]?.question_options || [];
-            }
-          } catch (e) {
-            console.error("exception in nested fallback for options:", e);
-            optsRows = [];
-          }
+        if (optErr) {
+          console.error("fetch question_options error for question", qq.id, ":", optErr);
+          optsRows = [];
         }
 
         const qOptions: any[] = [];
@@ -240,9 +182,11 @@ useEffect(() => {
           // Fetch weights for this option in stable order
           const { data: weightsRows, error: wErr } = await supabase
             .from("option_weights")
-            .select("weight")
+            .select("weight, weight_index")
             .eq("option_id", opt.id)
             .order("weight_index", { ascending: true });
+
+          console.log(`[quiz] weights for option ${opt.id}:`, weightsRows);
 
           if (wErr) {
             console.error("fetch option_weights error for option", opt.id, ":", wErr?.message || wErr);
@@ -256,7 +200,15 @@ useEffect(() => {
             continue;
           }
 
-          const optionWeights = (weightsRows || []).map((w: any) => ({ weight: Number(w?.weight ?? 0) }));
+          const optionWeights = (weightsRows || [])
+            .slice()
+            .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0))
+            .map((w: any) => ({ weight: Number(w?.weight ?? 0) }));
+
+          console.log(`[quiz] normalized weight vector for option ${opt.id}:`, JSON.stringify(optionWeights.map((w: any, idx: number) => ({
+            committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
+            weight: w.weight,
+          })), null, 2));
 
           qOptions.push({
             id: opt.id,
@@ -273,16 +225,32 @@ useEffect(() => {
           max: typeof qq.max === "number" ? qq.max : null,
           question_options: qOptions,
         });
-        
-        // console.log(`Loaded question ${assembled.length}: "${qq.text}" with ${qOptions.length} options`);
+
+        console.log("[quiz] assembled question:", assembled[assembled.length - 1]);
       }
+
+      console.log("[quiz] final assembled questions:", JSON.stringify(assembled.map((q: any) => ({
+        id: q.id,
+        text: q.text,
+        slider: q.slider,
+        max: q.max,
+        options: (q.question_options || []).map((opt: any) => ({
+          id: opt.id,
+          text: opt.text,
+          range: opt.range,
+          weights: (opt.option_weights || []).map((w: any, idx: number) => ({
+            committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
+            weight: w.weight,
+          })),
+        })),
+      })), null, 2));
 
       setQuestions(assembled);
       setSelectedOptions(Array(assembled.length).fill(null));
       setSliderValues(Array(assembled.length).fill(0));
       setQuestionNumber(0);
       setLoading(false);
-      
+    
       // Debug: log loaded questions
       // console.log("Loaded questions count:", assembled.length);
       // console.log("Questions:", assembled.map(q => ({ text: q.text, optionsCount: q.question_options?.length })));
@@ -290,6 +258,8 @@ useEffect(() => {
       console.error("fetchQuestions unexpected error", err);
       setQuestions([]);
       setLoading(false);
+    } finally {
+      console.groupEnd();
     }
   }
 
@@ -344,16 +314,19 @@ useEffect(() => {
       if (!question) return;
 
       if (question.slider && sel !== null) {
-        question["question_options"].forEach((opt: any) => {
-          if (opt.range !== undefined && (sel as number) <= opt.range) {
-            if (opt["option_weights"]) {
-              opt["option_weights"].forEach((w: any, committeeIdx: number) => {
-                  // const weight = typeof w === "number" ? w : (w?.weight ?? 0);
-                  tally[committeeIdx] += Number(w.weight);
-              });
-            }
-          }
-        });
+        const sliderBands = question["question_options"]
+          .filter((opt: any) => typeof opt.range === "number")
+          .slice()
+          .sort((a: any, b: any) => a.range - b.range);
+
+        const selectedBand =
+          sliderBands.find((opt: any) => (sel as number) <= opt.range) ?? sliderBands[sliderBands.length - 1];
+
+        if (selectedBand && selectedBand["option_weights"]) {
+          selectedBand["option_weights"].forEach((w: any, committeeIdx: number) => {
+              tally[committeeIdx] += Number(w.weight);
+          });
+        }
       } else if (sel !== null) {
         const chosen = question["question_options"][sel];
         if (chosen && chosen["option_weights"]) {
@@ -395,9 +368,11 @@ useEffect(() => {
   if (loading) {
     return (
       <div className="relative flex flex-col items-center min-h-screen">
-        <nav className={`h-16 flex justify-center align-center w-full bg-${conferenceSlug}-primary`} >
-          <div className="hidden md:block" id="LOGO"></div>
-          <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+        <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
+                <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
+                    <div className="hidden md:block quiz-page-logo"></div> 
+                    <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+                </a>
         </nav>
         <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
           <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">

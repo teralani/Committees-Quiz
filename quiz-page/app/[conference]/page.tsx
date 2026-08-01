@@ -33,6 +33,13 @@ export default async function Home({ params }: { params: { conference: string } 
     const conferenceName = SLUG_METADATA[conferenceSlug].title;
     const supabase = await createClient();
 
+    const LINKS: {[key: string]: string} = {
+    "kingmun" : "kingmun.org",
+    "edumun" : "edumun.com",
+    "pacmun" : "pacificmun.com",
+    "seattlemun" : "seattlemun.org",
+    }
+
     const { data: teams, error: nestedErr } = await supabase
         .from("page_sections")
         .select(`
@@ -73,8 +80,10 @@ export default async function Home({ params }: { params: { conference: string } 
         >
         
             <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
-                <div className="hidden md:block quiz-page-logo"></div> 
-                <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+                <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
+                    <div className="hidden md:block quiz-page-logo"></div> 
+                    <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+                </a>
             </nav>
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
                 <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>
@@ -147,7 +156,7 @@ export default async function Home({ params }: { params: { conference: string } 
                             <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                                 Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                             </p>
-                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${conferenceSlug}.org` : `mailto:da@${conferenceSlug}.org`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{conferenceSlug}.org</a>.</p>
+                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
                         </div>
                 </div>
             </div>
