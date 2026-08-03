@@ -265,7 +265,7 @@ export default function CommitteeQuizPage() {
             {faqOpen && (
               <>
               <p className="px-10 pt-5 pb-2 text-left">Seminars are designed to help delegates develop the knowledge and skills needed to succeed in Model UN. Beginner Seminars introduce the fundamentals of MUN, including the Rules of Procedure, Flow of Debate, and position paper writing, before concluding with a Capstone session where delegates can apply their learning. Advanced Seminars are intended for delegates with prior MUN experience who are ready to explore more complex committee formats, such as Specialized, Cabinet, and Crisis committees. Committees are intended for delegates who already have a strong understanding of MUN procedures and are prepared to engage directly in debate.</p>
-              <p className="pb-5 text-left px-10">To learn more, visit <a className="text-edumun-primary font-bold">https://edumun.com/committees</a> for more information.</p>
+              <p className="pb-5 text-left px-10">To learn more, visit <a className="text-edumun-primary font-bold">https://edumun.com/committees</a> for more information on seminars and committees.</p>
               </>
             )}
           </div>
