@@ -22,7 +22,7 @@ export default async function Page() {
     <div className={`${montserrat.className} min-h-screen`}>
         <nav className="h-16 flex justify-between md:justify-center align-center w-full bg-munnorthwest-primary" >
             <div className="max-md:ml-4" id="MUNNWLOGO"></div> 
-            <h1 className="max-md:hidden text-white text-2xl my-auto text-center mx-2 font-bold">MUNNorthwest Committee Quizzes</h1>
+            <h1 className="max-md:hidden text-white text-xl md:text-2xl my-auto text-center mx-2 font-bold">MUNNorthwest Committee Quizzes</h1>
             <Link className="absolute right-10 top-3 bg-white py-2 px-4 font-bold rounded-xl hover:bg-gray-100 hover:scale-105 transition-transform" href="/login">
                 <p>
                     Sign in
@@ -35,6 +35,7 @@ export default async function Page() {
         <div className="mx-auto max-w-280 pb-20">
             <div className={`${conferences.length > 1? "grid lg:grid-cols-2 lg:grid-rows-2": "flex justify-center"} place-items-center-safe gap-6 w-full h-full`}>
                 {conferences.map((conf: any, idx: number) => (
+                    <div className="scale-75 md:scale-90 lg:scale-100 max-w-screen overflow-x-clip">
                     <TiltedCard
                         imageSrc={`${conf.slug.toLowerCase()}.jpg`}
                         key={conf.slug || idx}
@@ -57,6 +58,7 @@ export default async function Page() {
                         }
                         displayOverlayContent={true}
                     />
+                    </div>
                 ))}
             </div>
         </div>

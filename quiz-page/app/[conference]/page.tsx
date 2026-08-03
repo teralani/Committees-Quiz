@@ -82,16 +82,16 @@ export default async function Home({ params }: { params: { conference: string } 
             <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
                 <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
                     <div className="hidden md:block quiz-page-logo"></div> 
-                    <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+                    <h1 className="text-white text-xl md:text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
                 </a>
             </nav>
             <div className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
-                <h1 className="text-white text-center text-3xl ">Find Your Perfect {conferenceName} Committee</h1>
-                <p className="text-lg text-white mt-3 mx-5 text-center">Discover your perfect committee match with our interactive quiz!</p>
-                <div className="flex justify-center pb-10 flex-col items-center ">
+                <h1 className="text-white text-center text-3xl max-md:text-2xl max-md:px-10 ">Find Your Perfect {conferenceName} Committee</h1>
+                <p className="text-lg text-white mt-3 mx-5 text-center max-md:text-md">Discover your perfect committee match with our interactive quiz!</p>
+                <div className="scale-90 md:scale-100 flex justify-center md:pb-10 flex-col items-center">
                         <Magnet
                             padding={30}
-                            wrapperClassName="mt-20 mb-10"
+                            wrapperClassName="md:mt-20 md:mb-10 -mt-5 mb-12"
                         >
                             <Link href={`/${conferenceSlug}/quiz`}>
                                 <button 

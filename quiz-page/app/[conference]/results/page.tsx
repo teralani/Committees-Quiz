@@ -39,6 +39,9 @@ export default function CommitteeQuizPage() {
   
   const [loading, setLoading] = useState(true)
   const [committees, setCommittees] = useState<Committee[]>([])
+
+  const [faqOpen, setFaqOpen] = useState<boolean>(false)
+
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -212,13 +215,13 @@ export default function CommitteeQuizPage() {
         <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
                 <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
                     <div className="hidden md:block quiz-page-logo"></div> 
-                    <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+                    <h1 className="text-white text-xl md:text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
                 </a>
         </nav>
 
         <div className="max-md:w-full md:max-w-400 result-card fade-in relative mb-10 md:my-30 backdrop-blur-md md:rounded-2xl max-md:py-12 md:p-12 text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-4xl font-bold text-white mb-6">Top Committee Matches</h2>
+          <h2 className="text-4xl max-md:text-2xl font-bold text-white mb-6">Top Committee Matches</h2>
 
 
           {loading? 
@@ -233,12 +236,12 @@ export default function CommitteeQuizPage() {
           <>
             <Magnet
               padding={30}
-              wrapperClassName="p-10 my-10 "
+              wrapperClassName="p-10 max-md:mb-0 mb-10 "
             >
               <Link href={`/${conferenceSlug}`}>
                   <button
                       onClick={clearResults}
-                      className="backdrop-blur-lg text-white text-lg h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl"
+                      className="backdrop-blur-lg text-white md:text-lg text-sm h-14 md:h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl"
                       style={{ 
                           backgroundColor: `color-mix(in srgb, var(--color-${conferenceSlug}-primary) 80%, transparent)`,
                           boxShadow: `0 0 15px var(--color-${conferenceSlug}-secondary)` 
@@ -250,6 +253,23 @@ export default function CommitteeQuizPage() {
                   </button>
               </Link>
             </Magnet>
+
+          {conferenceSlug == "edumun" && (
+            <div className={`rounded-md cursor-pointer max-md:text-md py-4 px-2 bg-white mb-10 ${faqOpen? "" : ""}`} onClick={()=> setFaqOpen(!faqOpen)}>
+            <div className={` flex px-3 `}>
+              <svg className={`${!faqOpen? "rotate-0" : "rotate-45"}  transition-transform my-auto size-15 fill-neutral-600 stroke-0`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                <path className=" origin-center" d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+              </svg>
+              <h1 className="my-auto md:text-xl lg:px-10 font-bold text-left pl-5">What is the difference between seminars and committees?</h1>
+            </div>
+            {faqOpen && (
+              <>
+              <p className="px-10 pt-5 pb-2 text-left">Seminars are designed to help delegates develop the knowledge and skills needed to succeed in Model UN. Beginner Seminars introduce the fundamentals of MUN, including the Rules of Procedure, Flow of Debate, and position paper writing, before concluding with a Capstone session where delegates can apply their learning. Advanced Seminars are intended for delegates with prior MUN experience who are ready to explore more complex committee formats, such as Specialized, Cabinet, and Crisis committees. Committees are intended for delegates who already have a strong understanding of MUN procedures and are prepared to engage directly in debate.</p>
+              <p className="pb-5 text-left px-10">To learn more, visit <a className="text-edumun-primary font-bold">https://edumun.com/committees</a> for more information.</p>
+              </>
+            )}
+          </div>
+          )}
 
          {results && results.map((r, i) => {
           const committee = resolveCommittee(r);
@@ -270,7 +290,7 @@ export default function CommitteeQuizPage() {
                 <div className="max-md:relative max-md:-top-10.5 max-md:-left-8 max-md:h-0 md:min-h-max w-0 md:flex md:flex-col md:justify-around md:align-middle">
                     <div className="text-center font-bold flex flex-col justify-around text-white rounded-full text-2xl w-10 h-10" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>{i+1}</div>
                 </div>
-              <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-60 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
+              <div className="bg-blue-50 md:ml-6 my-auto max-md:w-full h-50 md:aspect-square lg:h-60 lg:w-60 xl:h-70 xl:w-70 md:h-50 md:w-50 max-md:mx-auto">
                 {committee?.img_url ? (
                   <img
                       className="card-img object-cover h-full w-full"
@@ -283,16 +303,16 @@ export default function CommitteeQuizPage() {
               </div>
 
               <div className="w-full">
-                <p className="text-left text-2xl font-bold my-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
+                <p className="text-left max-md:text-xl text-2xl font-bold my-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                   {r.name}
                 </p>
-              <p className="md:text-sm lg:text-md  text-start text-gray-600">{committee?.description || ''}</p>
-              <p className={`rounded-full py-1 px-3 my-5 max-w-min ${committee?.difficulty == "Advanced"? 'text-red-600 bg-red-100' : committee?.difficulty == "Intermediate"? "text-amber-600 bg-amber-100" : "text-green-700 bg-green-100"}`}>{committee?.difficulty || ''} </p>
+              <p className="md:text-sm lg:text-md text-start max-md:text-sm text-gray-600">{committee?.description || ''}</p>
+              <p className={`rounded-full py-1 px-3 my-5 max-w-min max-md:text-sm ${committee?.difficulty == "Advanced"? 'text-red-600 bg-red-100' : committee?.difficulty == "Intermediate"? "text-amber-600 bg-amber-100" : "text-green-700 bg-green-100"}`}>{committee?.difficulty || ''} </p>
               <p className="text-start font-bold mt-5">Topic{(committee?.topics?.length || 0)>1? "s" : ""}: </p>
               <div className="my-2 flex gap-3 w-full flex-wrap">
                 {(committee?.topics || []).map((topic, idx) => {
                   return (
-                    <p key={idx} className="rounded-full py-1 px-3 bg-gray-200">
+                    <p key={idx} className="max-md:text-sm rounded-full py-1 px-3 bg-gray-200">
                       {topic}
                     </p>
                   )
@@ -306,7 +326,7 @@ export default function CommitteeQuizPage() {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-secondary)`}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `var(--color-${conferenceSlug}-primary)`}
                 >
-                  <p className="text-white font-bold text-sm">Learn more about {committee?.acronym || ''}</p>
+                  <p className="text-white max-md:text-xs font-bold text-sm">Learn more about {committee?.acronym || ''}</p>
                   </button>
                 </Link>
               </div>
@@ -326,10 +346,10 @@ export default function CommitteeQuizPage() {
                 <h1 className="font-bold text-xl mb-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>Disclaimer & Contact</h1>
                 </div>
                 
-                <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
+                <p className="max-md:text-xs text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
                     Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                 </p>
-                <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
+                <p className="max-md:text-xs text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
             </div>
         </div>
 
