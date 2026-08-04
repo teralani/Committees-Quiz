@@ -65,6 +65,8 @@ export default async function Home({ params }: { params: { conference: string } 
         console.error("Supabase error:", nestedErr);
     }
 
+    
+
     return (
         <>
         <title>{`${conferenceName} ${new Date().getFullYear()} Committee Quiz`}</title>
@@ -79,7 +81,7 @@ export default async function Home({ params }: { params: { conference: string } 
             } as CSSProperties}
         >
         
-            <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
+            <nav className="h-16 flex justify-center align-center w-full bg-(--quiz-primary)">
                 <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
                     <div className="hidden md:block quiz-page-logo"></div> 
                     <h1 className="text-white text-xl md:text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
@@ -95,11 +97,7 @@ export default async function Home({ params }: { params: { conference: string } 
                         >
                             <Link href={`/${conferenceSlug}/quiz`}>
                                 <button 
-                                    className="quiz-page-button backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 hover:shadow-2xl"
-                                    style={{ 
-                                        backgroundColor: `color-mix(in srgb, var(--quiz-primary) 80%, transparent)`,
-                                        boxShadow: `0 0 15px var(--quiz-secondary)` 
-                                    }}
+                                    className="bg-(--quiz-primary)/80 shadow-[0_0px_15px_var(--quiz-secondary)] quiz-page-button backdrop-blur-lg text-white h-16 px-6 py-3 rounded-lg transition transform hover:scale-105 "
                                 >Take the Quiz Now!</button>
                             </Link>
                         </Magnet>
@@ -119,7 +117,7 @@ export default async function Home({ params }: { params: { conference: string } 
                                 displayCardContent={true}
                                 cardContent={
                                     <div className="hover-card w-full h-full p-6">
-                                        <div className={`hover-border quiz-page-hover-border w-31 hover:bg-amber-400 h-31 -mt-1 mx-auto shadow-lg shadow-${conferenceSlug}-primary/40 mb-6 rounded-lg`}></div>
+                                        <div className= "hover-border quiz-page-hover-border w-31 hover:bg-amber-400 h-31 -mt-1 mx-auto shadow-lg shadow-(--quiz-primary)/40 mb-6 rounded-lg"></div>
                                         <h3 className="text-2xl font-bold text-center">{team?.title}</h3>
                                         <p className="mt-2 text-sm text-center">{team?.body}</p>
                                     </div>
@@ -145,23 +143,23 @@ export default async function Home({ params }: { params: { conference: string } 
                             }
                             )}
                         </div>
-                        <div id="disclaimer" className="quiz-page-disclaimer flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black transition transform duration-300 hover:scale-105 hover:shadow-xl">
+                        <div id="disclaimer" className="text-(--quiz-primary) flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black transition transform duration-300 hover:scale-105 hover:shadow-xl">
                             <div className="flex">
-                                <svg className="h-6 w-6 mr-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="h-6 w-6 mr-2"  fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"></path>
                             </svg>
-                            <h1 className="font-bold text-xl mb-2" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>Disclaimer & Contact</h1>
+                            <h1 className="font-bold text-xl mb-2 ">Disclaimer & Contact</h1>
                             </div>
                             
-                            <p className="text-sm mb-3" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
+                            <p className="text-sm mb-3">
                                 Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
                             </p>
-                            <p className="text-sm" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>For questions, feedback, or further guidance, contact us at <a className="underline" style={{ color: `var(--color-${conferenceSlug}-secondary)` }} href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
+                            <p className="text-sm" >For questions, feedback, or further guidance, contact us at <a className="underline text-(--quiz-secondary)" href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
                         </div>
                 </div>
             </div>
             <CommitteesSection display={false} />
-            <footer className=" min-h-14 max-h-min flex justify-center align-center w-full" style={{ backgroundColor: `var(--quiz-secondary)` }}>
+            <footer className=" min-h-14 max-h-min flex justify-center align-center w-full bg-(--quiz-secondary)">
                 <h2 className="text-white text-center my-auto">© {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.</h2>
             </footer>
         </div>

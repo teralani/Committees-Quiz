@@ -30,23 +30,38 @@ export default async function Page() {
             </Link>
         </nav>
         <main>
-        <h1 className="font-bold text-3xl md:text-5xl text-center w-full md:mt-20 mb-5 mt-20 px-5 text-white">Available Committee Quizzes</h1>
+        <h1 className="font-bold text-3xl md:text-4xl lg:text-5xl text-center w-full md:mt-20 mb-5 mt-20 px-5 text-white">Available Committee Quizzes</h1>
         <h2 className="text-white max-md:text-sm w-full text-center mb-10">Click on a quiz to get started!</h2>
         <div className="mx-auto max-w-280 pb-20">
-            <div className={`${conferences.length > 1? "grid lg:grid-cols-2 lg:grid-rows-2": "flex justify-center"} place-items-center-safe gap-6 w-full h-full`}>
+            <div className={`${conferences.length > 1? "grid lg:grid-cols-2 lg:grid-rows-2": "flex justify-center"} max-md:my-10 place-items-center-safe gap-6 w-full h-full`}>
                 {conferences.map((conf: any, idx: number) => (
-                    <div className="scale-75 md:scale-90 lg:scale-100 max-w-screen overflow-x-clip">
-                    <TiltedCard
-                        imageSrc={`${conf.slug.toLowerCase()}.jpg`}
-                        key={conf.slug || idx}
-                        cardHeight={400}
-                        cardWidth={400}
-                        containerHeight={500}
-                        containerWidth={500}
-                        showTooltip={true}
-                        captionText={`Go to the ${conf.name} Committee Quiz`}
-                        overlayContent={
-                            <Link href={`/${conf.slug.toLowerCase()}`}>
+                    <div key={idx} className="max-w-screen overflow-x-clip max-md:m-3 max-md:flex max-md:justify-center">
+                        <div className="max-md:hidden md:scale-90 lg:scale-100">
+                            <TiltedCard
+                                imageSrc={`${conf.slug.toLowerCase()}.jpg`}
+                                key={conf.slug || idx}
+                                cardHeight={400}
+                                cardWidth={400}
+                                containerHeight={500}
+                                containerWidth={500}
+                                showTooltip={true}
+                                captionText={`Go to the ${conf.name} Committee Quiz`}
+                                overlayContent={
+                                    <Link href={`/${conf.slug.toLowerCase()}`}>
+                                        <Image
+                                            src={`/${conf.slug.toLowerCase()}.png`}
+                                            alt={conf.name}
+                                            width={500}
+                                            height={500}
+                                            className="w-full h-full object-contain p-3"
+                                        />
+                                    </Link>
+                                }
+                                displayOverlayContent={true}
+                            />
+                        </div>
+                        <div className="w-[clamp(300px,50%,800px)] bg-white rounded-xl md:hidden">
+                            <Link  href={`/${conf.slug.toLowerCase()}`}>
                                 <Image
                                     src={`/${conf.slug.toLowerCase()}.png`}
                                     alt={conf.name}
@@ -55,9 +70,7 @@ export default async function Page() {
                                     className="w-full h-full object-contain p-3"
                                 />
                             </Link>
-                        }
-                        displayOverlayContent={true}
-                    />
+                        </div>
                     </div>
                 ))}
             </div>
