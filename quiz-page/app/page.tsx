@@ -35,7 +35,7 @@ export default async function Page() {
         <div className="mx-auto max-w-280 pb-20">
             <div className={`${conferences.length > 1? "grid lg:grid-cols-2 lg:grid-rows-2": "flex justify-center"} max-md:my-10 place-items-center-safe gap-6 w-full h-full`}>
                 {conferences.map((conf: any, idx: number) => (
-                    <div key={idx} className="max-w-screen overflow-x-clip max-md:m-3 max-md:flex max-md:justify-center">
+                    <div key={idx} className="max-w-screen max-md:m-3 max-md:flex max-md:justify-center">
                         <div className="max-md:hidden md:scale-90 lg:scale-100">
                             <TiltedCard
                                 imageSrc={`${conf.slug.toLowerCase()}.jpg`}

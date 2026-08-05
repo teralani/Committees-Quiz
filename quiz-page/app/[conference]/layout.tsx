@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { Montserrat } from "next/font/google";
 
 const ALLOWED_SLUGS = ["kingmun", "edumun", "pacmun", "seattlemun"];
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 export default async function ConferenceLayout({
   children,
@@ -29,5 +31,12 @@ export default async function ConferenceLayout({
     notFound();
   }
 
-  return <>{children}</>;
+  return <div
+    className={montserrat.className}
+      style={{
+        ["--quiz-primary" as string]: `var(--color-${conferenceSlug}-primary)`,
+        ["--quiz-secondary" as string]: `var(--color-${conferenceSlug}-secondary)`,
+        ["--quiz-logo" as string]: `var(--${conferenceSlug}-logo)`
+      } as React.CSSProperties}
+  >{children}</div>;
 }

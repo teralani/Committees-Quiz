@@ -6,19 +6,28 @@ interface ConfettiProps {
   mobileParticles?: number;
   desktopParticles?: number;
   className?: string;
+  onComplete?: () => void;
 }
 
 type Particle = {
   x: number;
   y: number;
+
   r: number;
+  halfR: number;
+  quarterR: number;
+
   d: number;
+
   color: string;
+
   tilt: number;
   tiltAngle: number;
   tiltAngleIncrement: number;
+
   emoji?: HTMLCanvasElement;
 };
+
 
 const COLORS = [
   "DodgerBlue",
@@ -56,6 +65,7 @@ export default function Confetti({
   mobileParticles = 80,
   desktopParticles = 200,
   className = "",
+  onComplete
 }: ConfettiProps) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,9 +87,17 @@ export default function Confetti({
       width = window.innerWidth;
       height = window.innerHeight;
 
-      canvas.width = width;
-      canvas.height = height;
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
+
 
     resize();
 
@@ -94,126 +112,100 @@ export default function Confetti({
     const particles: Particle[] = [];
 
     for (let i = 0; i < MAX_PARTICLES; i++) {
+      const r = random(10, 30);
       particles.push({
-        x: random(0, width),
-        y: random(-height, 0),
-        r: random(10, 30),
-        d: random(10, MAX_PARTICLES),
-        color: COLORS[i % COLORS.length],
-        tilt: random(-10, 10),
-        tiltAngle: random(0, Math.PI * 2),
-        tiltAngleIncrement: random(0.05, 0.12),
-        emoji:
-          Math.random() < 0.25
-            ? Math.random() < 0.5
-              ? partySprite
-              : crownSprite
-            : undefined,
+          x: random(0, width),
+          y: random(-height, 0),
+
+          r,
+          halfR: r / 2,
+          quarterR: r / 4,
+
+          d: random(10, MAX_PARTICLES),
+
+          color: COLORS[i % COLORS.length],
+
+          tilt: random(-10, 10),
+          tiltAngle: random(0, Math.PI * 2),
+          tiltAngleIncrement: random(0.05, 0.12),
+          emoji:
+              Math.random() < 0.25
+                  ? Math.random() < 0.5
+                      ? partySprite
+                      : crownSprite
+                  : undefined,
       });
+
     }
 
     let angle = 0;
     let animationFrame = 0;
 
     const draw = () => {
-    ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
 
-    // One path for each ribbon color
-    const ribbonPaths = new Map<
-        string,
-        { x1: number; y1: number; x2: number; y2: number; lineWidth: number }[]
-    >();
+      const sinAngle = Math.sin(angle);
 
-    const emojis: Particle[] = [];
+      let alive = 0;
 
-    for (let i = particles.length - 1; i >= 0; i--) {
+      for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
         p.tiltAngle += p.tiltAngleIncrement;
         p.tilt = Math.sin(p.tiltAngle) * 15;
 
         if (p.emoji) {
-            emojis.push(p);
+          ctx.drawImage(
+            p.emoji,
+            p.x + p.tilt - p.halfR,
+            p.y - p.halfR,
+            p.r*2,
+            p.r *2
+          );
         } else {
-            let arr = ribbonPaths.get(p.color);
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = p.halfR;
 
-            if (!arr) {
-                arr = [];
-                ribbonPaths.set(p.color, arr);
-            }
-
-            arr.push({
-                x1: p.x + p.tilt + p.r / 4,
-                y1: p.y,
-                x2: p.x + p.tilt,
-                y2: p.y + p.tilt + p.r / 4,
-                lineWidth: p.r / 2,
-            });
+          ctx.beginPath();
+          ctx.moveTo(
+              p.x + p.tilt + p.quarterR,
+              p.y
+          );
+          ctx.lineTo(
+              p.x + p.tilt,
+              p.y + p.tilt + p.quarterR
+          );
+          ctx.stroke();
         }
 
         p.y +=
-            ((Math.cos(angle + p.d) + 2 + p.r / 2) * 2) /
-            2.5;
+          ((Math.cos(angle + p.d) + 2 + p.halfR) * 2) /
+          2.2;
 
-        p.x += Math.sin(angle) * 2;
+        p.x += sinAngle * 2;
 
         if (
-            p.x > width + 20 ||
-            p.x < -20 ||
-            p.y > height
+          p.x > width + 20 ||
+          p.x < -20 ||
+          p.y > height
         ) {
-            particles.splice(i, 1);
-        }
-    }
-
-    // Draw all ribbons grouped by color
-    ribbonPaths.forEach((segments, color) => {
-        ctx.strokeStyle = color;
-
-        // Ribbon sizes vary, so batch by line width
-        const widthGroups = new Map<number, typeof segments>();
-
-        for (const seg of segments) {
-            let arr = widthGroups.get(seg.lineWidth);
-
-            if (!arr) {
-                arr = [];
-                widthGroups.set(seg.lineWidth, arr);
-            }
-
-            arr.push(seg);
+            continue;
         }
 
-        widthGroups.forEach((group, lineWidth) => {
-            ctx.lineWidth = lineWidth;
-            ctx.beginPath();
+        particles[alive++] = p;
+      }
 
-            for (const s of group) {
-                ctx.moveTo(s.x1, s.y1);
-                ctx.lineTo(s.x2, s.y2);
-            }
+      particles.length = alive;
 
-            ctx.stroke();
-        });
-    });
+      angle += 0.01;
 
-    // Draw emojis
-    for (const p of emojis) {
-        ctx.drawImage(
-            p.emoji!,
-            p.x + p.tilt - p.r / 2,
-            p.y - p.r / 2,
-            p.r,
-            p.r
-        );
-    }
+      if (alive) {
+          animationFrame = requestAnimationFrame(draw);
+      } else {
+          onComplete?.();
+      }
+    };
 
-    angle += 0.01;
-
-    if (particles.length > 0) {
-        animationFrame = requestAnimationFrame(draw);
-    }
-};
 
     draw();
 

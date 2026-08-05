@@ -5,6 +5,7 @@ import Card from "@/components/card";
 import Magnet from "@/components/magneticButton";
 import { createClient } from "@/utils/supabase/server";
 import type { CSSProperties } from "react";
+import Disclaimer from "@/components/disclaimer";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
@@ -143,19 +144,7 @@ export default async function Home({ params }: { params: { conference: string } 
                             }
                             )}
                         </div>
-                        <div id="disclaimer" className="text-(--quiz-primary) flex-col mx-10 md:mx-auto max-w-175 my-10 min-h-20 bg-white/88 flex justify-center p-6 rounded-lg shadow-2xl shadow-black transition transform duration-300 hover:scale-105 hover:shadow-xl">
-                            <div className="flex">
-                                <svg className="h-6 w-6 mr-2"  fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"></path>
-                            </svg>
-                            <h1 className="font-bold text-xl mb-2 ">Disclaimer & Contact</h1>
-                            </div>
-                            
-                            <p className="text-sm mb-3">
-                                Disclaimer: This quiz is intended for guidance only. Final committee assignments are determined by the Delegate Affairs Team.
-                            </p>
-                            <p className="text-sm" >For questions, feedback, or further guidance, contact us at <a className="underline text-(--quiz-secondary)" href={conferenceSlug == "edumun"? `mailto:delegates@${LINKS[conferenceSlug]}` : `mailto:da@${LINKS[conferenceSlug]}`}>{conferenceSlug == "edumun"? "delegates" : "da"}@{LINKS[conferenceSlug]}</a>.</p>
-                        </div>
+                        <Disclaimer conferenceSlug={conferenceSlug} LINKS={LINKS}></Disclaimer>
                 </div>
             </div>
             <CommitteesSection display={false} />

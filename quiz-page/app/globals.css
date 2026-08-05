@@ -143,3 +143,77 @@ figure:hover .quiz-page-hover-border {
     transform: translateY(0);
   }
 }
+
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: oklch(89.668% 0.00766 260.877); /* Default slate gray */
+}
+
+.skeleton.image {
+  overflow: visible;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 40%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.4) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Container acts as the interactive wrapper */
+.clickable-card {
+  interpolate-size: allow-keywords;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hidden-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+
+.custom-checkbox {
+  rotate: 0deg;
+}
+
+
+.hidden-checkbox:checked ~ .card-content .custom-checkbox {
+  rotate: 45deg;
+}
+
+.hidden-checkbox ~ .card-content div:has(p) {
+  transition: height 0.15s;
+  overflow-y: clip;
+}
+
+.hidden-checkbox:not(:checked) ~ .card-content div:has(p) {
+  height: 0;
+}
+
+.hidden-checkbox:checked ~ .card-content div:has(p) {
+
+  height: auto;
+}

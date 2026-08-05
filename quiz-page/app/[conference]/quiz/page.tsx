@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
@@ -11,35 +11,14 @@ const ALLOWED_SLUGS = ['kingmun', 'edumun', 'pacmun', 'seattlemun'];
 
 export default function CommitteeQuizPage() {
   const params = useParams();
+  const router = useRouter()
+
   const rawSlug = (params.conference as string || 'kingmun').toLowerCase();
   const conferenceSlug = ALLOWED_SLUGS.includes(rawSlug) ? rawSlug : 'kingmun';
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
-
-  // type Data = {
-  //     id: string;
-  //     name: string;
-  //     pages: {
-  //         id: string;
-  //         name: string;
-  //         quiz_questions: {
-  //             id: string;
-  //             text: string;
-  //             slider: boolean;
-  //             max: number;
-  //             question_options: {
-  //                 id: string;
-  //                 text: string;
-  //                 range: number;
-  //                 option_weights: {
-  //                     weight: number;
-  //                 }[];
-  //             }[];
-  //         }[];
-  //     }[];
-  // }[]
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Array<number | null>>([]);
@@ -64,58 +43,43 @@ useEffect(() => {
       console.groupCollapsed(`[quiz] load questions for ${conferenceSlug}`);
 
       // Fetch committees first
-      const { data: committeesData, error: committeesErr } = await supabase
-        .from("conferences")
-        .select(`
-          committees (
-            id,
-            name,
-            acronym,
-            description,
-            difficulty,
-            topics,
-            img_url,
-            position
-          )
-        `)
-        .eq("slug", conferenceSlug)
-        .maybeSingle();
-
-      if (!committeesErr && committeesData) {
-        const comms = (committeesData.committees || []).sort((a: any, b: any) => 
-          (a.position ?? 0) - (b.position ?? 0)
-        );
-        // const committeeSummary = comms.map((c: any, idx: number) => ({
-        //   idx,
-        //   name: c.name,
-        //   acronym: c.acronym,
-        //   difficulty: c.difficulty ?? null,
-        //   position: c.position ?? null,
-        // }));
-        // console.log("[quiz] committees raw:", JSON.stringify(committeesData.committees || [], null, 2));
-        // console.log("[quiz] committees sorted:", JSON.stringify(committeeSummary, null, 2));
-        setCommittees(comms);
-        setIndexing(comms.map((c: any) => c.acronym));
-      } else {
-        console.warn("[quiz] committees query failed:", committeesErr);
-      }
-
-      // Resolve conference id
       const { data: confRow, error: confErr } = await supabase
-        .from("conferences")
-        .select("id, name")
-        .eq("slug", conferenceSlug)
-        .limit(1)
-        .maybeSingle();
-      // console.log("[quiz] conference row:", confRow);
-      if (confErr || !confRow) {
-        console.error("conference query failed:", confErr);
-        setQuestions([]);
-        setLoading(false);
-        return;
-      }
-      const confId = confRow.id;
-      setConferenceName(confRow.name);
+      .from("conferences")
+      .select(`
+        id,
+        name,
+        committees (
+          id,
+          name,
+          acronym,
+          description,
+          difficulty,
+          topics,
+          img_url,
+          position
+        )
+      `)
+      .eq("slug", conferenceSlug)
+      .maybeSingle();
+
+    if (confErr || !confRow) {
+      console.error("conference query failed:", confErr);
+      setQuestions([]);
+      setLoading(false);
+      return;
+    }
+
+    setConferenceName(confRow.name);
+
+    const comms = (confRow.committees || []).sort(
+      (a: any, b: any) => (a.position ?? 0) - (b.position ?? 0)
+    );
+
+    setCommittees(comms);
+    setIndexing(comms.map((c: any) => c.acronym));
+
+    const confId = confRow.id;
+
 
       // Resolve page id
       const { data: pageRow, error: pageErr } = await supabase
@@ -136,124 +100,66 @@ useEffect(() => {
 
       // Fetch questions in stable order
       const { data: questionsRows, error: qErr } = await supabase
-        .from("quiz_questions")
-        .select("id, text, slider, max, position")
-        .eq("page_id", pageId)
-        .order("position", { ascending: true });
+      .from("quiz_questions")
+      .select(`
+        id,
+        text,
+        slider,
+        max,
+        position,
+        question_options (
+          id,
+          text,
+          range,
+          position,
+          option_weights (
+            weight,
+            weight_index
+          )
+        )
+      `)
+      .eq("page_id", pageId)
+      .order("position", { ascending: true });
 
-      // console.log("[quiz] quiz questions rows:", JSON.stringify((questionsRows || []).map((q: any) => ({
-      //   id: q.id,
-      //   text: q.text,
-      //   slider: q.slider,
-      //   max: q.max ?? null,
-      //   position: q.position ?? null,
-      // })), null, 2));
-
-      if (qErr) {
-        console.error("fetch quiz_questions error:", qErr);
-        setQuestions([]);
-        setLoading(false);
-        return;
-      }
-
-      const assembled: any[] = [];
-      for (const qq of questionsRows || []) {
-        // Fetch options for this question in stable order
-        let { data: optsRows, error: optErr } = await supabase
-          .from("question_options")
-          .select("id, text, range, position")
-          .eq("question_id", qq.id)
-          .order("position", { ascending: true });
-
-        // console.log(`[quiz] options for question ${qq.id}:`, JSON.stringify((optsRows || []).map((opt: any) => ({
-        //   id: opt.id,
-        //   text: opt.text,
-        //   range: opt.range ?? null,
-        //   position: opt.position ?? null,
-        // })), null, 2));
-
-        if (optErr) {
-          console.error("fetch question_options error for question", qq.id, ":", optErr);
-          optsRows = [];
-        }
-
-        const qOptions: any[] = [];
-        for (const opt of optsRows || []) {
-          // Fetch weights for this option in stable order
-          const { data: weightsRows, error: wErr } = await supabase
-            .from("option_weights")
-            .select("weight, weight_index")
-            .eq("option_id", opt.id)
-            .order("weight_index", { ascending: true });
-
-          console.log(`[quiz] weights for option ${opt.id}:`, weightsRows);
-
-          if (wErr) {
-            console.error("fetch option_weights error for option", opt.id, ":", wErr?.message || wErr);
-            // Still add the option with empty weights rather than stopping
-            qOptions.push({
-              id: opt.id,
-              text: opt.text ?? "",
-              range: typeof opt.range === "number" ? opt.range : null,
-              option_weights: [],
-            });
-            continue;
-          }
-
-          const optionWeights = (weightsRows || [])
-            .slice()
-            .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0))
-            .map((w: any) => ({ weight: Number(w?.weight ?? 0) }));
-
-          // console.log(`[quiz] normalized weight vector for option ${opt.id}:`, JSON.stringify(optionWeights.map((w: any, idx: number) => ({
-          //   committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
-          //   weight: w.weight,
-          // })), null, 2));
-
-          qOptions.push({
-            id: opt.id,
-            text: opt.text ?? "",
-            range: typeof opt.range === "number" ? opt.range : null,
-            option_weights: optionWeights,
-          });
-        }
-
-        assembled.push({
-          id: qq.id,
-          text: qq.text ?? "",
-          slider: !!qq.slider,
-          max: typeof qq.max === "number" ? qq.max : null,
-          question_options: qOptions,
-        });
-
-        // console.log("[quiz] assembled question:", assembled[assembled.length - 1]);
-      }
-
-      // console.log("[quiz] final assembled questions:", JSON.stringify(assembled.map((q: any) => ({
-      //   id: q.id,
-      //   text: q.text,
-      //   slider: q.slider,
-      //   max: q.max,
-      //   options: (q.question_options || []).map((opt: any) => ({
-      //     id: opt.id,
-      //     text: opt.text,
-      //     range: opt.range,
-      //     weights: (opt.option_weights || []).map((w: any, idx: number) => ({
-      //       committee: committees[idx]?.acronym ?? indexing[idx] ?? `committee-${idx}`,
-      //       weight: w.weight,
-      //     })),
-      //   })),
-      // })), null, 2));
-
-      setQuestions(assembled);
-      setSelectedOptions(Array(assembled.length).fill(null));
-      setSliderValues(Array(assembled.length).fill(0));
-      setQuestionNumber(0);
+    if (qErr) {
+      console.error("fetch quiz_questions error:", qErr);
+      setQuestions([]);
       setLoading(false);
-    
-      // Debug: log loaded questions
-      // console.log("Loaded questions count:", assembled.length);
-      // console.log("Questions:", assembled.map(q => ({ text: q.text, optionsCount: q.question_options?.length })));
+      return;
+    }
+
+    const assembled = (questionsRows || []).map((q: any) => ({
+      id: q.id,
+      text: q.text ?? "",
+      slider: !!q.slider,
+      max: typeof q.max === "number" ? q.max : null,
+
+      question_options: (q.question_options || [])
+        .sort(
+          (a: any, b: any) =>
+            (a.position ?? 0) - (b.position ?? 0)
+        )
+        .map((opt: any) => ({
+          id: opt.id,
+          text: opt.text ?? "",
+          range: typeof opt.range === "number"
+            ? opt.range
+            : null,
+
+          option_weights: (opt.option_weights || [])
+            .sort(
+              (a: any, b: any) =>
+                (a.weight_index ?? 0) - (b.weight_index ?? 0)
+            )
+            .map((w: any) => ({
+              weight: Number(w.weight),
+            })),
+        })),
+    }));
+
+    setQuestions(assembled);
+      setLoading(false);
+
     } catch (err) {
       console.error("fetchQuestions unexpected error", err);
       setQuestions([]);
@@ -360,7 +266,11 @@ useEffect(() => {
 
     setResults(topThree);
     localStorage.setItem(`quizResults-${conferenceSlug}`, JSON.stringify(topThree));
-    window.location.href = `/${conferenceSlug}/results`;
+    // window.location.href = `/${conferenceSlug}/results`
+    
+    router.push(`/${conferenceSlug}/results`)
+    
+    
   };
 
   const progressPercent = questions.length ? (questionNumber / questions.length) * 100 : 0;
@@ -368,14 +278,31 @@ useEffect(() => {
   if (loading) {
     return (
       <div className="relative flex flex-col items-center min-h-screen">
-        <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
-                <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
-                    <div className="hidden md:block quiz-page-logo"></div> 
-                    <h1 className="text-white text-xl md:text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
-                </a>
-        </nav>
-        <div className="relative max-md:mx-4 md:w-150 my-20 max-w-5xl">
-          <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+        <nav className="h-16 flex justify-center align-center w-full bg-(--quiz-primary)" >
+        <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
+          <div className="hidden md:block quiz-page-logo"></div>
+          <h1 className="font-bold text-white text-xl md:text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+        </a>
+      </nav>
+      <div className="relative max-md:mx-4 w-full px-4 md:w-150 mt-20 max-w-5xl">
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2 h-5">
+            {/* <span className="text-sm font-semibold text-white">Question {questionNumber + 1} of {questions.length}</span>
+            <span className="text-sm font-semibold text-white">{Math.round(progressPercent)}%</span> */}
+          </div>
+          <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500 bg-linear-to-r from-(--quiz-primary) to-(--quiz-secondary)"
+              style={{ 
+                width: `${progressPercent}%`,
+              }}
+            ></div>
+          </div>
+        </div>
+        </div>
+
+        <div className="relative max-md:mx-4 md:w-140 max-w-5xl">
+          <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20 h-120">
             <p>Loading quiz...</p>
           </div>
         </div>
@@ -386,7 +313,7 @@ useEffect(() => {
   if (questions.length === 0) {
     return (
       <div className="relative flex flex-col items-center min-h-screen">
-        <nav className={`h-16 flex justify-center align-center w-full bg-${conferenceSlug}-primary`}>
+        <nav className={`h-16 flex justify-center align-center w-full bg-(--quiz-primary)`}>
           <div className="hidden md:block" id="LOGO"></div>
           <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
         </nav>
@@ -403,15 +330,13 @@ useEffect(() => {
     <div className="relative flex flex-col items-center min-h-screen">
       {results !== null && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 max-h-screen max-w-screen" />}
 
-      <nav className="h-16 flex justify-center align-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-primary)` }}>
-          <Link
-            href={"./"}
-            className="flex justify-center align-center"
-          >
-            <div className="hidden md:block" id="LOGO"></div> 
-            <h1 className="text-white text-2xl my-auto text-center mx-2">{conferenceName} Committee Quiz</h1>
-          </Link>
+      <nav className="h-16 flex justify-center align-center w-full bg-(--quiz-primary)" >
+        <a href={`/${conferenceSlug}`} className="flex justify-center align-center">
+          <div className="hidden md:block quiz-page-logo"></div>
+          <h1 className="font-bold text-white text-xl md:text-2xl my-auto text-center mx-2">{conferenceName} {new Date().getFullYear()} Committee Quiz</h1>
+        </a>
       </nav>
+
       <div className="relative max-md:mx-4 w-full px-4 md:w-150 my-20 max-w-5xl">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
@@ -420,24 +345,23 @@ useEffect(() => {
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full rounded-full transition-all duration-500 bg-linear-to-r from-(--quiz-primary) to-(--quiz-secondary)"
               style={{ 
                 width: `${progressPercent}%`,
-                background: `linear-gradient(to right, var(--color-${conferenceSlug}-primary), var(--color-${conferenceSlug}-secondary))`
               }}
             ></div>
           </div>
         </div>
 
         <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-          <p className="text-xl md:text-2xl font-bold mb-6" style={{ color: `var(--color-${conferenceSlug}-primary)` }}>
+          <p className="text-xl md:text-2xl font-bold mb-6 text-(--quiz-primary)">
             {questions[questionNumber].text}
           </p>
 
           {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
             <div className="flex flex-col items-center mt-10 gap-10 h-full">
-              <p className="md:mt-8 mb-8 text-lg font-bold" style={{ color: `var(--color-${conferenceSlug}-secondary)` }}>
+              <p className="md:mt-8 mb-8 text-lg font-bold text-(--quiz-primary)" >
                 {sliderValues[questionNumber] < questions[questionNumber]["max"]!? sliderValues[questionNumber] : `${sliderValues[questionNumber]}+` } conference{sliderValues[questionNumber] == 1? "": "s"}
               </p>
               <div className="w-full md:mb-8 relative">
@@ -448,14 +372,12 @@ useEffect(() => {
                   type="range"
                   min={0}
                   max={questions[questionNumber]["max"]!.toString()}
-                  value={sliderValues[questionNumber]}
+                  value={sliderValues[questionNumber] ?? 0}
                   onChange={(e) =>
                     handleSliderChange(questionNumber, parseInt(e.target.value))
                   }
-                  className="-mt-3 absolute w-full slider-gradient h-3 rounded-lg appearance-none cursor-pointer"
-                  style={{ accentColor: `var(--color-${conferenceSlug}-secondary)` }}
+                  className="-mt-3 absolute w-full slider-gradient h-3 rounded-lg appearance-none cursor-pointer accent-(--quiz-secondary)"
                 />
-                
               </div>
               
               
@@ -529,7 +451,7 @@ useEffect(() => {
       </div>
 
 
-        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full" style={{ backgroundColor: `var(--color-${conferenceSlug}-secondary)` }}>
+        <footer className="absolute bottom-0 min-h-14 flex justify-center w-full bg-(--quiz-secondary)">
           <h2 className="text-white text-center my-auto">
             © {new Date().getFullYear()} Model United Nations Northwest. All Rights Reserved.
           </h2>
@@ -542,18 +464,6 @@ useEffect(() => {
         }
         h1 {
             font-weight: 700;
-        }
-        #LOGO{
-            position: relative;
-            width: 45px;
-            height: auto;
-            background: url(https://kingmun.org/_next/image?url=https://files.munnorthwest.org/image/kingmun/9b852e368aceaf885c8e672aa83c8a2ac7ef2500a81335c7356c6732d175beda/whiteSmallLogo.png&w=3840&q=75) no-repeat center;
-            background-size: contain;
-        }
-        #disclaimer {
-            max-width: 700px;
-            border-left-width: 12px;
-            border-image: linear-gradient(to bottom, #2E4A20, #5b2950) 1;
         }
           
         .btn-option {
@@ -583,13 +493,13 @@ useEffect(() => {
         }
         .btn-option:hover {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-          border-color: var(--color-${conferenceSlug}-primary);
+          border-color: var(--quiz-primary);
           border-thickness: 5px;
           transform: translateY(-2px);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .btn-option.selected {
-          border-color: var(--color-${conferenceSlug}-primary);
+          border-color: var(--quiz-primary);
           border-thickness: 5px;
           background: #f3fcf2;
         }
@@ -606,20 +516,7 @@ useEffect(() => {
         }
         .btn-retry:enabled:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px color-mix(in srgb, var(--color-${conferenceSlug}-primary) 50%, transparent);
-        }
-        .fade-in {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          box-shadow: 0 6px 15px color-mix(in srgb, var(--quiz-primary) 50%, transparent);
         }
       `}</style>
     </div>

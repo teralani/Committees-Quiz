@@ -49,12 +49,10 @@ const CommitteeResultCard = memo(
             <div
               className="
                 relative h-7 md:h-5 rounded-r-full md:rounded-full
-                transition-all duration-500
+                transition-all duration-500 bg-linear-to-br from-(--quiz-primary) to-(--quiz-secondary)
               "
               style={{
-                width: `${result.percentage}%`,
-                background:
-                  "linear-gradient(to right, var(--quiz-primary), var(--quiz-secondary))",
+                width: `${result.percentage}%`
               }}
             >
               <p className="text-sm right-4 text-white font-bold absolute max-md:mt-1">
@@ -174,7 +172,7 @@ const CommitteeResultCard = memo(
                   w-full relative bottom-2 mt-7 rounded-lg p-3
                   bg-(--quiz-primary)
                   hover:bg-(--quiz-secondary)
-                  hover:-translate-y-0.5
+                  hover:-translate-y-1
                   transition
                 "
               >
