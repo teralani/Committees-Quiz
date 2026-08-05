@@ -73,7 +73,6 @@ return (
                 {committees.slice(0, 3).map((committtee) => (
                     <TiltedCard
                         key={committtee.name}
-                        imageSrc={undefined}
                         rotateAmplitude={12}
                         captionText="Take the quiz to find out which committee suits you best!"
                         containerHeight="400px"
@@ -98,7 +97,6 @@ return (
                 {committees.slice(3, 6).map(committtee => (
                     <TiltedCard 
                         key={committtee.name}
-                        imageSrc={undefined}
                         rotateAmplitude={12}
                         captionText="Take the quiz to find out which committee suits you best!"
                         containerHeight="400px"
@@ -123,7 +121,6 @@ return (
                 {committees.slice(6, 10).map(committtee => (
                     <TiltedCard
                         key={committtee.name} 
-                        imageSrc={undefined}
                         rotateAmplitude={12}
                         captionText="Take the quiz to find out which committee suits you best!"
                         containerHeight="400px"
@@ -148,7 +145,6 @@ return (
                 {committees.slice(10, 13).map(committtee => (
                     <TiltedCard 
                         key={committtee.name}
-                        imageSrc={undefined}
                         rotateAmplitude={12}
                         captionText="Take the quiz to find out which committee suits you best!"
                         containerHeight="400px"
