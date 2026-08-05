@@ -38,7 +38,6 @@ export default async function Page() {
                     <div key={idx} className="max-w-screen max-md:m-3 max-md:flex max-md:justify-center">
                         <div className="max-md:hidden md:scale-90 lg:scale-100">
                             <TiltedCard
-                                imageSrc={`${conf.slug.toLowerCase()}.jpg`}
                                 key={conf.slug || idx}
                                 cardHeight={400}
                                 cardWidth={400}
