@@ -1,11 +1,9 @@
 "use client";
 import type { SpringOptions } from 'motion/react';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, memo } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 
 interface TiltedCardProps {
-  imageSrc: React.ComponentProps<'img'>['src'];
-  altText?: string;
   captionText?: string;
   containerHeight?: React.CSSProperties['height'];
   containerWidth?: React.CSSProperties['width'];
@@ -22,14 +20,12 @@ interface TiltedCardProps {
 }
 
 const springValues: SpringOptions = {
-  damping: 30,
-  stiffness: 200,
-  mass: 1
+  damping: 20,
+  stiffness: 130,
+  mass: 0.8
 };
 
-export default function TiltedCard({
-  imageSrc,
-  altText = 'Tilted card image',
+function TiltedCard({
   captionText = '',
   containerHeight = '300px',
   containerWidth = '100%',
@@ -47,10 +43,12 @@ export default function TiltedCard({
   if (cardContent == null && overlayContent == null) {return (<div></div>)}
 
   const ref = useRef<HTMLElement>(null);
+  const rectRef = useRef<DOMRect | null>(null);
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useSpring(useMotionValue(0), springValues);
-  const rotateY = useSpring(useMotionValue(0), springValues);
+  const rotateX = useSpring(0, springValues);
+  const rotateY = useSpring(0, springValues);
   const scale = useSpring(1, springValues);
   const opacity = useSpring(0);
   const rotateFigcaption = useSpring(0, {
@@ -59,41 +57,74 @@ export default function TiltedCard({
     mass: 1
   });
 
-  const [lastY, setLastY] = useState(0);
+  // const [lastY, setLastY] = useState(0);
+  const lastY = useRef(0);
 
-  function handleMouse(e: React.MouseEvent<HTMLElement>) {
+  const frame = useRef<number | null>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+
+  const handleMouse = useCallback((e: React.MouseEvent<HTMLElement>) => {
     if (!ref.current) return;
 
-    const rect = ref.current.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left - rect.width / 2;
-    const offsetY = e.clientY - rect.top - rect.height / 2;
+    const rect = rectRef.current;
 
-    const rotationX = (offsetY / (rect.height / 2)) * -rotateAmplitude;
-    const rotationY = (offsetX / (rect.width / 2)) * rotateAmplitude;
+    if (!rect) return;
 
-    rotateX.set(rotationX);
-    rotateY.set(rotationY);
+    mouse.current = {
+      x: e.clientX,
+      y: e.clientY,
+    };
 
-    x.set(e.clientX - rect.left);
-    y.set(e.clientY - rect.top);
+  if (frame.current) return;
 
-    const velocityY = offsetY - lastY;
-    rotateFigcaption.set(-velocityY * 0.6);
-    setLastY(offsetY);
-  }
+  frame.current = requestAnimationFrame(() => {
+    frame.current = null;
+
+    const rect = rectRef.current!;
+    const offsetX = mouse.current.x - rect.left - rect.width / 2;
+    const offsetY = mouse.current.y - rect.top - rect.height / 2;
+
+    rotateX.set((offsetY / (rect.height / 2)) * -rotateAmplitude);
+    rotateY.set((offsetX / (rect.width / 2)) * rotateAmplitude);
+
+    const velocityY = offsetY - lastY.current;
+
+    if (showTooltip) {
+      x.set(mouse.current.x - rect.left);
+      y.set(mouse.current.y - rect.top);
+      rotateFigcaption.set(-velocityY * 0.6);
+    }
+    
+    lastY.current = offsetY;
+  });
+  }, [rotateAmplitude])
 
   function handleMouseEnter() {
+    if (ref.current) {
+        rectRef.current = ref.current.getBoundingClientRect();
+    }
+
     scale.set(scaleOnHover);
     opacity.set(1);
-  }
+}
 
   function handleMouseLeave() {
-    opacity.set(0);
+    if (showTooltip) {
+      opacity.set(0);
+      rotateX.set(0);
+      rotateY.set(0);
+      rotateFigcaption.set(0);
+    }
     scale.set(1);
-    rotateX.set(0);
-    rotateY.set(0);
-    rotateFigcaption.set(0);
   }
+
+  useEffect(() => {
+  return () => {
+    if (frame.current) {
+      cancelAnimationFrame(frame.current);
+    }
+  };
+}, []);
 
   return (
     <figure
@@ -114,7 +145,7 @@ export default function TiltedCard({
       )}
 
       <motion.div
-        className="relative transform-3d"
+        className="relative transform-3d object-cover rounded-[15px] will-change-transform backface-hidden transform-[translateZ(0)] bg-white "
         style={{
           width: cardWidth,
           height: cardHeight,
@@ -123,28 +154,13 @@ export default function TiltedCard({
           scale
         }}
       >
-        {/* <motion.img
-          src={imageSrc}
-          alt={altText}
-          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform transform-[translateZ(0)]"
-          style={{
-            width: imageWidth,
-            height: imageHeight
-          }}
-        /> */}
-        <div
-          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform transform-[translateZ(0)] bg-white "
-          style={{
-            width: cardWidth,
-            height: cardHeight
-          }}
-        >
-          {displayCardContent && cardContent && (
-            <div className="absolute w-full top-0 left-0 z-1 h-full will-change-transform transform-[translateZ(10px)]">
-              {cardContent}
-            </div>
-          )}
-        </div>
+
+        {displayCardContent && cardContent && (
+          <div className="absolute w-full top-0 left-0 z-1 h-full will-change-transform transform-[translateZ(10px)]">
+            {cardContent}
+          </div>
+        )}
+
 
         {displayOverlayContent && overlayContent && (
           <motion.div className={`absolute w-full top-0 left-0 z-2 h-full will-change-transform transform-[translateZ(30px)]`}>
@@ -169,3 +185,5 @@ export default function TiltedCard({
     </figure>
   );
 }
+
+export default memo(TiltedCard)
