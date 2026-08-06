@@ -353,10 +353,10 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-          <p className="text-xl md:text-2xl font-bold mb-6 text-(--quiz-primary)">
+        <section className="card fade-in bg-white backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+          <h2 className="text-xl md:text-2xl font-bold mb-6 text-(--quiz-primary)">
             {questions[questionNumber].text}
-          </p>
+          </h2>
 
           {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
@@ -415,7 +415,7 @@ useEffect(() => {
                   <button
                     key={idx}
                     onClick={() => handleOptionSelect(questionNumber, idx)}
-                    className={`max-md:text-sm btn-option p-3 md:p-5 ${
+                    className={`max-md:text-xs text-sm btn-option p-3 md:p-5 ${
                       selectedOptions[questionNumber] === idx ? "selected" : ""
                     }`}
                   >
@@ -447,7 +447,7 @@ useEffect(() => {
               </div>
             </>
           )}
-        </div>
+        </section>
       </div>
 
 

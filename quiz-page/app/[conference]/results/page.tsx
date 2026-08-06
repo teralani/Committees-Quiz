@@ -185,7 +185,7 @@ export default function CommitteeQuizPage() {
               className="p-10 max-md:mb-0 mb-10 flex justify-center "
             >
               <div>
-                <div className="h-14 md:h-16 w-28 rounded-lg bg-white/20 skeleton" />
+                <div className="h-14 md:h-16 w-30 rounded-lg skeleton" />
               </div>
             </div>
 

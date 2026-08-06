@@ -125,7 +125,7 @@ export default function Confetti({
 
           color: COLORS[i % COLORS.length],
 
-          tilt: random(-10, 10),
+          tilt: random(-20, 20),
           tiltAngle: random(0, Math.PI * 2),
           tiltAngleIncrement: random(0.05, 0.12),
           emoji:
@@ -220,7 +220,7 @@ export default function Confetti({
   return (
     <canvas
       ref={canvasRef}
-      className={`pointer-events-none fixed inset-0 w-screen h-screen ${className}`}
+      className={`pointer-events-none fixed inset-0 w-1/2 md:w-screen h-screen ${className} confetti`}
     />
   );
 }

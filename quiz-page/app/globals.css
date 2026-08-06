@@ -217,3 +217,7 @@ figure:hover .quiz-page-hover-border {
 
   height: auto;
 }
+
+.confetti {
+  mask-image: linear-gradient(rgba(42, 123, 155, 0) 0%, rgba(200, 202, 97, 0.94) 92%, rgba(237, 221, 83, 1) 100%);
+}

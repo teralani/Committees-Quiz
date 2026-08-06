@@ -90,8 +90,8 @@ export default async function Home({ params }: { params: { conference: string } 
                 </a>
             </nav>
             <section className="w-full min-h-screen mx-auto mt-16 flex justify-center flex-col items-center">
-                <h2 className="text-white text-center text-3xl max-md:text-2xl max-md:px-10 ">Find Your Perfect {conferenceName} Committee</h2>
-                <h3 className="text-lg text-white mt-3 mx-5 text-center max-md:text-md">Discover your perfect committee match with our interactive quiz!</h3>
+                <h2 className="text-white text-center text-3xl max-md:text-2xl max-md:px-10  font-bold">Find Your Perfect {conferenceName} Committee</h2>
+                <h3 className="text-lg text-white mt-3 mx-5 text-center max-md:text-md font-bold">Discover your perfect committee match with our interactive quiz!</h3>
                 <div className="scale-90 md:scale-100 flex justify-center md:pb-10 flex-col items-center">
                         <Magnet
                             padding={30}
