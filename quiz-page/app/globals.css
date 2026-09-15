@@ -45,17 +45,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #2E4A20;
-    --secondary: #674ea7;
-  }
-} */
-
 body {
-  /* background: var(--background); */
   background: linear-gradient(rgba(44, 44, 101, 0.2), rgba(47, 47, 86, 0.2)), url(../public/background.jpeg) no-repeat bottom;
   background-size: cover;
   backdrop-filter: blur(6px);
@@ -148,7 +138,7 @@ figure:hover .quiz-page-hover-border {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background-color: oklch(89.668% 0.00766 260.877); /* Default slate gray */
+  background-color: oklch(89.668% 0.00766 260.877);
 }
 
 .skeleton.image {
@@ -180,7 +170,6 @@ figure:hover .quiz-page-hover-border {
   }
 }
 
-/* Container acts as the interactive wrapper */
 .clickable-card {
   interpolate-size: allow-keywords;
   cursor: pointer;

@@ -9,7 +9,6 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 export default async function DashboardPage() {
 
   await redirectIfNotAuthenticated()
-  // const supabase = await createClient();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const CONFERENCES = ["edumun.com", "pacmun.com", "seattlemun.org", "kingmun.org"]
