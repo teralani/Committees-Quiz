@@ -3,7 +3,6 @@
 import { createActionClient } from '@/utils/supabase/actions';
 import { redirect } from 'next/navigation';
 
-// Use Set for O(1) domain lookup instead of array includes
 const ALLOWED_DOMAINS = new Set([
   'kingmun.org',
   'seattlemun.org',

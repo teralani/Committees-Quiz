@@ -42,7 +42,6 @@ useEffect(() => {
     try {
       console.groupCollapsed(`[quiz] load questions for ${conferenceSlug}`);
 
-      // Fetch committees first
       const { data: confRow, error: confErr } = await supabase
       .from("conferences")
       .select(`
@@ -81,7 +80,6 @@ useEffect(() => {
     const confId = confRow.id;
 
 
-      // Resolve page id
       const { data: pageRow, error: pageErr } = await supabase
         .from("pages")
         .select("id")
@@ -89,7 +87,6 @@ useEffect(() => {
         .eq("name", "Quiz")
         .limit(1)
         .maybeSingle();
-      // console.log("[quiz] quiz page row:", pageRow);
       if (pageErr || !pageRow) {
         console.error("page query failed:", pageErr);
         setQuestions([]);
@@ -98,7 +95,6 @@ useEffect(() => {
       }
       const pageId = pageRow.id;
 
-      // Fetch questions in stable order
       const { data: questionsRows, error: qErr } = await supabase
       .from("quiz_questions")
       .select(`
@@ -172,7 +168,6 @@ useEffect(() => {
   fetchQuestions();
 }, [supabaseUrl, supabaseKey]);
 
-  // initialize selection arrays when questions load
   useEffect(() => {
     setSelectedOptions(Array(questions.length).fill(null));
     setSliderValues(Array(questions.length).fill(0));
@@ -180,13 +175,11 @@ useEffect(() => {
   }, [questions.length]);
 
 
-  // — HANDLERS —
   const handleOptionSelect = (qIdx: number, optIdx: number) => {
     const newSelections = [...selectedOptions];
     newSelections[qIdx] = optIdx;
     setSelectedOptions(newSelections);
 
-    // console.log(selectedOptions)
   };
 
   const handleSliderChange = (qIdx: number, value: number) => {
@@ -237,7 +230,6 @@ useEffect(() => {
         const chosen = question["question_options"][sel];
         if (chosen && chosen["option_weights"]) {
           chosen["option_weights"].forEach((w: any, committeeIdx: number) => {
-              // const weight = typeof w === "number" ? w : (w?.weight ?? 0);
               tally[committeeIdx] += Number(w.weight);
           });
         }
@@ -266,7 +258,6 @@ useEffect(() => {
 
     setResults(topThree);
     localStorage.setItem(`quizResults-${conferenceSlug}`, JSON.stringify(topThree));
-    // window.location.href = `/${conferenceSlug}/results`
     
     router.push(`/${conferenceSlug}/results`)
     
@@ -287,8 +278,6 @@ useEffect(() => {
       <div className="relative max-md:mx-4 w-full px-4 md:w-150 mt-20 max-w-5xl">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2 h-5">
-            {/* <span className="text-sm font-semibold text-white">Question {questionNumber + 1} of {questions.length}</span>
-            <span className="text-sm font-semibold text-white">{Math.round(progressPercent)}%</span> */}
           </div>
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div
@@ -358,7 +347,6 @@ useEffect(() => {
             {questions[questionNumber].text}
           </h2>
 
-          {/* --- Slider Question Block --- */}
           {questions[questionNumber].slider ? (
             <div className="flex flex-col items-center mt-10 gap-10 h-full">
               <p className="md:mt-8 mb-8 text-lg font-bold text-(--quiz-primary)" >
@@ -472,7 +460,6 @@ useEffect(() => {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
           border: 2px solid rgba(100, 100, 100, 0.3);
           border-radius: 12px;
-          // font-weight: 600;
           color: black;
           transition: all 0.3s ease;
           position: relative;

@@ -9,7 +9,6 @@ import SignupErrorPopup from './signup-error-popup';
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 
-// Accept searchParams as a prop (Next.js app directory convention)
 export default async function SignupPage({ searchParams }: { searchParams?: { error?: string } }) {
   await redirectIfAuthenticated();
   const error = searchParams?.error || '';

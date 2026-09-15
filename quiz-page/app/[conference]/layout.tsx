@@ -24,19 +24,15 @@ type Props = {
 const year = new Date().getFullYear()
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // 2. Await the dynamic conference slug
   const { conference } = await params
   const conferenceName = SLUG_METADATA[conference]
 
-  // 3. Read the custom pathname header injected by middleware
   const headerList = await headers()
   const pathname = headerList.get('x-pathname') || ''
 
-  // 4. Default state (neither)
   let title = `${conferenceName} ${year} Committee Quiz`
   let description = `Find your ideal ${conferenceName} committee.`
 
-  // 5. Change metadata conditionally based on sub-route content
   if (pathname.endsWith('/quiz')) {
     title = `${conferenceName} ${year} Committee Quiz`
     description = `Take the official ${conferenceName} Committee Quiz and discover the perfect committee for you!`

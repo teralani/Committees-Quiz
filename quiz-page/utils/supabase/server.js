@@ -12,8 +12,7 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
         },
-        // In Server Components cookies are read-only — leave this a no-op.
-        setAll(_cookies) { /* no-op in RSC; middleware writes cookies */ },
+        setAll(_cookies) {},
       },
     }
   );

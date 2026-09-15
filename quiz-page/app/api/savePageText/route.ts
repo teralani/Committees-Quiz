@@ -10,7 +10,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid payload, expected { questions: [...] }" }, { status: 400 });
     }
 
-    // Try common locations — adapt to how you run the dev server.
     const candidates = [
       path.join(process.cwd(), "quiz-page", "public", "pageText.json"),
       path.join(process.cwd(), "public", "pageText.json"),
@@ -32,7 +31,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "pageText.json not found in expected locations" }, { status: 500 });
     }
 
-    // Update quiz questions efficiently
     if (Array.isArray(json)) {
       const quizIndex = json.findIndex((p: any) => p?.name === "Quiz");
       if (quizIndex >= 0) {

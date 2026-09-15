@@ -15,7 +15,6 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
-    // Combine queries: get page and sections in one request
     const { data: pageData, error: pageError } = await supabase
       .from('pages')
       .select(`
@@ -40,12 +39,10 @@ export async function POST(req: Request) {
     const pageId = pageData.id;
     const existingSections = pageData.page_sections || [];
 
-    // Create a map of key -> id
     const sectionMap = new Map(
       existingSections.map((s: any) => [s.key, s.id])
     );
 
-    // Update each section
     const updates = content.map((section: any) => {
       const sectionId = sectionMap.get(section.key);
       if (!sectionId) {
@@ -63,11 +60,9 @@ export async function POST(req: Request) {
         .eq('id', sectionId);
     });
 
-    // Filter out null updates and execute all in parallel
     const validUpdates = updates.filter(Boolean);
     const results = await Promise.all(validUpdates);
 
-    // Check for errors
     const errors = results.filter((r: any) => r.error);
     if (errors.length > 0) {
       console.error("Some updates failed:", errors);

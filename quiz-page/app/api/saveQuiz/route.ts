@@ -13,7 +13,6 @@ export async function POST(req: Request) {
 
     const supabase = await createActionClient();
 
-    // Find conference + Quiz page
     const { data: confData, error: confError } = await supabase
       .from("conferences")
       .select("id, name, pages(id, name)")
@@ -33,7 +32,6 @@ export async function POST(req: Request) {
     const pageId = quizPage.id;
     const draftBody = JSON.stringify({ questions });
 
-    // Check if draft exists, then update or insert
     const { data: existing, error: checkErr } = await supabase
       .from("page_sections")
       .select("id")
@@ -44,14 +42,12 @@ export async function POST(req: Request) {
     if (checkErr) return NextResponse.json({ error: checkErr.message }, { status: 500 });
 
     if (existing?.id) {
-      // Update existing draft
       const { error: updateErr } = await supabase
         .from("page_sections")
         .update({ body: draftBody, title: "Quiz Draft" })
         .eq("id", existing.id);
       if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
     } else {
-      // Insert new draft
       const { error: insertErr } = await supabase
         .from("page_sections")
         .insert({
@@ -64,7 +60,6 @@ export async function POST(req: Request) {
       if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
-    // Delete all existing questions (cascade deletes options and weights)
     const { error: delErr } = await supabase
       .from("quiz_questions")
       .delete()
@@ -72,7 +67,6 @@ export async function POST(req: Request) {
     
     if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
 
-    // Insert all questions
     const questionsToInsert = questions.map((q, idx) => ({
       page_id: pageId,
       text: q.text ?? "",
@@ -90,7 +84,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insQErr?.message || "Question insertion failed" }, { status: 500 });
     }
 
-    // Build options batch (link to inserted questions by index order)
     const optionsToInsert: any[] = [];
     questions.forEach((q: any, qIdx: number) => {
       const questionId = insertedQuestions[qIdx].id;
@@ -107,7 +100,6 @@ export async function POST(req: Request) {
 
     if (!optionsToInsert.length) return NextResponse.json({ ok: true });
 
-    // Insert all options
     const { data: insertedOptions, error: insOptErr } = await supabase
       .from("question_options")
       .insert(optionsToInsert.map(({ _weights, ...opt }) => opt))
@@ -117,7 +109,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insOptErr?.message || "Option insertion failed" }, { status: 500 });
     }
 
-    // Build weights batch using inserted option IDs
     const weightsToInsert = optionsToInsert
       .flatMap((opt, idx) =>
         opt._weights.map((weight: any, wIdx: number) => ({

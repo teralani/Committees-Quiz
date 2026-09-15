@@ -65,7 +65,6 @@ export default function PageDashboard () {
                         .order('position', { ascending: true })
                 ]);
 
-                // Update available conferences (filtered to allowed slugs only)
                 if (!conferencesResult.error && conferencesResult.data) {
                     const filtered = conferencesResult.data
                     .filter((c: any) => ALLOWED_SLUGS.includes(c.slug))
@@ -75,7 +74,6 @@ export default function PageDashboard () {
                     setPublished(match?.published ?? false)
                 }
 
-                // Process quiz data
                 const { data: confData, error: confErr } = pageContentResult;
                 if (confErr || !confData) {
                     console.error("Conference not found", confErr);
@@ -217,10 +215,8 @@ export default function PageDashboard () {
                         setPublished(Boolean(j.published));
                         const msg = j.published ? 'Site published' : 'Site unpublished';
                         setToast(msg);
-                        // Mount hidden then make visible on next tick to trigger slide-in
                         setToastVisible(false);
                         setTimeout(() => setToastVisible(true), 10);
-                        // Hide after 2.6s then clear after animation finishes
                         setTimeout(() => setToastVisible(false), 2600);
                         setTimeout(() => setToast(null), 3000);
                     } catch (err) {

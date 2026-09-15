@@ -50,18 +50,14 @@ export default function CustomMultiSlider({ question, onChange, outerClassName }
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // Sync only when the actual range structure changes so unrelated parent rerenders do not
-  // reset the local slider state while the user is dragging.
   useEffect(() => {
     setValues((current) => {
       if (arraysEqual(current, normalized)) return current;
-      // This state change originates from parent data sync; do not echo it back.
       skipNotifyRef.current = true;
       return normalized;
     });
   }, [rangeSignature, max, normalized]);
 
-  // Notify parent only when user interaction changed values.
   useEffect(() => {
     if (skipNotifyRef.current) {
       skipNotifyRef.current = false;

@@ -126,7 +126,6 @@ export default function DashboardContent() {
       setSlugHydrated(true);
     }, []);
 
-    // Fetch from Supabase on mount (and map DB shape -> editor shape).
     useEffect(() => {
       if (!slugHydrated) {
         return;
@@ -144,7 +143,6 @@ export default function DashboardContent() {
       async function fetchQuestionsFromDb() {
         setLoading(true);
         try {
-          // Parallel fetch: get conferences list, quiz data, and committees simultaneously
           const [conferencesResult, quizDataResult, committeesResult] = await Promise.all([
             supabase
               .from("conferences")
@@ -193,7 +191,6 @@ export default function DashboardContent() {
 
           console.log(quizDataResult)
 
-          // Update available conferences (filtered to allowed slugs only)
           if (!conferencesResult.error && conferencesResult.data) {
             const mapped = conferencesResult.data.map((c: any) => ({ name: c.name, slug: c.slug }));
             const allowed = mapped
@@ -205,7 +202,6 @@ export default function DashboardContent() {
             const filtered = [...allowed, ...others];
             setAvailableConferences(filtered);
 
-            // Recover from stale localStorage slugs by switching to the first available conference.
             const conferenceExists = filtered.some((c) => c.slug === conferenceSlug);
             if (!conferenceExists && filtered.length > 0) {
               const fallbackSlug = filtered[0].slug;
@@ -215,31 +211,22 @@ export default function DashboardContent() {
             }
           }
 
-          // Update committees indexing FIRST
           if (!committeesResult.error && committeesResult.data) {
-            // Debug: log committees before sorting
             const rawCommittees = (committeesResult.data.committees || []);
             console.log("Committees from Supabase (raw):", rawCommittees);
-            // Sort committees by position (ascending, left to right)
             const committees = rawCommittees
-              .slice() // defensive copy
+              .slice()
               .sort((a: any, b: any) => {
-                // If position is missing, treat as very large (put at end)
                 const posA = (typeof a.position === 'number') ? a.position : 9999;
                 const posB = (typeof b.position === 'number') ? b.position : 9999;
                 return posA - posB;
               });
-            // Debug: log committees after sorting
-            // console.log("Committees after sorting by position:", committees);
             const acronyms = committees.map((c: any) => c.acronym);
-            // console.log("Loaded committees (sorted by position, left to right):", acronyms);
             setIndexing(acronyms);
           } else {
-            // console.error("Failed to load committees:", committeesResult.error);
             setIndexing([]);
           }
 
-          // Process quiz data
           const { data: confData, error: confErr } = quizDataResult;
           if (confErr) {
             console.error("Failed to load conference quiz data", confErr);
@@ -260,7 +247,6 @@ export default function DashboardContent() {
             return;
           }
 
-          // Transform nested data into Question[] format
           const dbQuestions: Question[] = (page.quiz_questions || [])
             .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
             .map((qq: any) => {
@@ -271,7 +257,6 @@ export default function DashboardContent() {
                     .sort((a: any, b: any) => (a.weight_index ?? 0) - (b.weight_index ?? 0));
                   
                   const weights = weightsData.map((w: any) => Number(w?.weight ?? 0));
-                  // Note: Use committees count directly since indexing state updates async
                   const committeeCount = committeesResult.data?.committees?.length || weights.length || 1;
                   const padded = Array.from({ length: committeeCount }, (_, i) => weights[i] ?? 0);
 
@@ -308,9 +293,6 @@ export default function DashboardContent() {
       };
     }, [conferenceSlug, slugHydrated]);
 
-    // Auto-save edits locally for draft persistence (UX improvement)
-    // Note: This is just for in-session editing; the source of truth is always the database
-    // Sync weights arrays when indexing changes
     useEffect(() => {
         if (indexing.length > 0 && questions.length > 0) {
         setQuestions((prevQuestions) => {
@@ -322,7 +304,6 @@ export default function DashboardContent() {
               if (currentWeights.length !== indexing.length) {
                 questionChanged = true;
                 hasChanges = true;
-                // Resize weights array to match indexing length
                 const resized = Array.from({ length: indexing.length }, (_, i) => currentWeights[i] ?? 0);
                 return { ...opt, weights: resized };
               }
@@ -337,15 +318,12 @@ export default function DashboardContent() {
         }
     }, [indexing.length]);
 
-    // Auto-save edits locally for draft persistence (UX improvement)
-    // Note: This is just for in-session editing; the source of truth is always the database
     useEffect(() => {
         if (questions.length > 0) {
             localStorage.setItem("editorQuestions", JSON.stringify(questions));
         }
     }, [questions]);
 
-    // Helpers
     const updateQuestion = (idx: number, patch: Partial<Question>) =>
         setQuestions((s) => s.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
 
@@ -379,7 +357,6 @@ export default function DashboardContent() {
         )
         );
 
-    // Toggle slider mode: initialize ranges (default to evenly-spaced values) or clear them.
     const toggleSlider = (qIdx: number, checked: boolean) =>
         setQuestions((s) =>
         s.map((q, i) => {
@@ -393,7 +370,6 @@ export default function DashboardContent() {
         })
         );
 
-    // Operations
     const addQuestion = () =>
         setQuestions((s) => [
         ...s,
@@ -467,17 +443,14 @@ export default function DashboardContent() {
         alert("Copied to clipboard");
     };
 
-    // Only persist to server when user presses Save
     const saveToFile = useCallback(async () => {
       setSaving(true);
       const ok = await persistQuestions(questions, conferenceSlug);
       setSaving(false);
       if (ok) {
-        // Clear local edit buffer so subsequent load comes from DB
         localStorage.removeItem("editorQuestions");
         const updatedAt = formatUpdatedAt();
         setSavedAt(updatedAt);
-        // Force reload to ensure both dashboard and quiz page show same data
         alert(`Website updated on ${updatedAt}. The quiz page now will display the updated quiz data.`);
         localStorage.setItem(STORAGE_KEY, conferenceSlug)
       } else {
@@ -533,12 +506,9 @@ export default function DashboardContent() {
         };
   }, [])
 
-    // reset will re-fetch from DB (keeps UI label identical)
     const resetFromDb = async () => {
       if (!confirm("Reset to default from database? This will replace editor contents.")) return;
-      // re-run the same fetch logic by reloading page-level data in localStorage and state
       localStorage.removeItem("editorQuestions");
-      // simple hack: reload the window to ensure fresh DB state; alternatively call fetch logic again
       window.location.reload();
     };
 
@@ -637,12 +607,6 @@ export default function DashboardContent() {
                     >
                     Go to Site
                     </button>
-                    {/* <button
-                    className="px-4 py-2 bg-orange-500 text-white rounded cursor-pointer"
-                    onClick={printDebug}
-                    >
-                    Print
-                    </button> */}
                     <button className="px-4 py-2 bg-kingmun-primary/90 hover:bg-kingmun-primary text-white rounded cursor-pointer" onClick={saveToFile} disabled={saving}>
                     {saving ? "Saving…" : "Save changes"}
                     </button>

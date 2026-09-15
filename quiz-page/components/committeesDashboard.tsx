@@ -46,7 +46,6 @@ export default function CommitteesDashboard() {
     async function fetchCommittees() {
       setLoading(true);
       try {
-        // Fetch conferences list and committees simultaneously
         const [conferencesResult, committeesResult] = await Promise.all([
           supabase
             .from("conferences")
@@ -74,7 +73,6 @@ export default function CommitteesDashboard() {
             .maybeSingle()
         ]);
 
-        // Update available conferences
         if (!conferencesResult.error && conferencesResult.data) {
           const mapped = conferencesResult.data.map((c: any) => ({ 
             name: c.name, 
@@ -99,7 +97,6 @@ export default function CommitteesDashboard() {
           }
         }
 
-        // Process committees data
         const { data: confData, error: confErr } = committeesResult;
         if (confErr || !confData) {
           console.error("Conference not found", confErr);
@@ -171,7 +168,6 @@ export default function CommitteesDashboard() {
       conference = data;
     }
 
-    // Find the next available position (max + 1)
     const nextPosition = committees.length > 0 ? Math.max(...committees.map(c => c.position ?? 0)) + 1 : 0;
 
     const newCommittee: Partial<Committee> = {
@@ -198,7 +194,6 @@ export default function CommitteesDashboard() {
     }
 
     if (data) {
-      // Insert and sort by position
       setCommittees((s) => [...s, data].slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)));
     }
   };
@@ -222,14 +217,11 @@ export default function CommitteesDashboard() {
       return;
     }
 
-    // Remove from local state and reindex positions
     let updated = committees.slice();
     updated.splice(idx, 1);
-    // Reassign positions to be continuous (0, 1, 2, ...)
     updated = updated.map((c, i) => ({ ...c, position: i }));
     setCommittees(updated);
 
-    // Update all positions in DB
     for (const c of updated) {
       await supabase
         .from("committees")
@@ -270,7 +262,6 @@ export default function CommitteesDashboard() {
     const supabase = createBrowserClient(supabaseUrl, supabaseKey);
 
     try {
-      // Update all committees
       const updates = committees.map((committee) => ({
         id: committee.id,
         name: committee.name,

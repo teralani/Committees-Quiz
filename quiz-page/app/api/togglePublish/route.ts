@@ -12,7 +12,6 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
-    // Fetch and update in one query to reduce roundtrips
     const { data: conf, error: fetchErr } = await supabase
       .from('conferences')
       .select('id, published')
