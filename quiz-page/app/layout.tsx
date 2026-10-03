@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next"
+import { GoogleAnalytics } from "@next/third-parties/google";
+// @ts-expect-error Next.js loads this global stylesheet at runtime.
 import "./globals.css";
 
 
@@ -34,6 +36,7 @@ export default function RootLayout({
         {children}
         <Analytics/>
       </body>
+      <GoogleAnalytics gaId="G-VZX9MT55K5"/>
     </html>
   );
 }
